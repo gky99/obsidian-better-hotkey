@@ -1,0 +1,19 @@
+# Agent OS Standards Index
+
+architecture:
+  component-folders:
+    description: Organize components by domain context (hotkey-context/, execution-context/)
+
+development:
+  string-constants:
+    description: Command IDs and context keys as constants with 'as const', never hard-code
+  stub-implementations:
+    description: Explicit inline documentation for stub method implementations
+  todo-comments:
+    description: Phase-aware TODO comments that reference development plan
+
+testing:
+  file-organization:
+    description: Tests in __tests__/ directories at component level, ComponentName.test.ts naming
+  test-structure:
+    description: Nested describe blocks, beforeEach for test isolation, descriptive test names

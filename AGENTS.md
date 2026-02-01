@@ -6,40 +6,6 @@
 - Entry point: `main.ts` compiled to `main.js` and loaded by Obsidian.
 - Required release artifacts: `main.js`, `manifest.json`, and optional `styles.css`.
 
-## Environment & tooling
-
-- Node.js: use current LTS (Node 18+ recommended).
-- **Package manager: npm** (required for this sample - `package.json` defines npm scripts and dependencies).
-- **Bundler: esbuild** (required for this sample - `esbuild.config.mjs` and build scripts depend on it). Alternative bundlers like Rollup or webpack are acceptable for other projects if they bundle all external dependencies into `main.js`.
-- Types: `obsidian` type definitions.
-
-**Note**: This sample project has specific technical dependencies on npm and esbuild. If you're creating a plugin from scratch, you can choose different tools, but you'll need to replace the build configuration accordingly.
-
-### Install
-
-```bash
-npm install
-```
-
-### Dev (watch)
-
-```bash
-npm run dev
-```
-
-### Production build
-
-```bash
-npm run build
-```
-
-## Linting
-
-- To use eslint install eslint from terminal: `npm install -g eslint`
-- To use eslint to analyze this project use this command: `eslint main.ts`
-- eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder: `eslint ./src/`
-
 ## File & folder conventions
 
 - **Organize code into multiple files**: Split functionality across separate modules rather than putting everything in `main.ts`.
@@ -78,20 +44,10 @@ npm run build
 - Keep `minAppVersion` accurate when using newer APIs.
 - Canonical requirements are coded here: https://github.com/obsidianmd/obsidian-releases/blob/master/.github/workflows/validate-plugin-entry.yml
 
-## Testing
-
-- Manual install for testing: copy `main.js`, `manifest.json`, `styles.css` (if any) to:
-  ```
-  <Vault>/.obsidian/plugins/<plugin-id>/
-  ```
-- Reload Obsidian and enable the plugin in **Settings → Community plugins**.
-
 ## Commands & settings
 
-- Any user-facing commands should be added via `this.addCommand(...)`.
 - If the plugin has configuration, provide a settings tab and sensible defaults.
 - Persist settings using `this.loadData()` / `this.saveData()`.
-- Use stable command IDs; avoid renaming once released.
 
 ## Versioning & releases
 
@@ -204,16 +160,6 @@ export function registerCommands(plugin: Plugin) {
 }
 ```
 
-### Add a command
-
-```ts
-this.addCommand({
-  id: "your-command-id",
-  name: "Do the thing",
-  callback: () => this.doTheThing(),
-});
-```
-
 ### Persist settings
 
 ```ts
@@ -237,7 +183,7 @@ this.registerInterval(window.setInterval(() => { /* ... */ }, 1000));
 ## Troubleshooting
 
 - Plugin doesn't load after build: ensure `main.js` and `manifest.json` are at the top level of the plugin folder under `<Vault>/.obsidian/plugins/<plugin-id>/`. 
-- Build issues: if `main.js` is missing, run `npm run build` or `npm run dev` to compile your TypeScript source code.
+- Build issues: if `main.js` is missing, run `pnpm run build` or `pnpm run dev` to compile your TypeScript source code.
 - Commands not appearing: verify `addCommand` runs after `onload` and IDs are unique.
 - Settings not persisting: ensure `loadData`/`saveData` are awaited and you re-render the UI after changes.
 - Mobile-only issues: confirm you're not using desktop-only APIs; check `isDesktopOnly` and adjust.
@@ -249,3 +195,66 @@ this.registerInterval(window.setInterval(() => { /* ... */ }, 1000));
 - Developer policies: https://docs.obsidian.md/Developer+policies
 - Plugin guidelines: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines
 - Style guide: https://help.obsidian.md/style-guide
+
+---
+
+## Project-Specific Development Notes
+
+### Project Structure
+
+- **Design Architecture**: `.AI/Architecture.md`
+- **Development Plan**: `.AI/Development Plan.md`
+- **Architecture Decision Records**: `.AI/ADR/`
+- **Source Code**: `src/`
+- **Test Convention**: Test files are placed in `__tests__/` directories at the component level (e.g., `src/components/hotkey-context/__tests__/HotkeyManager.test.ts`)
+
+### Key Design Documents
+
+| Document                | Location                       |
+| ----------------------- | ------------------------------ |
+| Architecture Overview   | `.AI/Architecture.md`          |
+| Development Plan        | `.AI/Development Plan.md`      |
+| Architecture Decisions  | `.AI/ADR/*.md`                 |
+
+### Development Rules
+
+#### Test Organization
+
+- Place test files in `__tests__/` directories at the component level
+- Mirror the component structure within the `__tests__/` folder
+- Naming convention: `ComponentName.test.ts`
+- Example: `src/components/hotkey-context/__tests__/HotkeyManager.test.ts`
+
+#### Update This File
+
+Add the following to this file when provided by the user:
+
+- Development workflow instructions or preferences
+- Project-specific conventions or patterns to follow
+- Decisions made during development (e.g., "method X was removed from design")
+- Clarifications about design intent
+- File paths or locations that may be referenced later
+- Any recurring instructions the user wants remembered across sessions
+
+Do NOT add:
+
+- Temporary debugging notes
+- Session-specific context that won't be relevant later
+
+#### Phase Status
+
+- **Phase 1**: Core infrastructure (in progress)
+- **Phase 2**: Kill Ring + Configuration
+- **Phase 3**: Integration + Polish
+- **Phase 4**: Post-MVP features
+
+#### Code Review Checklist
+
+When reviewing code against design:
+
+- Compare method signatures with design docs
+- Check for missing methods listed in design
+- Verify state properties match design
+- Ensure dependencies are properly wired
+
+**Important**: If you find a difference between implementation and design docs, ask the user first to determine which version is the latest/correct design before making changes.
