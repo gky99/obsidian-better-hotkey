@@ -35,7 +35,7 @@ export class KillRing {
 		}
 
 		// Sync to system clipboard
-		this.syncToClipboard(text);
+		void this.syncToClipboard(text);
 
 		// Reset yank state when new content is killed
 		this.resetPointer();

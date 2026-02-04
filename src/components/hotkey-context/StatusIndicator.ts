@@ -1,3 +1,4 @@
+/* eslint-disable obsidianmd/no-static-styles-assignment */
 /**
  * Status Indicator Component
  * Responsibility: Display pending key sequence in status bar

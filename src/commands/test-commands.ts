@@ -28,7 +28,7 @@ export function createTestCommands(): Command[] {
 		{
 			id: COMMAND_NAMES.DELETE_WORD,
 			name: "Delete Word",
-			execute: (_args, context) => {
+			execute: (_args, context: ExecutionContext) => {
 				if (!context) return;
 
 				const result = context.workspaceContext.getTextAtCursor("word");
