@@ -37,57 +37,57 @@ Components inside the Hotkey Context group, built individually before the Input 
 
 | Task                               | Effort | Dependencies | Done |
 | ---------------------------------- | ------ | ------------ | ---- |
-| Implement pending state management | 0.25d  | 1.1          |      |
-| Implement `append`, `clear`        | 0.5d   | 1.1          |      |
-| Implement timeout logic            | 0.5d   | 1.1          |      |
-| Test sequence building and timeout | 0.25d  |              |      |
+| Implement pending state management | 0.25d  | 1.1          | Done |
+| Implement `append`, `clear`        | 0.5d   | 1.1          | Done |
+| Implement timeout logic            | 0.5d   | 1.1          | Done |
+| Test sequence building and timeout | 0.25d  |              | Done |
 
 #### Hotkey Manager
 
 | Task                                                       | Effort | Dependencies | Done |
 | ---------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement source hotkey table (keyed by sequence::command) | 0.5d   | 1.1          |      |
-| Implement `insert`, `remove`, `clear`                      | 0.5d   |              |      |
-| Implement onChange callback support                        | 0.25d  |              |      |
-| Test table operations                                      | 0.25d  |              |      |
+| Implement source hotkey table (keyed by sequence::command) | 0.5d   | 1.1          | Done |
+| Implement `insert`, `remove`, `clear`                      | 0.5d   |              | Done |
+| Implement onChange callback support                        | 0.25d  |              | Done |
+| Test table operations                                      | 0.25d  |              | Done |
 
 #### Hotkey Matcher
 
 | Task                                                    | Effort | Dependencies | Done |
 | ------------------------------------------------------- | ------ | ------------ | ---- |
-| Define matching table interface (TODO: Trie vs HashMap) | 0.25d  | 1.1          |      |
-| Implement Map-based matching table for MVP              | 0.5d   |              |      |
-| Implement `match(sequence): MatchResult`                | 0.5d   |              |      |
-| Implement `isEscape`, `isChord`, `hasPrefix`            | 0.25d  |              |      |
-| Implement rebuild from Hotkey Manager source data       | 0.5d   |              |      |
-| Test exact match, prefix match, no match                | 0.5d   |              |      |
+| Define matching table interface (TODO: Trie vs HashMap) | 0.25d  | 1.1          | Done |
+| Implement Map-based matching table for MVP              | 0.5d   |              | Done |
+| Implement `match(sequence): MatchResult`                | 0.5d   |              | Done |
+| Implement `isEscape`, `isChord`, `hasPrefix`            | 0.25d  |              | Done |
+| Implement rebuild from Hotkey Manager source data       | 0.5d   |              | Done |
+| Test exact match, prefix match, no match                | 0.5d   |              | Done |
 
 #### Status Indicator
 
 | Task                             | Effort | Dependencies | Done |
 | -------------------------------- | ------ | ------------ | ---- |
-| Create status bar element        | 0.25d  | 1.1          |      |
-| Implement `showPending`, `clear` | 0.25d  |              |      |
-| Style indicator                  | 0.25d  |              |      |
+| Create status bar element        | 0.25d  | 1.1          | Done |
+| Implement `showPending`, `clear` | 0.25d  |              | Done |
+| Style indicator                  | 0.25d  |              | Done |
 
 ### 1.3 Hotkey Context Engine (Stub)
 
 | Task                                                  | Effort | Dependencies | Done |
 | ----------------------------------------------------- | ------ | ------------ | ---- |
-| Implement global singleton with `state` Map           | 0.25d  | 1.1          |      |
-| Implement `setContext`, `getContext`, `getAllContext` | 0.25d  |              |      |
-| Stub `evaluate(whenClause)` as `() => true`           | 0.25d  |              |      |
-| Implement `filter(entries)` using stub evaluation     | 0.25d  |              |      |
+| Implement global singleton with `state` Map           | 0.25d  | 1.1          | Done |
+| Implement `setContext`, `getContext`, `getAllContext` | 0.25d  |              | Done |
+| Stub `evaluate(whenClause)` as `() => true`           | 0.25d  |              | Done |
+| Implement `filter(entries)` using stub evaluation     | 0.25d  |              | Done |
 
 ### 1.4 Command Registry
 
 | Task                                      | Effort | Dependencies | Done |
 | ----------------------------------------- | ------ | ------------ | ---- |
-| Implement commands Map                    | 0.25d  | 1.1          |      |
-| Implement `registerCommand`, `getCommand` | 0.5d   |              |      |
-| Implement `execute(commandId, args)`      | 0.5d   |              |      |
-| Implement `loadObsidianCommands`          | 0.5d   |              |      |
-| Test command registration and execution   | 0.25d  |              |      |
+| Implement commands Map                    | 0.25d  | 1.1          | Done |
+| Implement `registerCommand`, `getCommand` | 0.5d   |              | Done |
+| Implement `execute(commandId, args)`      | 0.5d   |              | Done |
+| Implement `loadObsidianCommands`          | 0.5d   |              | Done |
+| Test command registration and execution   | 0.25d  |              | Done |
 
 ### 1.5 Input Handler
 
@@ -95,17 +95,17 @@ The main orchestrator. Registers a global `keydown` listener and drives the full
 
 | Task                                                                                         | Effort | Dependencies  | Done |
 | -------------------------------------------------------------------------------------------- | ------ | ------------- | ---- |
-| Implement global `keydown` listener registration and teardown                                | 0.5d   | 1.1           |      |
-| Implement `normalize(KeyboardEvent): KeyPress`                                               | 0.5d   | 1.1           |      |
-| Wire pipeline: normalize → ChordSequenceBuffer → Matcher → Command Registry                  | 0.5d   | 1.2, 1.3, 1.4 |      |
-| Wire ChordSequenceBuffer → Status Indicator for pending display                              | 0.25d  | 1.2           |      |
-| Implement exact match flow: clear buffer → execute command → update `lastActionWasYank` flag | 0.5d   |               |      |
-| Implement prefix match flow: buffer key, show pending, suppress event                        | 0.25d  |               |      |
-| Implement no match (chord) flow: clear buffer, suppress event                                | 0.25d  |               |      |
-| Implement no match (non-chord) flow: clear buffer, pass through to Obsidian                  | 0.25d  |               |      |
-| Implement timeout → clear flow                                                               | 0.25d  |               |      |
-| Implement escape → clear flow                                                                | 0.25d  |               |      |
-| End-to-end testing with hardcoded hotkeys                                                    | 0.5d   |               |      |
+| Implement global `keydown` listener registration and teardown                                | 0.5d   | 1.1           | Done |
+| Implement `normalize(KeyboardEvent): KeyPress`                                               | 0.5d   | 1.1           | Done |
+| Wire pipeline: normalize → ChordSequenceBuffer → Matcher → Command Registry                  | 0.5d   | 1.2, 1.3, 1.4 | Done |
+| Wire ChordSequenceBuffer → Status Indicator for pending display                              | 0.25d  | 1.2           | Done |
+| Implement exact match flow: clear buffer → execute command → update `lastActionWasYank` flag | 0.5d   |               | Done |
+| Implement prefix match flow: buffer key, show pending, suppress event                        | 0.25d  |               | Done |
+| Implement no match (chord) flow: clear buffer, suppress event                                | 0.25d  |               | Done |
+| Implement no match (non-chord) flow: clear buffer, pass through to Obsidian                  | 0.25d  |               | Done |
+| Implement timeout → clear flow                                                               | 0.25d  |               | Done |
+| Implement escape → clear flow                                                                | 0.25d  |               | Done |
+| End-to-end testing with hardcoded hotkeys                                                    | 0.5d   |               | Done |
 
 **Phase 1 Total:** ~5-6 days
 
