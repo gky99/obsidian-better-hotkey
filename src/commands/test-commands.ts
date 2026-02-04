@@ -13,7 +13,7 @@ export function createTestCommands(): Command[] {
 			id: COMMAND_NAMES.TEST_CHORD_X,
 			name: "Test Chord X",
 			execute: () => {
-				console.log("Chord C-x pressed!");
+				console.debug("Chord C-x pressed!");
 				// InputHandler will track lastActionWasYank
 			},
 		},
@@ -21,7 +21,7 @@ export function createTestCommands(): Command[] {
 			id: COMMAND_NAMES.TEST_SAVE,
 			name: "Test Save (C-x C-s)",
 			execute: () => {
-				console.log("Save command executed!");
+				console.debug("Save command executed!");
 				// InputHandler will track lastActionWasYank
 			},
 		},
@@ -50,7 +50,7 @@ export function createTestCommands(): Command[] {
 					const range = context.workspaceContext.insertAtCursor(text);
 					if (range) context.killRing.setYankRange(range);
 				}
-				console.log(text);
+				console.debug(text);
 				// InputHandler will track lastActionWasYank
 			},
 		},

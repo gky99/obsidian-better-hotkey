@@ -30,7 +30,7 @@ export class SampleSettingTab extends PluginSettingTab {
 			.setName('Preset')
 			.setDesc('Select the keybinding preset')
 			.addDropdown(dropdown => dropdown
-				.addOption('default', 'Default Emacs-like')
+				.addOption('default', 'Default emacs-like')
 				.setValue(this.plugin.settings.selectedPreset)
 				.onChange(async (value) => {
 					this.plugin.settings.selectedPreset = value;
