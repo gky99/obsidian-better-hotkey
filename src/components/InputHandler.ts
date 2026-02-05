@@ -8,13 +8,11 @@
 
 import type { KeyPress, MatchResult } from "../types";
 import type { HotkeyContext } from "./hotkey-context/HotkeyContext";
-import type { App } from "obsidian";
+import type { Plugin } from "obsidian";
 import { CommandRegistry } from "./CommandRegistry";
 import { ExecutionContext } from "./execution-context/ExecutionContext";
 
 export class InputHandler {
-	private keydownHandler: ((event: KeyboardEvent) => void) | null = null;
-
 	// Hotkey context (passed from main.ts)
 	private hotkeyContext: HotkeyContext;
 
@@ -24,38 +22,32 @@ export class InputHandler {
 	// External dependencies
 	private commandRegistry: CommandRegistry;
 
+	// Plugin instance for lifecycle management
+	private plugin: Plugin;
+
 	constructor(
 		commandRegistry: CommandRegistry,
 		hotkeyContext: HotkeyContext,
-		app: App,
+		plugin: Plugin,
 	) {
 		this.commandRegistry = commandRegistry;
 		this.hotkeyContext = hotkeyContext;
+		this.plugin = plugin;
 
 		// Create execution context
-		this.executionContext = new ExecutionContext(app);
+		this.executionContext = new ExecutionContext(plugin.app);
 	}
 
 	/**
 	 * Begin listening to keyboard events
 	 */
 	start(): void {
-		if (this.keydownHandler) {
-			return; // Already listening
-		}
-
-		this.keydownHandler = this.onKeyDown.bind(this);
-		window.addEventListener("keydown", this.keydownHandler, true);
-	}
-
-	/**
-	 * Stop listening to keyboard events
-	 */
-	stop(): void {
-		if (this.keydownHandler) {
-			window.removeEventListener("keydown", this.keydownHandler, true);
-			this.keydownHandler = null;
-		}
+		this.plugin.registerDomEvent(
+			window,
+			"keydown",
+			this.onKeyDown.bind(this),
+			true,
+		);
 	}
 
 	/**

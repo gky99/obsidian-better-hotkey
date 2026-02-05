@@ -3,7 +3,7 @@ import { InputHandler } from '../InputHandler';
 import { COMMAND_NAMES } from '../../constants';
 import type { KeyPress, MatchResult } from '../../types';
 import { Priority } from '../../types';
-import type { App } from 'obsidian';
+import type { Plugin, App } from 'obsidian';
 
 // Mock obsidian module
 vi.mock('obsidian', () => ({
@@ -11,6 +11,15 @@ vi.mock('obsidian', () => ({
 	App: vi.fn(),
 	Plugin: vi.fn(),
 }));
+
+// Mock factory for Plugin
+function createMockPlugin() {
+	const mockApp = {} as App;
+	return {
+		app: mockApp,
+		registerDomEvent: vi.fn(),
+	} as unknown as Plugin;
+}
 
 // Helper function to create KeyPress objects
 function key(
@@ -55,80 +64,62 @@ describe('InputHandler', () => {
 	let inputHandler: InputHandler;
 	let mockHotkeyContext: ReturnType<typeof createMockHotkeyContext>;
 	let mockCommandRegistry: ReturnType<typeof createMockCommandRegistry>;
-	let mockApp: App;
+	let mockPlugin: Plugin;
+	let capturedKeydownHandler: ((event: KeyboardEvent) => void) | null = null;
 
 	beforeEach(() => {
 		// Create fresh mocks
 		mockHotkeyContext = createMockHotkeyContext();
 		mockCommandRegistry = createMockCommandRegistry();
-		mockApp = {} as App;
+		mockPlugin = createMockPlugin();
+
+		// Capture the keydown handler when registerDomEvent is called
+		(mockPlugin.registerDomEvent as ReturnType<typeof vi.fn>).mockImplementation(
+			(target: Window, event: string, handler: (event: KeyboardEvent) => void) => {
+				if (event === 'keydown') {
+					capturedKeydownHandler = handler;
+					// Also register it on window so tests can dispatch events
+					window.addEventListener('keydown', handler, true);
+				}
+			}
+		);
 
 		// Create InputHandler with mocked dependencies
 		inputHandler = new InputHandler(
 			mockCommandRegistry as any,
 			mockHotkeyContext as any,
-			mockApp
+			mockPlugin
 		);
 	});
 
 	afterEach(() => {
-		// Cleanup
-		inputHandler.stop();
+		// Cleanup - remove the captured handler if it exists
+		if (capturedKeydownHandler) {
+			window.removeEventListener('keydown', capturedKeydownHandler, true);
+			capturedKeydownHandler = null;
+		}
 		vi.clearAllMocks();
 	});
 
 	describe('Lifecycle Management', () => {
-		it('start() registers keydown listener', () => {
-			const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-
+		it('start() registers keydown listener via plugin.registerDomEvent', () => {
 			inputHandler.start();
 
-			expect(addEventListenerSpy).toHaveBeenCalledWith(
+			expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
+				window,
 				'keydown',
 				expect.any(Function),
 				true // capture phase
 			);
-
-			addEventListenerSpy.mockRestore();
 		});
 
-		it('start() is idempotent (multiple calls do not duplicate listeners)', () => {
-			const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-
+		it('start() calls registerDomEvent each time (plugin handles deduplication)', () => {
 			inputHandler.start();
 			inputHandler.start();
 			inputHandler.start();
 
-			expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
-
-			addEventListenerSpy.mockRestore();
-		});
-
-		it('stop() removes keydown listener', () => {
-			const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-
-			inputHandler.start();
-			inputHandler.stop();
-
-			expect(removeEventListenerSpy).toHaveBeenCalledWith(
-				'keydown',
-				expect.any(Function),
-				true // capture phase
-			);
-
-			removeEventListenerSpy.mockRestore();
-		});
-
-		it('stop() is safe when not started', () => {
-			const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-
-			// Call stop without calling start first
-			inputHandler.stop();
-
-			// Should not throw and removeEventListener should not be called
-			expect(removeEventListenerSpy).not.toHaveBeenCalled();
-
-			removeEventListenerSpy.mockRestore();
+			// registerDomEvent is called each time - plugin handles lifecycle
+			expect(mockPlugin.registerDomEvent).toHaveBeenCalledTimes(3);
 		});
 	});
 

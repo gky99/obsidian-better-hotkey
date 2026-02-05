@@ -39,14 +39,13 @@ export default class MyPlugin extends Plugin {
 		this.inputHandler = new InputHandler(
 			this.commandRegistry,
 			this.hotkeyContext,
-			this.app
+			this, // Plugin instance (provides access to plugin.app and registerDomEvent)
 		);
 		this.inputHandler.start();
 	}
 
 	onunload() {
-		// Stop Input Handler
-		this.inputHandler?.stop();
+		// Event listener cleanup handled automatically by Plugin.registerDomEvent
 		// Cleanup Hotkey Context
 		this.hotkeyContext?.destroy();
 	}

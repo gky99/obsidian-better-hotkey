@@ -5,6 +5,8 @@ architecture:
     description: Organize components by domain context (hotkey-context/, execution-context/)
 
 development:
+  git-worktree-workflow:
+    description: MANDATORY Task 0 in all plans; call /using-git-worktrees before any implementation
   string-constants:
     description: Command IDs and context keys as constants with 'as const', never hard-code
   stub-implementations:
