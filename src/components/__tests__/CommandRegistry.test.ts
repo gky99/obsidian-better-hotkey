@@ -21,7 +21,8 @@ describe('CommandRegistry', () => {
 
 	beforeEach(() => {
 		// Fresh instance per test for isolation
-		registry = new CommandRegistry();
+		const mockApp = {} as App;
+		registry = new CommandRegistry(mockApp);
 	});
 
 	afterEach(() => {
@@ -34,8 +35,8 @@ describe('CommandRegistry', () => {
 			const cmd = createCommand('test-command');
 			const disposable = registry.registerCommand(cmd);
 
-			expect(disposable).toBeDefined();
-			expect(disposable.dispose).toBeInstanceOf(Function);
+			expect(disposable).not.toBeNull();
+			expect(disposable?.dispose).toBeInstanceOf(Function);
 		});
 
 		it('allows retrieving registered command', () => {
@@ -46,22 +47,30 @@ describe('CommandRegistry', () => {
 			expect(retrieved).toBe(cmd);
 		});
 
-		it('overwrites duplicate command IDs', () => {
+		it('prevents duplicate registration and returns null', () => {
+			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 			const cmd1 = createCommand('duplicate-id');
 			const cmd2 = createCommand('duplicate-id');
 
-			registry.registerCommand(cmd1);
-			registry.registerCommand(cmd2);
+			const disposable1 = registry.registerCommand(cmd1);
+			const disposable2 = registry.registerCommand(cmd2);
 
-			const retrieved = registry.getCommand('duplicate-id');
-			expect(retrieved).toBe(cmd2);
+			expect(disposable1).not.toBeNull();
+			expect(disposable2).toBeNull();
+			expect(consoleWarnSpy).toHaveBeenCalledWith(
+				expect.stringContaining('already registered')
+			);
+			expect(registry.getCommand('duplicate-id')).toBe(cmd1);
+
+			consoleWarnSpy.mockRestore();
 		});
 
 		it('Disposable.dispose() removes command', () => {
 			const cmd = createCommand('test-command');
 			const disposable = registry.registerCommand(cmd);
 
-			disposable.dispose();
+			expect(disposable).not.toBeNull();
+			disposable!.dispose();
 
 			const retrieved = registry.getCommand('test-command');
 			expect(retrieved).toBeNull();
@@ -88,7 +97,8 @@ describe('CommandRegistry', () => {
 			const disposable1 = registry.registerCommand(cmd1);
 			registry.registerCommand(cmd2);
 
-			disposable1.dispose();
+			expect(disposable1).not.toBeNull();
+			disposable1!.dispose();
 
 			expect(registry.getCommand('cmd1')).toBeNull();
 			expect(registry.getCommand('cmd2')).toBe(cmd2);
@@ -125,7 +135,8 @@ describe('CommandRegistry', () => {
 			const cmd = createCommand('test-command');
 			const disposable = registry.registerCommand(cmd);
 
-			disposable.dispose();
+			expect(disposable).not.toBeNull();
+			disposable!.dispose();
 
 			expect(registry.getCommand('test-command')).toBeNull();
 		});
@@ -295,7 +306,8 @@ describe('CommandRegistry', () => {
 			const disposable1 = registry.registerCommand(cmd1);
 			registry.registerCommand(cmd2);
 
-			disposable1.dispose();
+			expect(disposable1).not.toBeNull();
+			disposable1!.dispose();
 
 			const ids = registry.getAllCommandIds();
 			expect(ids).toHaveLength(1);
@@ -333,7 +345,8 @@ describe('CommandRegistry', () => {
 			const disposable1 = registry.registerCommand(cmd1);
 			registry.registerCommand(cmd2);
 
-			disposable1.dispose();
+			expect(disposable1).not.toBeNull();
+			disposable1!.dispose();
 
 			const commands = registry.getAllCommands();
 			expect(commands).toHaveLength(1);
@@ -342,52 +355,10 @@ describe('CommandRegistry', () => {
 		});
 	});
 
-	describe('setApp', () => {
-		it('stores app reference', () => {
-			const mockApp = {} as App;
-
-			expect(() => registry.setApp(mockApp)).not.toThrow();
-		});
-
-		it('allows setting app after construction', () => {
-			const mockApp = {} as App;
-
-			registry.setApp(mockApp);
-
-			// Verify by calling loadObsidianCommands which uses app
-			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-			// With app set, should not warn
-			registry.loadObsidianCommands();
-			expect(consoleWarnSpy).not.toHaveBeenCalled();
-
-			consoleWarnSpy.mockRestore();
-		});
-	});
-
 	describe('loadObsidianCommands', () => {
-		it('warns when app is not set', () => {
-			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-			registry.loadObsidianCommands();
-
-			expect(consoleWarnSpy).toHaveBeenCalledWith(
-				expect.stringContaining('Cannot load Obsidian commands')
-			);
-
-			consoleWarnSpy.mockRestore();
-		});
-
-		it('does not warn when app is set', () => {
-			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-			const mockApp = {} as App;
-
-			registry.setApp(mockApp);
-			registry.loadObsidianCommands();
-
-			expect(consoleWarnSpy).not.toHaveBeenCalled();
-
-			consoleWarnSpy.mockRestore();
+		it('does not throw when called', () => {
+			// App is always set via constructor now
+			expect(() => registry.loadObsidianCommands()).not.toThrow();
 		});
 	});
 });

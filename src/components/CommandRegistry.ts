@@ -11,23 +11,27 @@ import type { App } from "obsidian";
 
 export class CommandRegistry {
 	private commands: Map<string, Command> = new Map();
-	private app: App | null = null;
+	private app: App;
 
-	constructor() {
-		// No dependencies
-	}
-
-	/**
-	 * Set Obsidian app instance (needed for loadObsidianCommands)
-	 */
-	setApp(app: App): void {
+	constructor(app: App) {
 		this.app = app;
 	}
 
 	/**
 	 * Register a command
+	 * Returns null if command ID is already registered
 	 */
-	registerCommand(command: Command): Disposable {
+	registerCommand(command: Command): Disposable | null {
+		// Check for duplicate
+		if (this.commands.has(command.id)) {
+			console.warn(
+				`CommandRegistry: Command "${command.id}" is already registered. ` +
+				`Registration refused.`
+			);
+			return null;
+		}
+
+		// Register command
 		this.commands.set(command.id, command);
 		return {
 			dispose: () => {
@@ -75,11 +79,6 @@ export class CommandRegistry {
 	 * TODO: Implement in integration phase when wiring with Obsidian app
 	 */
 	loadObsidianCommands(): void {
-		if (!this.app) {
-			console.warn("Cannot load Obsidian commands: app instance not set");
-			return;
-		}
-
 		// TODO: Iterate through app.commands.commands and register them
 		// This will be implemented during integration phase
 		// For now, this is a placeholder

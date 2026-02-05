@@ -18,8 +18,7 @@ export default class MyPlugin extends Plugin {
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
 		// Initialize command registry
-		this.commandRegistry = new CommandRegistry();
-		this.commandRegistry.setApp(this.app);
+		this.commandRegistry = new CommandRegistry(this.app);
 
 		// Register test commands
 		const testCommands = createTestCommands();
