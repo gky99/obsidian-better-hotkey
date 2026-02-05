@@ -258,3 +258,56 @@ When reviewing code against design:
 - Ensure dependencies are properly wired
 
 **Important**: If you find a difference between implementation and design docs, ask the user first to determine which version is the latest/correct design before making changes.
+
+### Git Worktrees
+
+This project uses Git worktrees for isolated development workspaces. Worktrees allow working on multiple branches simultaneously without switching contexts.
+
+#### Worktree Directory Location
+
+- **Location**: `.worktrees/` (project-local, hidden directory)
+- **Git ignore**: Already configured in `.gitignore`
+
+#### When to Use Worktrees
+
+Use worktrees for:
+
+- Feature development requiring isolation from main workspace
+- Working on multiple features in parallel
+- Executing implementation plans that need clean environments
+- Testing changes without affecting current workspace
+
+#### Creating a Worktree
+
+The `/using-git-worktrees` skill automates worktree creation:
+
+1. **Automatic setup**: Creates worktree directory, new branch, and runs `npm install`
+2. **Test baseline**: Verifies tests pass before starting work
+3. **Clean state**: Ensures isolated environment for development
+
+#### Usage Pattern
+
+```bash
+# Invoke the skill (via Claude)
+/using-git-worktrees
+
+# After worktree is created and tests pass:
+# - Work on feature in isolated environment
+# - Run tests frequently
+# - Commit changes to feature branch
+```
+
+#### Cleanup
+
+When work is complete:
+
+- Use `/finishing-a-development-branch` skill to merge or create PR
+- Remove worktree: `git worktree remove .worktrees/<branch-name>`
+- Delete branch if no longer needed: `git branch -d <branch-name>`
+
+#### Benefits
+
+- **Isolation**: Changes don't affect main workspace
+- **Parallel work**: Multiple features can be developed simultaneously
+- **Clean baseline**: Each worktree starts with passing tests
+- **Safety**: Worktree contents never committed to repo (gitignored)
