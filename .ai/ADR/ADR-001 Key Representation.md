@@ -14,6 +14,15 @@ Some users on non-Latin layouts may prefer bindings tied to physical position in
 
 Use **character-based matching by default**, with scan-code as an opt-in feature deferred to P2.
 
+## Update: Layout-Aware Normalization (ADR-008)
+
+The original decision remains valid, but is refined by [ADR-008](ADR-008%20Keyboard%20Layout%20Normalization.md):
+
+- **Key matching** still uses the character representation, but the character is now **derived from the physical key code** via the Keyboard Layout Service
+- **KeyPress.key** contains the base character from the user's keyboard layout (not the raw `event.key`)
+- **KeyPress.code** is used as input to the layout translation, not for direct matching
+- This approach maintains Emacs-style character semantics while ensuring correct behavior across layouts and OS platforms
+
 ## Options Considered
 
 | Option | Pros | Cons |
@@ -24,6 +33,9 @@ Use **character-based matching by default**, with scan-code as an opt-in feature
 
 ## Consequences
 
-- `KeyPress` stores both `key` (character) and `code` (scan-code), but matching uses `key` by default.
-- Scan-code matching can be added later by introducing a `[KeyX]` syntax in config, affecting only the key normalization layer and config parsing. Low coupling.
-- Users on non-standard layouts will need to wait for P2 scan-code support or remap at the OS level.
+- `KeyPress` stores both `key` (layout-normalized character) and `code` (physical key code)
+- Matching uses the layout-normalized `key` value
+- The Keyboard Layout Service translates `code` → `key` at input time
+- Scan-code matching can still be added later as an opt-in feature
+- Number keys in presets are translated to layout-specific base characters
+- Symbols not available as base keys on a layout are silently skipped

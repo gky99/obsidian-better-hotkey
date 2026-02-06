@@ -1,6 +1,3 @@
 {
-  "enabledPlugins": {
-    "superpowers@superpowers-marketplace": true,
-    "plannotator@plannotator": true
-  }
+  "enabledPlugins": {}
 }

@@ -29,5 +29,6 @@ A global, Emacs-like hotkey system for Obsidian that provides:
 - **Kill ring**: Ring buffer for killed text with system clipboard synchronization
 - **Extensible API**: Third-party plugins can register commands, hotkeys, and custom context keys
 - **Priority-based configuration**: User overrides > Presets > Plugin registrations
+- **Cross-platform keyboard support**: Layout-aware key normalization that works correctly across different keyboard layouts and operating systems
 
 The system acts as a complete replacement for Obsidian's fragmented hotkey handling, providing centralized, customizable keyboard control across all contexts.

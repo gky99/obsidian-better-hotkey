@@ -7,7 +7,11 @@
       "Bash(test:*)",
       "Bash(pnpm test:*)",
       "Bash(grep:*)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git worktree add:*)",
+      "Bash(pnpm install:*)",
+      "Bash(git commit -m:*)"
     ]
   }
 }

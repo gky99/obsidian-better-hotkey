@@ -136,15 +136,15 @@ System clipboard is accessed directly via `navigator.clipboard` — it's an exte
 
 | Task                                                                            | Effort | Dependencies | Done |
 | ------------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement clipboard read/write utilities with permission/error handling         | 0.5d   | Phase 1      |      |
-| Implement entries ring buffer with `maxSize`                                    | 0.25d  |              |      |
-| Implement `push(text)` with clipboard sync                                      | 0.5d   |              |      |
-| Implement `yank()` with external clipboard detection                            | 0.5d   |              |      |
-| Implement `yankPop()` with pointer cycling                                      | 0.5d   |              |      |
-| Implement `canYankPop()` — reads `lastActionWasYank` from Hotkey Context Engine | 0.25d  |              |      |
-| Implement yank range tracking (`setYankRange`, `getYankRange`)                  | 0.25d  |              |      |
-| Implement `getEntries()` for future browser UI                                  | 0.25d  |              |      |
-| Test kill ring flows                                                            | 0.5d   |              |      |
+| Implement clipboard read/write utilities with permission/error handling         | 0.5d   | Phase 1      | Done |
+| Implement entries ring buffer with `maxSize`                                    | 0.25d  |              | Done |
+| Implement `push(text)` with clipboard sync                                      | 0.5d   |              | Done |
+| Implement `yank()` with external clipboard detection                            | 0.5d   |              | Done |
+| Implement `yankPop()` with pointer cycling                                      | 0.5d   |              | Done |
+| Implement `canYankPop()` — reads `lastActionWasYank` from Hotkey Context Engine | 0.25d  |              | Done |
+| Implement yank range tracking (`setYankRange`, `getYankRange`)                  | 0.25d  |              | Done |
+| Implement `getEntries()` for future browser UI                                  | 0.25d  |              | Done |
+| Test kill ring flows                                                            | 0.5d   |              | Done |
 
 ### 2.3 Kill/Yank Commands
 
@@ -186,7 +186,42 @@ System clipboard is accessed directly via `navigator.clipboard` — it's an exte
 | Create `emacs.json` preset with basic Emacs bindings | 1d     | 2.5          |      |
 | Test preset loading                                  | 0.25d  |              |      |
 
-**Phase 2 Total:** ~5-6 days
+### 2.7 Keyboard Layout Service
+
+| Task                                                               | Effort | Dependencies | Done |
+| ------------------------------------------------------------------ | ------ | ------------ | ---- |
+| Implement Keyboard Layout Service singleton                        | 0.5d   | Phase 1      |      |
+| Implement `getLayoutMap()` wrapper with error handling             | 0.5d   |              |      |
+| Implement `getBaseCharacter(code): string \| null`                 | 0.25d  |              |      |
+| Implement `isBaseKey(character): boolean`                          | 0.25d  |              |      |
+| Implement dynamic digit-to-code mapping from layout                | 0.5d   |              |      |
+| Implement `translateNumber(digit): string` using dynamic mapping   | 0.25d  |              |      |
+| Implement `layoutchange` event listener                            | 0.25d  |              |      |
+| Implement `onLayoutChange(callback): Disposable` for listeners     | 0.25d  |              |      |
+| Implement identity fallback for unsupported environments           | 0.5d   |              |      |
+| Test layout detection, translation, and change handling            | 0.5d   |              |      |
+
+### 2.8 Input Handler Layout Integration
+
+| Task                                                       | Effort | Dependencies            | Done |
+| ---------------------------------------------------------- | ------ | ----------------------- | ---- |
+| Update `normalize()` to use Keyboard Layout Service        | 0.5d   | Keyboard Layout Service |      |
+| Update KeyPress.key to store layout-normalized character   | 0.25d  |                         |      |
+| Test input normalization on different layouts              | 0.5d   |                         |      |
+
+### 2.9 Config Loader Layout Integration
+
+| Task                                                       | Effort | Dependencies            | Done |
+| ---------------------------------------------------------- | ------ | ----------------------- | ---- |
+| Update preset loading to translate number keys             | 0.5d   | Keyboard Layout Service |      |
+| Update preset loading to skip unavailable symbols          | 0.5d   |                         |      |
+| Wire layout change listener to trigger preset reload       | 0.5d   |                         |      |
+| Implement `HotkeyContext.reloadPreset()` method            | 0.25d  |                         |      |
+| Update Settings UI to show translated hotkeys              | 0.5d   | Phase 3                 |      |
+| Test preset translation on different layouts               | 0.5d   |                         |      |
+| Test layout change triggers automatic reload               | 0.5d   |                         |      |
+
+**Phase 2 Total:** ~8-9 days
 
 **Phase 2 Deliverable:** Working kill ring with yank/yank-pop (including yank tracking via Hotkey Context Engine), editor operations through Workspace Context, configuration loading from JSON files, default Emacs preset
 

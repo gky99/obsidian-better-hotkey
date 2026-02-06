@@ -15,6 +15,12 @@
 
 **Features to add after initial launch:**
 
+- **Keyboard layout normalization**: Detect user's keyboard layout and normalize key input
+  - Uses physical key codes translated to layout-specific base characters
+  - Handles macOS Option key behavior correctly
+  - Translates number keys in presets to corresponding layout characters
+  - Skips hotkeys for symbols not available on user's layout
+  - Automatically reloads hotkeys when layout changes
 - **Plugin context registration**: Allow third-party plugins to register custom context keys
 - **Kill ring browser UI**: Modal interface for viewing and selecting kill ring entries
 - **Configuration UI**: Display bindings, conflicts, and override relationships

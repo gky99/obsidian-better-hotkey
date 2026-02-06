@@ -22,12 +22,15 @@ This plugin provides an Emacs-like hotkey system for Obsidian with context-aware
 ## 2. System Overview
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                           Global                                     │
-│  ┌───────────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
-│  │ Hotkey Context Engine │  │ Command Registry │  │ Input Handler │  │
-│  └───────────────────────┘  └──────────────────┘  └───────────────┘  │
-└──────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                                     Global                                         │
+│  ┌───────────────────────┐  ┌──────────────────┐  ┌───────────────┐               │
+│  │ Hotkey Context Engine │  │ Command Registry │  │ Input Handler │               │
+│  └───────────────────────┘  └──────────────────┘  └───────────────┘               │
+│  ┌───────────────────────┐                                                         │
+│  │Keyboard Layout Service│                                                         │
+│  └───────────────────────┘                                                         │
+└───────────────────────────────────────────────────────────────────────────────────┘
          │                            │                     │
          │  ┌─────────────────────────┼─────────────────────┘
          │  │                         │
@@ -86,6 +89,16 @@ External APIs: System Clipboard, Obsidian Editor API, Obsidian Workspace API
 
 **Command Registry** — Stores and executes registered commands. On startup, loads Obsidian's built-in commands. Commands receive the Hotkey Context Engine and optional args at execution time.
 
+**Keyboard Layout Service** — Detects the user's keyboard layout and provides translation between physical key codes and base characters. Uses `navigator.keyboard.getLayoutMap()` to build a code-to-character mapping. Exposes:
+
+- `getBaseCharacter(code: string): string | null` — Returns the base character for a physical key code
+- `isBaseKey(character: string): boolean` — Checks if a character is available without modifiers
+- `translateNumber(digit: string): string` — Translates a digit (0-9) to the corresponding base character on the current layout (mapping built dynamically)
+- `getLayoutName(): string | null` — Returns detected layout identifier if available
+- `onLayoutChange(callback): Disposable` — Registers callback for layout change events
+
+Monitors for `layoutchange` events and notifies listeners when the keyboard layout changes, enabling automatic re-translation of hotkeys. Initialized once on plugin load. Falls back to identity mapping if the Keyboard API is unavailable. See [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
+
 ### Hotkey Context
 
 The input processing group — everything involved in capturing keystrokes and resolving them to a matched hotkey entry.
@@ -135,11 +148,12 @@ Sub-components:
 ```
 KeyboardEvent
   → Input Handler
-      1. Normalize to KeyPress
-      2. ChordSequenceBuffer.append(keypress)    [Hotkey Context]
-      3. Matcher.match(sequence)                  [Hotkey Context]
+      1. Keyboard Layout Service.getBaseCharacter(event.code) [Global]
+      2. Build KeyPress with base character + modifiers
+      3. ChordSequenceBuffer.append(keypress)    [Hotkey Context]
+      4. Matcher.match(sequence)                  [Hotkey Context]
          └─ filters by Hotkey Context Engine      [Global]
-      4. On exact match:
+      5. On exact match:
          a. ChordSequenceBuffer.clear()           [Hotkey Context]
          b. Command Registry.execute(command)     [Global]
             └─ command action reads/writes        [Execution Context]
@@ -147,7 +161,7 @@ KeyboardEvent
             set lastActionWasYank = true if the
             executed command was yank or yank-pop,
             false otherwise
-      5. Decide: suppress or pass through event
+      6. Decide: suppress or pass through event
 ```
 
 Outcomes per match result:
@@ -168,6 +182,33 @@ Plugin load
   → Load plugin registrations   → Hotkey Manager (Priority: Plugin)
   → Load user overrides          → Hotkey Manager (Priority: User)
   → Hotkey Manager triggers Matcher rebuild
+```
+
+### Preset Translation
+
+```
+Preset loading
+  → Config Loader reads preset
+  → For each hotkey:
+      a. If key is digit (0-9):
+         → Keyboard Layout Service.translateNumber(digit)
+         → Replace with translated base character
+      b. If key is symbol:
+         → Keyboard Layout Service.isBaseKey(symbol)
+         → Skip if not a base key on current layout
+  → Insert into Hotkey Manager with translated keys
+```
+
+### Layout Change Handling
+
+```
+Layout change event
+  → Keyboard Layout Service detects change
+  → Rebuilds internal layout map and digit-to-code mapping
+  → Notifies registered listeners
+  → Hotkey Manager receives notification
+  → Triggers full preset reload with new translations
+  → Matcher rebuilds with updated hotkeys
 ```
 
 ### Kill / Yank
@@ -218,7 +259,7 @@ See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) and [ADR-006](ADR/ADR-0
 
 ## 6. Key Constraints
 
-- Key matching is **character-based** by default. Physical scan-code matching is deferred (P2). See [ADR-001](ADR/ADR-001%20Key%20Representation.md).
+- Key matching uses **layout-normalized characters** — physical key codes are translated to base characters via the Keyboard Layout Service. See [ADR-001](ADR/ADR-001%20Key%20Representation.md) and [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
 - Chord sequences support **at most 2 keypresses**.
 - "When" clause syntax supports: `key`, `!key`, `&&`, `||`, `== "value"`. Parentheses are deferred (P2).
 - The Hotkey Context Engine is a **global singleton** initialized at plugin load, accessible to all components.
@@ -232,12 +273,13 @@ See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) and [ADR-006](ADR/ADR-0
 
 ## 7. ADR Index
 
-| ADR                                                         | Decision                                     |
-| ----------------------------------------------------------- | -------------------------------------------- |
-| [ADR-001](ADR/ADR-001%20Key%20Representation.md)            | Character-based key matching by default      |
-| [ADR-002](ADR/ADR-002%20Configuration%20Priority.md)        | User > Preset > Plugin priority              |
-| [ADR-003](ADR/ADR-003%20Clipboard%20Sync%20Strategy.md)     | Sync kill→clipboard, detect external on yank |
-| [ADR-004](ADR/ADR-004%20Lifecycle%20Management.md)          | Return Disposable, auto-cleanup deferred     |
-| [ADR-005](ADR/ADR-005%20Event%20Interception%20Strategy.md) | Global keydown listener via Input Handler    |
-| [ADR-006](ADR/ADR-006%20Conflict%20Resolution.md)           | Priority stacking with context coexistence   |
-| [ADR-007](ADR/ADR-007%20Context%20Engine%20Design.md)       | Black-boxed engine with "when" clause syntax |
+| ADR                                                           | Decision                                     |
+| ------------------------------------------------------------- | -------------------------------------------- |
+| [ADR-001](ADR/ADR-001%20Key%20Representation.md)              | Character-based key matching by default      |
+| [ADR-002](ADR/ADR-002%20Configuration%20Priority.md)          | User > Preset > Plugin priority              |
+| [ADR-003](ADR/ADR-003%20Clipboard%20Sync%20Strategy.md)       | Sync kill→clipboard, detect external on yank |
+| [ADR-004](ADR/ADR-004%20Lifecycle%20Management.md)            | Return Disposable, auto-cleanup deferred     |
+| [ADR-005](ADR/ADR-005%20Event%20Interception%20Strategy.md)   | Global keydown listener via Input Handler    |
+| [ADR-006](ADR/ADR-006%20Conflict%20Resolution.md)             | Priority stacking with context coexistence   |
+| [ADR-007](ADR/ADR-007%20Context%20Engine%20Design.md)         | Black-boxed engine with "when" clause syntax |
+| [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md) | Layout-aware key normalization               |
