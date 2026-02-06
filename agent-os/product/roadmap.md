@@ -5,7 +5,7 @@
 **Core functionality required for first usable release:**
 
 - **Key sequences/chords**: Support multi-key sequences (e.g., `C-x C-s`)
-- **Kill ring**: Ring buffer with clipboard sync on kill, detection on yank
+- **Editor commands**: 29 Emacs editor commands — kill/yank (7), cursor movement (12), basic editing (3), case transformation (4), control (3) — using Kill Ring + CM6 EditorView delegation
 - **Context system**: Hotkey Context Engine (global singleton), core context keys + evaluation
 - **Configuration**: Presets, user overrides, priority resolution (User > Preset > Plugin)
 - **Input Handler**: Orchestrator for global keydown → normalize → match → execute pipeline

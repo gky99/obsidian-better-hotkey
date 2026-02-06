@@ -146,16 +146,149 @@ System clipboard is accessed directly via `navigator.clipboard` — it's an exte
 | Implement `getEntries()` for future browser UI                                  | 0.25d  |              | Done |
 | Test kill ring flows                                                            | 0.5d   |              | Done |
 
-### 2.3 Kill/Yank Commands
+### 2.3 Editor Commands
 
-| Task                                                                        | Effort | Dependencies | Done |
-| --------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement `kill-line` command (uses Workspace Context + Kill Ring)          | 0.5d   | 2.1, 2.2     |      |
-| Implement `kill-region` command (if selection)                              | 0.25d  | 2.1, 2.2     |      |
-| Implement `yank` command                                                    | 0.5d   | 2.1, 2.2     |      |
-| Implement `yank-pop` command (check `lastActionWasYank`, cycle or fallback) | 0.5d   | 2.1, 2.2     |      |
-| Register commands with Command Registry                                     | 0.25d  |              |      |
-| Test kill/yank flows end-to-end (including yank tracking)                   | 0.5d   |              |      |
+Commands implemented as part of Phase 2. Each command is registered in the Command Registry and bound in the default preset.
+
+- **CM6 Direct Call** (15 commands): Thin wrappers that call CodeMirror 6 built-in command functions via `EditorView`. CM6 handles bidi text, wrapped lines, multiple cursors, and undo grouping — more correct and efficient than custom implementation.
+- **Custom Implementation** (14 commands): Commands that need Kill Ring integration, case transformation via `view.dispatch()`, or plugin state management. Many reuse CM6 selection commands (`selectGroupForward`, `selectGroupBackward`) as helpers for range computation. See ADR-009.
+
+#### 2.3.1 Kill & Yank Commands
+
+7 commands. **Custom implementation** — these interact with the Kill Ring and must capture text before deletion. Kill-word commands use CM6's `selectGroupForward`/`selectGroupBackward` to compute word ranges.
+
+| Command              | Hotkey        | Implementation                                                          |
+| -------------------- | ------------- | ----------------------------------------------------------------------- |
+| `kill-line`          | `C-k`         | Compute cursor-to-EOL range → capture text → Kill Ring push → delete   |
+| `kill-region`        | `C-w`         | Read selection → capture text → Kill Ring push → delete selection       |
+| `kill-word`          | `M-d`         | `selectGroupForward` for range → capture text → Kill Ring push → delete |
+| `backward-kill-word` | `M-Backspace` | `selectGroupBackward` for range → capture text → Kill Ring push → delete|
+| `copy-region`        | `M-w`         | Read selection → capture text → Kill Ring push (no delete)              |
+| `yank`               | `C-y`         | Kill Ring yank → insert at cursor → set yank range                      |
+| `yank-pop`           | `M-y`         | Check lastActionWasYank → cycle Kill Ring → replace yank range          |
+
+| Task                                                                         | Effort | Dependencies | Done |
+| ---------------------------------------------------------------------------- | ------ | ------------ | ---- |
+| Implement `kill-line` (C-k): cursor-to-EOL text → Kill Ring push            | 0.5d   | 2.1, 2.2     |      |
+| Implement `kill-region` (C-w): selection → Kill Ring push → delete           | 0.25d  | 2.1, 2.2     |      |
+| Implement `kill-word` (M-d): forward word → Kill Ring push → delete          | 0.25d  | 2.1, 2.2     |      |
+| Implement `backward-kill-word` (M-Backspace): backward word → Kill Ring push | 0.25d  | 2.1, 2.2     |      |
+| Implement `copy-region` (M-w): selection → Kill Ring (no delete)             | 0.25d  | 2.1, 2.2     |      |
+| Implement `yank` (C-y): insert from Kill Ring, set yank range               | 0.5d   | 2.1, 2.2     |      |
+| Implement `yank-pop` (M-y): cycle Kill Ring, replace last yank range        | 0.5d   | 2.1, 2.2     |      |
+| Test kill/yank flows end-to-end (including yank tracking)                    | 0.5d   |              |      |
+
+#### 2.3.2 Cursor Movement Commands
+
+12 commands. **CM6 Direct Call** — each calls a CM6 built-in function (e.g., `cursorCharForward(editorView)`). CM6 handles bidi, wrapped lines, goal column, and multiple cursors.
+
+| Command                   | Hotkey         | CM6 Function (`@codemirror/commands`) |
+| ------------------------- | -------------- | ------------------------------------- |
+| `forward-char`            | `C-f`          | `cursorCharForward`                   |
+| `backward-char`           | `C-b`          | `cursorCharBackward`                  |
+| `next-line`               | `C-n`          | `cursorLineDown`                      |
+| `previous-line`           | `C-p`          | `cursorLineUp`                        |
+| `move-beginning-of-line`  | `C-a`          | `cursorLineStart`                     |
+| `move-end-of-line`        | `C-e`          | `cursorLineEnd`                       |
+| `forward-word`            | `M-f`          | `cursorGroupForward`                  |
+| `backward-word`           | `M-b`          | `cursorGroupBackward`                 |
+| `scroll-up`               | `C-v`          | `cursorPageDown`                      |
+| `scroll-down`             | `M-v`          | `cursorPageUp`                        |
+| `beginning-of-buffer`     | `M-<` (S-M-,) | `cursorDocStart`                      |
+| `end-of-buffer`           | `M->` (S-M-.) | `cursorDocEnd`                        |
+
+| Task                                                               | Effort | Dependencies | Done |
+| ------------------------------------------------------------------ | ------ | ------------ | ---- |
+| Register 12 cursor movement commands as CM6 direct-call wrappers  | 0.5d   | 2.1          |      |
+| Add cursor movement hotkeys to default preset                      | 0.25d  |              |      |
+| Test cursor movement commands with active editor                   | 0.25d  |              |      |
+
+#### 2.3.3 Basic Editing Commands
+
+3 commands. **CM6 Direct Call** — each calls a CM6 built-in function.
+
+| Command           | Hotkey | CM6 Function (`@codemirror/commands`) |
+| ----------------- | ------ | ------------------------------------- |
+| `delete-char`     | `C-d`  | `deleteCharForward`                   |
+| `transpose-chars` | `C-t`  | `transposeChars`                      |
+| `open-line`       | `C-o`  | `splitLine`                           |
+
+| Task                                                               | Effort | Dependencies | Done |
+| ------------------------------------------------------------------ | ------ | ------------ | ---- |
+| Register 3 basic editing commands as CM6 direct-call wrappers     | 0.25d  | 2.1          |      |
+| Add basic editing hotkeys to default preset                        | 0.25d  |              |      |
+| Test basic editing commands                                        | 0.25d  |              |      |
+
+#### 2.3.4 Case Transformation Commands
+
+4 commands. **Custom implementation** — no CM6 built-in exists. Uses `view.dispatch()` with `changeByRange()` to transform text in-place.
+
+| Command          | Hotkey     | Implementation                                               |
+| ---------------- | ---------- | ------------------------------------------------------------ |
+| `upcase-word`    | `M-u`      | Find next word range → transform `.toUpperCase()` → dispatch |
+| `downcase-word`  | `M-l`      | Find next word range → transform `.toLowerCase()` → dispatch |
+| `upcase-region`  | `C-x C-u`  | Get selection → transform `.toUpperCase()` → dispatch        |
+| `downcase-region`| `C-x C-l`  | Get selection → transform `.toLowerCase()` → dispatch        |
+
+| Task                                                                         | Effort | Dependencies | Done |
+| ---------------------------------------------------------------------------- | ------ | ------------ | ---- |
+| Implement `upcase-word` and `downcase-word` via dispatch + changeByRange     | 0.5d   | 2.1          |      |
+| Implement `upcase-region` and `downcase-region` via dispatch + changeByRange | 0.25d  | 2.1          |      |
+| Add case transformation hotkeys to default preset                            | 0.25d  |              |      |
+| Test case transformation commands                                            | 0.25d  |              |      |
+
+#### 2.3.5 Control Commands
+
+3 commands. **Custom implementation** — plugin state management and editor control.
+
+| Command               | Hotkey         | Implementation                                            |
+| --------------------- | -------------- | --------------------------------------------------------- |
+| `keyboard-quit`       | `C-g`          | Clear selection + clear chord buffer + reset plugin state |
+| `recenter-top-bottom` | `C-l`          | `EditorView.scrollIntoView` cycling: center → top → bottom |
+| `undo`                | `C-/`, `C-x u` | Delegate to Obsidian `editor.undo()`                     |
+
+| Task                                                                         | Effort | Dependencies | Done |
+| ---------------------------------------------------------------------------- | ------ | ------------ | ---- |
+| Implement `keyboard-quit` (C-g): clear selection + chord buffer + state      | 0.5d   | 2.1          |      |
+| Implement `recenter-top-bottom` (C-l): scrollIntoView with position cycling  | 0.5d   | 2.1          |      |
+| Implement `undo` (C-/): delegate to editor.undo()                            | 0.25d  | 2.1          |      |
+| Add control command hotkeys to default preset                                | 0.25d  |              |      |
+| Test control commands                                                        | 0.25d  |              |      |
+
+#### Phase 2 Commands Summary
+
+| Group               | Count | Strategy                      |
+| ------------------- | ----- | ----------------------------- |
+| Kill & Yank         | 7     | Custom (Kill Ring)            |
+| Cursor Movement     | 12    | CM6 Direct Call               |
+| Basic Editing       | 3     | CM6 Direct Call               |
+| Case Transformation | 4     | Custom (`changeByRange`)      |
+| Control             | 3     | Custom / Obsidian delegation  |
+| **Total**           | **29**|                               |
+
+#### Deferred Commands (Phase 3+)
+
+These require the mark/region system (Phase 3 P2):
+
+| Command                    | Hotkey     | Phase |
+| -------------------------- | ---------- | ----- |
+| `set-mark-command`         | `C-Space`  | 3     |
+| `exchange-point-and-mark`  | `C-x C-x`  | 3     |
+| `select-all`               | `C-x h`    | 3     |
+| `mark-paragraph`           | `M-h`      | 3     |
+| `mark-word`                | `M-@`      | 3     |
+
+#### Not Implementing (Obsidian Native)
+
+These are handled by Obsidian's built-in systems:
+
+| Feature          | Hotkey    | Reason                       |
+| ---------------- | --------- | ---------------------------- |
+| Search           | `C-s/C-r` | Obsidian native search       |
+| Autocomplete     | `M-/`     | Obsidian native autocomplete |
+| Comment toggle   | `M-;`     | Obsidian native comment      |
+| Rectangle select | `C-x r`   | Too complex, low priority    |
+| Universal arg    | `C-u`     | Phase 4 (P3)                 |
 
 ### 2.4 Config Loader
 
@@ -221,9 +354,9 @@ System clipboard is accessed directly via `navigator.clipboard` — it's an exte
 | Test preset translation on different layouts               | 0.5d   |                         |      |
 | Test layout change triggers automatic reload               | 0.5d   |                         |      |
 
-**Phase 2 Total:** ~8-9 days
+**Phase 2 Total:** ~10-12 days
 
-**Phase 2 Deliverable:** Working kill ring with yank/yank-pop (including yank tracking via Hotkey Context Engine), editor operations through Workspace Context, configuration loading from JSON files, default Emacs preset
+**Phase 2 Deliverable:** 29 Emacs editor commands: 7 kill/yank (custom, Kill Ring), 15 CM6 direct-call (cursor movement + basic editing), 4 case transformation (custom), 3 control (custom). Editor operations through Workspace Context, configuration loading from JSON files, default Emacs preset.
 
 ---
 

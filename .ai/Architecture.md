@@ -283,3 +283,4 @@ See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) and [ADR-006](ADR/ADR-0
 | [ADR-006](ADR/ADR-006%20Conflict%20Resolution.md)             | Priority stacking with context coexistence   |
 | [ADR-007](ADR/ADR-007%20Context%20Engine%20Design.md)         | Black-boxed engine with "when" clause syntax |
 | [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md) | Layout-aware key normalization               |
+| [ADR-009](ADR/ADR-009%20CM6%20Command%20Integration%20Strategy.md) | CM6 Direct Call + Custom with CM6 helpers |
