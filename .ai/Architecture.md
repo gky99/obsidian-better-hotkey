@@ -93,11 +93,11 @@ External APIs: System Clipboard, Obsidian Editor API, Obsidian Workspace API
 
 - `getBaseCharacter(code: string): string | null` — Returns the base character for a physical key code
 - `isBaseKey(character: string): boolean` — Checks if a character is available without modifiers
-- `translateNumber(digit: string): string` — Translates a digit (0-9) to the corresponding base character on the current layout (mapping built dynamically)
+- `translateNumber(digit: string): string` — Translates a digit (0-9) to the base character of the corresponding physical key (hardcoded digit N → DigitN, then base character from layout map)
 - `getLayoutName(): string | null` — Returns detected layout identifier if available
 - `onLayoutChange(callback): Disposable` — Registers callback for layout change events
 
-Monitors for `layoutchange` events and notifies listeners when the keyboard layout changes, enabling automatic re-translation of hotkeys. Initialized once on plugin load. Falls back to identity mapping if the Keyboard API is unavailable. See [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
+Monitors for window `focus` events and re-checks the layout map (the `layoutchange` event has no reliable browser support). Notifies a registered callback when the layout changes, enabling automatic re-translation of hotkeys. Initialized once on plugin load. Falls back to identity mapping if the Keyboard API is unavailable. See [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
 
 ### Hotkey Context
 
@@ -202,11 +202,12 @@ Preset loading
 ### Layout Change Handling
 
 ```
-Layout change event
-  → Keyboard Layout Service detects change
+Window focus event
+  → Keyboard Layout Service re-checks layout map
+  → Compares with cached map; if changed:
   → Rebuilds internal layout map and digit-to-code mapping
-  → Notifies registered listeners
-  → Hotkey Manager receives notification
+  → Notifies registered callback
+  → Config Loader receives notification
   → Triggers full preset reload with new translations
   → Matcher rebuilds with updated hotkeys
 ```

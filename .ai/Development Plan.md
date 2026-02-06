@@ -323,16 +323,16 @@ These are handled by Obsidian's built-in systems:
 
 | Task                                                               | Effort | Dependencies | Done |
 | ------------------------------------------------------------------ | ------ | ------------ | ---- |
-| Implement Keyboard Layout Service singleton                        | 0.5d   | Phase 1      |      |
-| Implement `getLayoutMap()` wrapper with error handling             | 0.5d   |              |      |
-| Implement `getBaseCharacter(code): string \| null`                 | 0.25d  |              |      |
-| Implement `isBaseKey(character): boolean`                          | 0.25d  |              |      |
-| Implement dynamic digit-to-code mapping from layout                | 0.5d   |              |      |
-| Implement `translateNumber(digit): string` using dynamic mapping   | 0.25d  |              |      |
-| Implement `layoutchange` event listener                            | 0.25d  |              |      |
-| Implement `onLayoutChange(callback): Disposable` for listeners     | 0.25d  |              |      |
-| Implement identity fallback for unsupported environments           | 0.5d   |              |      |
-| Test layout detection, translation, and change handling            | 0.5d   |              |      |
+| Implement Keyboard Layout Service singleton                        | 0.5d   | Phase 1      | done |
+| Implement `getLayoutMap()` wrapper with error handling             | 0.5d   |              | done |
+| Implement `getBaseCharacter(code): string \| null`                 | 0.25d  |              | done |
+| Implement `isBaseKey(character): boolean`                          | 0.25d  |              | done |
+| Implement dynamic digit-to-code mapping from layout                | 0.5d   |              | done |
+| Implement `translateNumber(digit): string` using dynamic mapping   | 0.25d  |              | done |
+| Implement window focus listener for layout change detection        | 0.25d  |              | done |
+| Implement `onLayoutChange(callback): Disposable` (single callback) | 0.25d  |              | done |
+| Implement identity fallback for unsupported environments           | 0.5d   |              | done |
+| Test layout detection, translation, and change handling            | 0.5d   |              | done |
 
 ### 2.8 Input Handler Layout Integration
 

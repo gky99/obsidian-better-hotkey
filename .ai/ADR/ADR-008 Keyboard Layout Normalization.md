@@ -7,7 +7,7 @@
 The plugin needs to handle keyboard input consistently across different keyboard layouts and operating systems. Key challenges:
 
 1. **macOS Option key behavior**: Pressing Option+character produces altered characters (e.g., Option+e produces é), which breaks hotkey matching
-2. **Non-QWERTY layouts**: The same physical key produces different characters on different layouts (e.g., QWERTY "3" vs Programmer's Dvorak "}")
+2. **Non-QWERTY layouts**: The same physical key produces different characters on different layouts (e.g., QWERTY "3" vs Programmer's Dvorak "{")
 3. **Symbol availability**: Some symbols available as base keys on QWERTY require modifiers on other layouts (e.g., backtick on Programmer's Dvorak)
 
 ## Decision
@@ -27,9 +27,12 @@ Implement a **Keyboard Layout Service** that:
 
 ### Preset Loading Rules
 
-- **Number keys (0-9)**: Translate to the base character of the corresponding physical key position
-  - Example: "ctrl+3" on QWERTY → "ctrl+}" on Programmer's Dvorak
-  - The physical key for "3" on QWERTY is Digit3; on Programmer's Dvorak, Digit3 produces "}"
+- **Number keys (0-9)**: Two-step translation using hardcoded digit-to-physical-key mapping:
+  1. Map digit N → physical key code `DigitN` (hardcoded; `getLayoutMap()` only returns base/unshifted characters, so reverse lookup is not possible)
+  2. Look up `layoutMap.get("DigitN")` to get the base character on the current layout
+  - Example: "ctrl+3" on QWERTY → "ctrl+{" on Programmer's Dvorak
+    - Step 1: digit "3" → physical key `Digit3`
+    - Step 2: `layoutMap.get("Digit3")` → "{" (base character on Programmer's Dvorak)
 
 - **Symbol keys**: If the symbol requires a modifier on the user's layout, skip the hotkey
   - Example: "ctrl+`" is skipped on Programmer's Dvorak (backtick requires shift)
@@ -37,15 +40,15 @@ Implement a **Keyboard Layout Service** that:
 ### Display
 
 - Settings UI shows the **actual key** users should press (translated form)
-- Example: A preset defining "ctrl+3" shows as "ctrl+}" on Programmer's Dvorak
+- Example: A preset defining "ctrl+3" shows as "ctrl+{" on Programmer's Dvorak
 
 ### Layout Change Handling
 
 The Keyboard Layout Service monitors for layout changes:
 
-- Registers for `layoutchange` events via `navigator.keyboard.addEventListener()`
-- Rebuilds layout map when layout changes
-- Notifies Hotkey Manager to reload presets with new translations
+- Listens for window `focus` events (the `layoutchange` event has no reliable browser support)
+- On focus: re-checks layout map via `getLayoutMap()` and compares with cached map
+- If layout changed: rebuilds maps and notifies callback to reload presets with new translations
 - This ensures hotkeys remain correct when user switches keyboard layouts
 
 ## Options Considered
