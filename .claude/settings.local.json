@@ -1,17 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm run lint:*)",
       "Bash(dir:*)",
-      "Bash(pnpm run build:*)",
-      "Bash(test:*)",
-      "Bash(pnpm test:*)",
+      "Bash(git add:*)",
+      "Bash(git branch:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git checkout:*)",
+      "Bash(git commit -m:*)",
+      "Bash(git worktree:*)",
+      "Bash(git worktree add:*)",
       "Bash(grep:*)",
       "Bash(pnpm build:*)",
-      "Bash(git check-ignore:*)",
-      "Bash(git worktree add:*)",
       "Bash(pnpm install:*)",
-      "Bash(git commit -m:*)"
+      "Bash(pnpm run build:*)",
+      "Bash(pnpm run lint:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm vitest run:*)"
     ]
   }
 }
