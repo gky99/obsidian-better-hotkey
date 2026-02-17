@@ -5,7 +5,7 @@
  * Based on Architecture.md § 3 - Execution Context
  */
 
-import type { App } from "obsidian";
+import type { Plugin } from "obsidian";
 import { KillRing } from "./KillRing";
 import { WorkspaceContext } from "./WorkspaceContext";
 
@@ -14,11 +14,11 @@ export class ExecutionContext {
 	public readonly workspaceContext: WorkspaceContext;
 
 	/**
-	 * Create execution context with app instance
-	 * @param app - Obsidian App instance (required for WorkspaceContext)
+	 * Create execution context with plugin instance
+	 * @param plugin - Obsidian Plugin instance (provides app + lifecycle management)
 	 */
-	constructor(app: App) {
+	constructor(plugin: Plugin) {
 		this.killRing = new KillRing();
-		this.workspaceContext = new WorkspaceContext(app);
+		this.workspaceContext = new WorkspaceContext(plugin);
 	}
 }

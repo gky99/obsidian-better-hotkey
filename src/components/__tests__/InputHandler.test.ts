@@ -14,10 +14,17 @@ vi.mock('obsidian', () => ({
 
 // Mock factory for Plugin
 function createMockPlugin() {
-	const mockApp = {} as App;
+	const mockApp = {
+		workspace: {
+			getActiveViewOfType: vi.fn().mockReturnValue(null),
+			activeLeaf: null,
+			on: vi.fn().mockReturnValue({ /* EventRef mock */ }),
+		},
+	} as unknown as App;
 	return {
 		app: mockApp,
 		registerDomEvent: vi.fn(),
+		registerEvent: vi.fn(),
 	} as unknown as Plugin;
 }
 

@@ -20,4 +20,5 @@ export { StatusIndicator } from "./hotkey-context/StatusIndicator";
 // Execution Context
 export { ExecutionContext } from "./execution-context/ExecutionContext";
 export { KillRing } from "./execution-context/KillRing";
+export { MarkdownEditorProxy } from "./execution-context/MarkdownEditorProxy";
 export { WorkspaceContext } from "./execution-context/WorkspaceContext";

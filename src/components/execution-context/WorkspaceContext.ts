@@ -6,21 +6,63 @@
  * Future expansion (deferred):
  * - Suggestion Modal Context: Detect modal open/close by patching SuggestModal
  * - Popover Suggestions Context: Detect popover open/close by patching PopoverSuggest
- * - Last Active MarkdownView: Track last focused markdown editor view
  */
 
-import type { App, Editor, EditorRange, EditorPosition } from "obsidian";
+import type { App, Editor, EditorRange, EditorPosition, Plugin, WorkspaceLeaf } from "obsidian";
 import { MarkdownView } from "obsidian";
+import { MarkdownEditorProxy } from "./MarkdownEditorProxy";
 
 export class WorkspaceContext {
 	private app: App;
+	private activeLeaf: WorkspaceLeaf | null = null;
+	private editorProxy: MarkdownEditorProxy;
 
-	constructor(app: App) {
-		this.app = app;
+	constructor(plugin: Plugin) {
+		this.app = plugin.app;
+
+		// Create persistent proxy — eagerly initialize from current workspace state
+		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		this.editorProxy = new MarkdownEditorProxy(activeView);
+
+		// Register active-leaf-change listener via Plugin for auto-cleanup
+		plugin.registerEvent(
+			this.app.workspace.on("active-leaf-change", (leaf) => {
+				this.onActiveLeafChange(leaf);
+			}),
+		);
 	}
 
 	/**
-	 * Get the active editor instance
+	 * Handle active leaf change event.
+	 * Updates activeLeaf and, if the new leaf is a markdown view,
+	 * updates the editor proxy.
+	 */
+	private onActiveLeafChange(leaf: WorkspaceLeaf | null): void {
+		this.activeLeaf = leaf;
+
+		if (leaf?.view instanceof MarkdownView) {
+			this.editorProxy.updateView(leaf.view);
+		}
+	}
+
+	/**
+	 * Get the persistent MarkdownEditorProxy.
+	 * Always returns the proxy (never null). The proxy's internal view
+	 * may be null if no markdown view has been active since plugin load.
+	 */
+	getEditorProxy(): MarkdownEditorProxy {
+		return this.editorProxy;
+	}
+
+	/**
+	 * Get the currently active workspace leaf.
+	 */
+	getActiveLeaf(): WorkspaceLeaf | null {
+		return this.activeLeaf;
+	}
+
+	/**
+	 * Get the active editor instance (live query — not from proxy)
 	 */
 	private getActiveEditor(): Editor | null {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -192,5 +234,14 @@ export class WorkspaceContext {
 		}
 
 		return { start, end };
+	}
+
+	/**
+	 * Dispose resources.
+	 * The active-leaf-change listener is cleaned up automatically
+	 * by Plugin.registerEvent() when the plugin unloads.
+	 */
+	dispose(): void {
+		this.activeLeaf = null;
 	}
 }

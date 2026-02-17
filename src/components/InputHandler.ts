@@ -35,7 +35,7 @@ export class InputHandler {
 		this.plugin = plugin;
 
 		// Create execution context
-		this.executionContext = new ExecutionContext(plugin.app);
+		this.executionContext = new ExecutionContext(this.plugin);
 	}
 
 	/**
