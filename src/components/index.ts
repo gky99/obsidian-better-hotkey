@@ -8,6 +8,7 @@ export { InputHandler } from "./InputHandler";
 export { ContextEngine } from "./ContextEngine";
 export { CommandRegistry } from "./CommandRegistry";
 export { KeyboardLayoutService } from "./KeyboardLayoutService";
+export { ConfigManager } from "./ConfigManager";
 
 // Hotkey Context
 export { HotkeyContext } from "./hotkey-context/HotkeyContext";

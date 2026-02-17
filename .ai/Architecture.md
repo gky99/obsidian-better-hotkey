@@ -99,7 +99,7 @@ External APIs: System Clipboard, Obsidian Editor API, Obsidian Workspace API
 
 Monitors for window `focus` events and re-checks the layout map (the `layoutchange` event has no reliable browser support). Notifies a registered callback when the layout changes. Used by the Input Handler for key normalization at match time and by the Settings UI for display translation — NOT used by Config Manager at load time (see [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md)). Initialized once on plugin load. Falls back to identity mapping if the Keyboard API is unavailable. See [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
 
-**Config Manager** — Data provider for all hotkey configuration. Loads preset JSON and user overrides from separate files in the plugin folder (custom file I/O via `app.vault.adapter`, since Obsidian's `loadData()`/`saveData()` only supports `data.json`). Parses string hotkey notation (e.g., `"ctrl+x ctrl+s"`) into `KeyPress` objects. Stores entries separately by source (preset, plugin, user) and fires an `onChange` callback when any source changes, enabling HotkeyManager to recalculate the effective hotkey table. Manages user overrides including `"-command"` removal syntax (VSCode-style). Tracks plugin-registered hotkeys in memory. Does NOT perform keyboard layout translation — that happens at match time (Input Handler) and display time (Settings UI). See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md), [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md).
+**Config Manager** — Data provider for all hotkey configuration. Constructed with `adapter: DataAdapter`; file paths derive from the `PLUGIN_DATA_PATH` constant in `constants.ts`. Loads preset JSON and user hotkeys from separate files in the plugin folder (custom file I/O via `app.vault.adapter`, since Obsidian's `loadData()`/`saveData()` only supports `data.json`). Parses string hotkey notation (e.g., `"ctrl+x ctrl+s"`) into `KeyPress` objects via `parseHotkeyString()`. Both preset and user JSON files use the same `RawHotkeyBinding` shape (`{ command, key?, when?, args? }`). Stores entries separately by source (preset, plugin, user) and fires an `onChange` callback when any source changes, enabling HotkeyManager to recalculate the effective hotkey table. Key APIs: `loadAll(presetName)` reads preset + user files; `registerPluginHotkeys(pluginName, bindings[])` bulk-registers plugin hotkeys keyed by plugin name (same name replaces all previous entries), returns `Disposable`; `addUserHotkey(command, key?, when?)` adds a user hotkey and persists to file; `removeHotkey()` is a placeholder stub (deferred to Settings UI). Manages user hotkeys including `"-command"` removal syntax (VSCode-style). Plugin entries are tracked in an in-memory `Map<pluginName, ConfigHotkeyEntry[]>`. Does NOT perform keyboard layout translation — that happens at match time (Input Handler) and display time (Settings UI). See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md), [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md).
 
 ### Hotkey Context
 
@@ -178,9 +178,11 @@ Outcomes per match result:
 ```
 Plugin load
   → Config Manager reads preset JSON file (presets/{name}.json)
-  → Config Manager reads user overrides file (user-hotkeys.json)
-  → Config Manager parses string notation → KeyPress objects
-  → Config Manager fires onChange callback
+  → Config Manager reads user hotkeys file (user-hotkeys.json)
+  → Config Manager parses string notation → KeyPress objects (via parseHotkeyString)
+  → Plugin entries registered at runtime via registerPluginHotkeys(pluginName, bindings[])
+    (stored in-memory Map<pluginName, ConfigHotkeyEntry[]>, not persisted to disk)
+  → Config Manager fires onChange callback with (preset[], plugin[], user[])
   → Hotkey Manager.recalculate() receives entries by source:
       1. Insert preset entries      (Priority: Preset)
       2. Insert plugin entries      (Priority: Plugin)
@@ -224,12 +226,16 @@ Plugin settings (`data.json`, via Obsidian's `loadData()`/`saveData()`):
 Hotkey configuration (separate JSON files, via `app.vault.adapter`):
 
 ```
-/<plugin-folder>/
+/<plugin-folder>/          (PLUGIN_DATA_PATH constant in constants.ts)
   ├── presets/
   │   ├── emacs.json
   │   └── emacs-strict.json
   └── user-hotkeys.json
 ```
+
+Both preset and user JSON files use the same `RawHotkeyBinding` shape: `{ command: string, key?: string, when?: string, args?: Record<string, unknown> }`. Preset files wrap bindings in a `{ name, description, version, hotkeys: RawHotkeyBinding[] }` envelope; user hotkeys file is `RawHotkeyBinding[]` directly.
+
+Plugin-registered hotkeys are stored in-memory only (`Map<pluginName, ConfigHotkeyEntry[]>`), registered via `registerPluginHotkeys(pluginName, bindings[])`. Re-registering the same plugin name replaces all previous entries. Not persisted to disk.
 
 ### String Notation
 

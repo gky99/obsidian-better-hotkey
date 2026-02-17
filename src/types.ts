@@ -28,6 +28,15 @@ export interface HotkeyEntry {
 }
 
 /**
+ * Extended entry used by ConfigManager — adds config metadata to HotkeyEntry.
+ * Stored separately by source (preset, plugin, user) in ConfigManager.
+ */
+export interface ConfigHotkeyEntry extends HotkeyEntry {
+	removal: boolean;       // true for "-command" removal entries
+	hotkeyString: string;   // original string notation, e.g. "ctrl+k"
+}
+
+/**
  * Represents a hotkey preset configuration
  */
 export interface HotkeyPreset {

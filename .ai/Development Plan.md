@@ -294,23 +294,25 @@ These are handled by Obsidian's built-in systems:
 
 | Task | Effort | Dependencies | Done |
 | --- | --- | --- | --- |
-| Add `ConfigHotkeyEntry` interface extending `HotkeyEntry` in `types.ts` | 0.25d | Phase 1 | |
-| Implement `parseHotkeyString()` in `utils/hotkey.ts` | 0.5d | | |
-| Add constants: `VALID_MODIFIERS`, `SPECIAL_KEY_MAP` | 0.25d | | |
-| Handle bare second chord (no modifier required) | — | | |
-| Console warn + skip for `+` as base key | — | | |
-| Test: chords, modifiers, special keys, bare second chord, edge cases | 0.5d | | |
+| Add `ConfigHotkeyEntry` interface extending `HotkeyEntry` in `types.ts` | 0.25d | Phase 1 | done |
+| Implement `parseHotkeyString()` in `utils/hotkey.ts` | 0.5d | | done |
+| Add constants: `VALID_MODIFIERS`, `SPECIAL_KEY_MAP` | 0.25d | | done |
+| Handle bare second chord (no modifier required) | — | | done |
+| Console warn + skip for `+` as base key | — | | done |
+| Test: chords, modifiers, special keys, bare second chord, edge cases | 0.5d | | done |
 
 ### 2.5 Config Manager
 
 | Task | Effort | Dependencies | Done |
 | --- | --- | --- | --- |
-| Implement ConfigManager class with constructor + `setOnChange` | 0.5d | 2.4 | |
-| Implement custom file I/O (`readJsonFile`, `writeJsonFile` via vault adapter) | 0.5d | | |
-| Implement `loadAll()` — read preset + user overrides, parse, fire onChange | 0.5d | | |
-| Implement `registerPluginHotkey()` returning Disposable | 0.25d | | |
-| Implement `addUserOverride()` / `removeUserOverride()` with file persistence | 0.5d | | |
-| Test: loading, persistence, plugin registration | 0.5d | | |
+| Add `PLUGIN_DATA_PATH` constant in `constants.ts` | — | 2.4 | done |
+| Implement ConfigManager class with `constructor(adapter)` + `setOnChange` | 0.5d | 2.4 | done |
+| Implement custom file I/O (`readJsonFile`, `writeJsonFile` via vault adapter) | 0.5d | | done |
+| Implement `loadAll()` — read preset + user hotkeys, parse, fire onChange | 0.5d | | done |
+| Implement `registerPluginHotkeys(pluginName, bindings[])` returning Disposable | 0.25d | | done |
+| Implement `addUserHotkey(command, key?, when?)` with file persistence | 0.5d | | done |
+| Implement `removeHotkey()` placeholder (stub, throws "not implemented") | — | | done |
+| Test: loading, persistence, plugin registration, round-trip | 0.5d | | done |
 
 ### 2.6 HotkeyManager Recalculate + Preset Migration
 
@@ -391,7 +393,7 @@ Context state capture — these live inside the Execution Context's Workspace Co
 | Task                                                                        | Effort | Dependencies | Done |
 | --------------------------------------------------------------------------- | ------ | ------------ | ---- |
 | Expose `commands.registerCommand`, `commands.getCommands`                   | 0.25d  | Phase 2      |      |
-| Expose `hotkeys.registerHotkey`                                             | 0.5d   |              |      |
+| Expose `hotkeys.registerPluginHotkeys(pluginName, bindings[])`              | 0.5d   |              |      |
 | Expose `context.declareContext`, `context.setContext`, `context.getContext` | 0.25d  |              |      |
 | Implement `Disposable` return for all registration methods                  | 0.25d  |              |      |
 | Document API                                                                | 0.5d   |              |      |
