@@ -15,7 +15,8 @@
       "Bash(pnpm run build:*)",
       "Bash(pnpm run lint:*)",
       "Bash(pnpm test:*)",
-      "Bash(pnpm vitest run:*)"
+      "Bash(pnpm vitest run:*)",
+      "Bash(git status:*)"
     ]
   }
 }
