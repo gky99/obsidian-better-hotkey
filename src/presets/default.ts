@@ -5,7 +5,7 @@
 
 import type { HotkeyPreset, KeyPress } from "../types";
 import { Priority } from "../types";
-import { COMMAND_NAMES } from "../constants";
+import { COMMAND_NAMES, CURSOR_MOVEMENT_COMMANDS } from "../constants";
 
 /**
  * Helper to create a KeyPress object
@@ -42,6 +42,68 @@ export const defaultPreset: HotkeyPreset = {
 		{
 			command: COMMAND_NAMES.YANK,
 			key: [key("y", ["ctrl"])],
+			priority: Priority.Preset,
+		},
+
+		// Cursor movement commands (2.3.2)
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.FORWARD_CHAR,
+			key: [key("f", ["ctrl"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.BACKWARD_CHAR,
+			key: [key("b", ["ctrl"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.NEXT_LINE,
+			key: [key("n", ["ctrl"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.PREVIOUS_LINE,
+			key: [key("p", ["ctrl"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.MOVE_BEGINNING_OF_LINE,
+			key: [key("a", ["ctrl"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.MOVE_END_OF_LINE,
+			key: [key("e", ["ctrl"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.FORWARD_WORD,
+			key: [key("f", ["meta"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.BACKWARD_WORD,
+			key: [key("b", ["meta"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.SCROLL_UP,
+			key: [key("v", ["ctrl"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.SCROLL_DOWN,
+			key: [key("v", ["meta"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.BEGINNING_OF_BUFFER,
+			key: [key(",", ["shift", "meta"])],
+			priority: Priority.Preset,
+		},
+		{
+			command: CURSOR_MOVEMENT_COMMANDS.END_OF_BUFFER,
+			key: [key(".", ["shift", "meta"])],
 			priority: Priority.Preset,
 		},
 	],

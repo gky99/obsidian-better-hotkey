@@ -5,6 +5,7 @@ import {CommandRegistry} from "./components/CommandRegistry";
 import {HotkeyContext} from "./components/hotkey-context/HotkeyContext";
 import {defaultPreset} from "./presets/default";
 import {createTestCommands} from "./commands/test-commands";
+import {createCursorCommands} from "./commands/cursor-commands";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -23,6 +24,12 @@ export default class MyPlugin extends Plugin {
 		// Register test commands
 		const testCommands = createTestCommands();
 		for (const cmd of testCommands) {
+			this.commandRegistry.registerCommand(cmd);
+		}
+
+		// Register cursor movement commands (2.3.2)
+		const cursorCommands = createCursorCommands();
+		for (const cmd of cursorCommands) {
 			this.commandRegistry.registerCommand(cmd);
 		}
 
