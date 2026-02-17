@@ -1,11 +1,12 @@
-import {Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
-import {InputHandler} from "./components/InputHandler";
-import {CommandRegistry} from "./components/CommandRegistry";
-import {HotkeyContext} from "./components/hotkey-context/HotkeyContext";
-import {defaultPreset} from "./presets/default";
-import {createTestCommands} from "./commands/test-commands";
-import {createCursorCommands} from "./commands/cursor-commands";
+import { Plugin } from 'obsidian';
+import {
+    DEFAULT_SETTINGS,
+    MyPluginSettings,
+    SampleSettingTab,
+} from './settings';
+import { defaultPreset } from './presets';
+import { createCursorCommands, createTestCommands } from './commands';
+import { InputHandler, CommandRegistry, HotkeyContext } from './components';
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;

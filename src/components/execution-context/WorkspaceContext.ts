@@ -235,13 +235,4 @@ export class WorkspaceContext {
 
 		return { start, end };
 	}
-
-	/**
-	 * Dispose resources.
-	 * The active-leaf-change listener is cleaned up automatically
-	 * by Plugin.registerEvent() when the plugin unloads.
-	 */
-	dispose(): void {
-		this.activeLeaf = null;
-	}
 }
