@@ -15,9 +15,9 @@ The plugin needs to handle keyboard input consistently across different keyboard
 Implement a **Keyboard Layout Service** that:
 
 1. **Detects the keyboard layout** using the Web Keyboard API (`navigator.keyboard.getLayoutMap()`)
-2. **Normalizes key input** by translating physical key codes to base characters on the detected layout
-3. **Translates number keys in presets** to their corresponding base characters
-4. **Skips unavailable symbols** when loading presets
+2. **Normalizes key input at match time** by translating physical key codes to base characters on the detected layout
+3. **Provides translation utilities** for number keys and symbol availability checks
+4. **Supports display translation** for showing layout-appropriate key labels in the Settings UI
 
 ### Key Normalization Rules
 
@@ -25,21 +25,22 @@ Implement a **Keyboard Layout Service** that:
 - **Modifiers are separate**: Shift/Ctrl/Alt/Meta are tracked independently; they don't affect the recognized base character
 - **macOS Option handling**: By using the physical code → layout map approach, we bypass OS-level character transformation
 
-### Preset Loading Rules
+### Input Normalization at Match Time
 
-- **Number keys (0-9)**: Two-step translation using hardcoded digit-to-physical-key mapping:
+Layout-based translation happens when the user presses a key, **not** when loading presets. See [ADR-010](ADR-010%20Keyboard%20Layout%20Translation%20Timing.md) for the full rationale.
+
+The Input Handler uses the Keyboard Layout Service at match time to:
+
+- **Translate number keys (0-9)**: Two-step translation using hardcoded digit-to-physical-key mapping:
   1. Map digit N → physical key code `DigitN` (hardcoded; `getLayoutMap()` only returns base/unshifted characters, so reverse lookup is not possible)
   2. Look up `layoutMap.get("DigitN")` to get the base character on the current layout
-  - Example: "ctrl+3" on QWERTY → "ctrl+{" on Programmer's Dvorak
-    - Step 1: digit "3" → physical key `Digit3`
-    - Step 2: `layoutMap.get("Digit3")` → "{" (base character on Programmer's Dvorak)
+  - Example: User presses Ctrl+Digit3 on Programmer's Dvorak → normalized to "ctrl+{" → matches against stored hotkey
 
-- **Symbol keys**: If the symbol requires a modifier on the user's layout, skip the hotkey
-  - Example: "ctrl+`" is skipped on Programmer's Dvorak (backtick requires shift)
+- **Handle symbol availability**: If a symbol key requires a modifier on the user's layout, the normalization accounts for this
 
 ### Display
 
-- Settings UI shows the **actual key** users should press (translated form)
+- Settings UI shows the **actual key** users should press (translated form via Keyboard Layout Service)
 - Example: A preset defining "ctrl+3" shows as "ctrl+{" on Programmer's Dvorak
 
 ### Layout Change Handling
@@ -48,8 +49,8 @@ The Keyboard Layout Service monitors for layout changes:
 
 - Listens for window `focus` events (the `layoutchange` event has no reliable browser support)
 - On focus: re-checks layout map via `getLayoutMap()` and compares with cached map
-- If layout changed: rebuilds maps and notifies callback to reload presets with new translations
-- This ensures hotkeys remain correct when user switches keyboard layouts
+- If layout changed: rebuilds internal maps and notifies callbacks
+- Stored hotkey definitions are NOT re-translated — they remain in their original notation. The Input Handler automatically uses the updated layout map for subsequent key normalizations
 
 ## Options Considered
 
@@ -62,8 +63,8 @@ The Keyboard Layout Service monitors for layout changes:
 ## Consequences
 
 - New component: **Keyboard Layout Service** (global singleton)
-- Input Handler uses layout service for key normalization
-- Config Loader uses layout service for preset translation
-- Settings UI shows translated hotkeys
-- Layout changes trigger automatic hotkey re-translation
+- Input Handler uses layout service for key normalization at match time
+- Settings UI uses layout service for display translation
+- Config Manager does **not** use layout service — stores hotkeys in original notation (see [ADR-010](ADR-010%20Keyboard%20Layout%20Translation%20Timing.md))
+- Layout changes update the Input Handler's normalization automatically; no config reload needed
 - Fallback behavior needed if Keyboard API unavailable (mobile, older browsers)

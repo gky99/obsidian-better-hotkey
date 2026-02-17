@@ -22,15 +22,15 @@ This plugin provides an Emacs-like hotkey system for Obsidian with context-aware
 ## 2. System Overview
 
 ```
-┌───────────────────────────────────────────────────────────────────────────────────┐
-│                                     Global                                         │
-│  ┌───────────────────────┐  ┌──────────────────┐  ┌───────────────┐               │
-│  │ Hotkey Context Engine │  │ Command Registry │  │ Input Handler │               │
-│  └───────────────────────┘  └──────────────────┘  └───────────────┘               │
-│  ┌───────────────────────┐                                                         │
-│  │Keyboard Layout Service│                                                         │
-│  └───────────────────────┘                                                         │
-└───────────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                                     Global                           │
+│  ┌───────────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
+│  │ Hotkey Context Engine │  │ Command Registry │  │ Input Handler │  │
+│  └───────────────────────┘  └──────────────────┘  └───────────────┘  │
+│  ┌───────────────────────┐  ┌────────────────┐                       │
+│  │Keyboard Layout Service│  │ Config Manager │                       │
+│  └───────────────────────┘  └────────────────┘                       │
+└──────────────────────────────────────────────────────────────────────┘
          │                            │                     │
          │  ┌─────────────────────────┼─────────────────────┘
          │  │                         │
@@ -59,9 +59,9 @@ This plugin provides an Emacs-like hotkey system for Obsidian with context-aware
          ▼                              ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                      Supporting                                      │
-│  ┌───────────────┐  ┌──────────────┐                                 │
-│  │ Config Loader │  │  Plugin API  │                                 │
-│  └───────────────┘  └──────────────┘                                 │
+│  ┌──────────────┐                                                    │
+│  │  Plugin API  │                                                    │
+│  └──────────────┘                                                    │
 └──────────────────────────────────────────────────────────────────────┘
 
 External APIs: System Clipboard, Obsidian Editor API, Obsidian Workspace API
@@ -72,7 +72,7 @@ External APIs: System Clipboard, Obsidian Editor API, Obsidian Workspace API
 | Global            | Cross-cutting components used by both contexts and the action pipeline              |
 | Hotkey Context    | Input processing: key sequence tracking, matching, pending state display            |
 | Execution Context | Runtime state: killed text, workspace/editor state, Obsidian UI observation         |
-| Supporting        | Persistence (Config Loader) and third-party integration (Plugin API)                |
+| Supporting        | Third-party integration (Plugin API)                                                |
 | External APIs     | System Clipboard, Obsidian Editor API, Obsidian Workspace API — consumed, not owned |
 
 ---
@@ -97,7 +97,9 @@ External APIs: System Clipboard, Obsidian Editor API, Obsidian Workspace API
 - `getLayoutName(): string | null` — Returns detected layout identifier if available
 - `onLayoutChange(callback): Disposable` — Registers callback for layout change events
 
-Monitors for window `focus` events and re-checks the layout map (the `layoutchange` event has no reliable browser support). Notifies a registered callback when the layout changes, enabling automatic re-translation of hotkeys. Initialized once on plugin load. Falls back to identity mapping if the Keyboard API is unavailable. See [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
+Monitors for window `focus` events and re-checks the layout map (the `layoutchange` event has no reliable browser support). Notifies a registered callback when the layout changes. Used by the Input Handler for key normalization at match time and by the Settings UI for display translation — NOT used by Config Manager at load time (see [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md)). Initialized once on plugin load. Falls back to identity mapping if the Keyboard API is unavailable. See [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
+
+**Config Manager** — Data provider for all hotkey configuration. Loads preset JSON and user overrides from separate files in the plugin folder (custom file I/O via `app.vault.adapter`, since Obsidian's `loadData()`/`saveData()` only supports `data.json`). Parses string hotkey notation (e.g., `"ctrl+x ctrl+s"`) into `KeyPress` objects. Stores entries separately by source (preset, plugin, user) and fires an `onChange` callback when any source changes, enabling HotkeyManager to recalculate the effective hotkey table. Manages user overrides including `"-command"` removal syntax (VSCode-style). Tracks plugin-registered hotkeys in memory. Does NOT perform keyboard layout translation — that happens at match time (Input Handler) and display time (Settings UI). See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md), [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md).
 
 ### Hotkey Context
 
@@ -126,8 +128,6 @@ Sub-components:
 - **Last Active MarkdownView** — Tracks the last focused markdown editor view
 
 ### Supporting
-
-**Config Loader** — Loads/saves JSON configuration: settings, presets, and user overrides. Validates preset format and supports settings migration.
 
 **Plugin API** — Public facade exposing three surfaces to third-party plugins: commands, hotkeys, and context. All registration methods return a `Disposable`. See [ADR-004](ADR/ADR-004%20Lifecycle%20Management.md).
 
@@ -177,26 +177,17 @@ Outcomes per match result:
 
 ```
 Plugin load
-  → Config Loader reads settings.json
-  → Load selected preset        → Hotkey Manager (Priority: Preset)
-  → Load plugin registrations   → Hotkey Manager (Priority: Plugin)
-  → Load user overrides          → Hotkey Manager (Priority: User)
+  → Config Manager reads preset JSON file (presets/{name}.json)
+  → Config Manager reads user overrides file (user-hotkeys.json)
+  → Config Manager parses string notation → KeyPress objects
+  → Config Manager fires onChange callback
+  → Hotkey Manager.recalculate() receives entries by source:
+      1. Insert preset entries      (Priority: Preset)
+      2. Insert plugin entries      (Priority: Plugin)
+      3. Process user entries:
+         - Normal entries           (Priority: User)
+         - Removal entries ("-cmd") → remove matching preset/plugin entry
   → Hotkey Manager triggers Matcher rebuild
-```
-
-### Preset Translation
-
-```
-Preset loading
-  → Config Loader reads preset
-  → For each hotkey:
-      a. If key is digit (0-9):
-         → Keyboard Layout Service.translateNumber(digit)
-         → Replace with translated base character
-      b. If key is symbol:
-         → Keyboard Layout Service.isBaseKey(symbol)
-         → Skip if not a base key on current layout
-  → Insert into Hotkey Manager with translated keys
 ```
 
 ### Layout Change Handling
@@ -206,10 +197,8 @@ Window focus event
   → Keyboard Layout Service re-checks layout map
   → Compares with cached map; if changed:
   → Rebuilds internal layout map and digit-to-code mapping
-  → Notifies registered callback
-  → Config Loader receives notification
-  → Triggers full preset reload with new translations
-  → Matcher rebuilds with updated hotkeys
+  → Subsequent keypress events are normalized using the new layout map
+  → Stored hotkey definitions are NOT re-translated (see ADR-010)
 ```
 
 ### Kill / Yank
@@ -228,15 +217,37 @@ Yank-Pop: Check lastActionWasYank in Hotkey Context Engine
 
 ### Storage Structure
 
+Plugin settings (`data.json`, via Obsidian's `loadData()`/`saveData()`):
+
+- `selectedPreset`, `chordTimeout`, `killRingMaxSize`
+
+Hotkey configuration (separate JSON files, via `app.vault.adapter`):
+
 ```
-/plugin-data/
+/<plugin-folder>/
   ├── presets/
   │   ├── emacs.json
-  │   ├── emacs-strict.json
-  │   └── imported/
-  ├── user-overrides.json
-  └── settings.json
+  │   └── emacs-strict.json
+  └── user-hotkeys.json
 ```
+
+### String Notation
+
+Hotkeys in JSON files use a human-readable string notation:
+
+- Modifier+key separated by `+`: `"ctrl+k"`, `"shift+meta+,"`
+- Chord steps separated by space: `"ctrl+x ctrl+s"` (two-step chord)
+- Second chord step may be a bare key: `"ctrl+x b"`
+- Modifiers: `ctrl`, `alt`, `shift`, `meta` (lowercase)
+- Special keys: `space`, `backspace`, `tab`, `enter`, `escape`, etc.
+- The `+` character cannot be used as a base key (it is the separator)
+
+### User Override Removal Syntax
+
+User overrides support VSCode-style removal using a `-` prefix on the command name:
+
+- `{ "command": "-kill-line", "key": "ctrl+k" }` — remove the ctrl+k binding for kill-line
+- If the specified key doesn't match any existing binding, the removal is silently ignored
 
 ### Priority Order (highest to lowest)
 
@@ -260,7 +271,7 @@ See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) and [ADR-006](ADR/ADR-0
 
 ## 6. Key Constraints
 
-- Key matching uses **layout-normalized characters** — physical key codes are translated to base characters via the Keyboard Layout Service. See [ADR-001](ADR/ADR-001%20Key%20Representation.md) and [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
+- Key matching uses **layout-normalized characters** — physical key codes are translated to base characters via the Keyboard Layout Service at match time (not at config load time). See [ADR-001](ADR/ADR-001%20Key%20Representation.md), [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md), and [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md).
 - Chord sequences support **at most 2 keypresses**.
 - "When" clause syntax supports: `key`, `!key`, `&&`, `||`, `== "value"`. Parentheses are deferred (P2).
 - The Hotkey Context Engine is a **global singleton** initialized at plugin load, accessible to all components.
@@ -274,14 +285,15 @@ See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) and [ADR-006](ADR/ADR-0
 
 ## 7. ADR Index
 
-| ADR                                                           | Decision                                     |
-| ------------------------------------------------------------- | -------------------------------------------- |
-| [ADR-001](ADR/ADR-001%20Key%20Representation.md)              | Character-based key matching by default      |
-| [ADR-002](ADR/ADR-002%20Configuration%20Priority.md)          | User > Preset > Plugin priority              |
-| [ADR-003](ADR/ADR-003%20Clipboard%20Sync%20Strategy.md)       | Sync kill→clipboard, detect external on yank |
-| [ADR-004](ADR/ADR-004%20Lifecycle%20Management.md)            | Return Disposable, auto-cleanup deferred     |
-| [ADR-005](ADR/ADR-005%20Event%20Interception%20Strategy.md)   | Global keydown listener via Input Handler    |
-| [ADR-006](ADR/ADR-006%20Conflict%20Resolution.md)             | Priority stacking with context coexistence   |
-| [ADR-007](ADR/ADR-007%20Context%20Engine%20Design.md)         | Black-boxed engine with "when" clause syntax |
-| [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md) | Layout-aware key normalization               |
+| ADR | Decision |
+| --- | --- |
+| [ADR-001](ADR/ADR-001%20Key%20Representation.md) | Character-based key matching by default |
+| [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) | User > Preset > Plugin priority |
+| [ADR-003](ADR/ADR-003%20Clipboard%20Sync%20Strategy.md) | Sync kill→clipboard, detect external on yank |
+| [ADR-004](ADR/ADR-004%20Lifecycle%20Management.md) | Return Disposable, auto-cleanup deferred |
+| [ADR-005](ADR/ADR-005%20Event%20Interception%20Strategy.md) | Global keydown listener via Input Handler |
+| [ADR-006](ADR/ADR-006%20Conflict%20Resolution.md) | Priority stacking with context coexistence |
+| [ADR-007](ADR/ADR-007%20Context%20Engine%20Design.md) | Black-boxed engine with "when" clause syntax |
+| [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md) | Layout-aware key normalization |
 | [ADR-009](ADR/ADR-009%20CM6%20Command%20Integration%20Strategy.md) | CM6 Direct Call + Custom with CM6 helpers |
+| [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md) | Layout translation at match time, not load time |

@@ -290,34 +290,39 @@ These are handled by Obsidian's built-in systems:
 | Rectangle select | `C-x r`   | Too complex, low priority    |
 | Universal arg    | `C-u`     | Phase 4 (P3)                 |
 
-### 2.4 Config Loader
+### 2.4 String Parser & Types
 
-| Task                                               | Effort | Dependencies | Done |
-| -------------------------------------------------- | ------ | ------------ | ---- |
-| Define storage paths                               | 0.25d  | Phase 1      |      |
-| Implement `loadSettings`, `saveSettings`           | 0.5d   |              |      |
-| Implement `loadHotkeyPreset(name)`                 | 0.5d   |              |      |
-| Implement `getAvailableHotkeyPresets`              | 0.25d  |              |      |
-| Implement `loadUserOverrides`, `saveUserOverrides` | 0.5d   |              |      |
-| Implement `validateHotkeyPreset`                   | 0.25d  |              |      |
-| Test file loading/saving                           | 0.25d  |              |      |
+| Task | Effort | Dependencies | Done |
+| --- | --- | --- | --- |
+| Add `ConfigHotkeyEntry` interface extending `HotkeyEntry` in `types.ts` | 0.25d | Phase 1 | |
+| Implement `parseHotkeyString()` in `utils/hotkey.ts` | 0.5d | | |
+| Add constants: `VALID_MODIFIERS`, `SPECIAL_KEY_MAP` | 0.25d | | |
+| Handle bare second chord (no modifier required) | — | | |
+| Console warn + skip for `+` as base key | — | | |
+| Test: chords, modifiers, special keys, bare second chord, edge cases | 0.5d | | |
 
-### 2.5 Configuration Loading Flow
+### 2.5 Config Manager
 
-| Task                                                      | Effort | Dependencies | Done |
-| --------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement loading order: preset → plugin → user overrides | 0.5d   | 2.4          |      |
-| Implement removal syntax (`-command`)                     | 0.25d  |              |      |
-| Implement priority resolution in Matcher                  | 0.5d   | 1.2          |      |
-| Wire Config Loader to plugin initialization               | 0.25d  |              |      |
-| Test configuration loading                                | 0.5d   |              |      |
+| Task | Effort | Dependencies | Done |
+| --- | --- | --- | --- |
+| Implement ConfigManager class with constructor + `setOnChange` | 0.5d | 2.4 | |
+| Implement custom file I/O (`readJsonFile`, `writeJsonFile` via vault adapter) | 0.5d | | |
+| Implement `loadAll()` — read preset + user overrides, parse, fire onChange | 0.5d | | |
+| Implement `registerPluginHotkey()` returning Disposable | 0.25d | | |
+| Implement `addUserOverride()` / `removeUserOverride()` with file persistence | 0.5d | | |
+| Test: loading, persistence, plugin registration | 0.5d | | |
 
-### 2.6 Default Preset
+### 2.6 HotkeyManager Recalculate + Preset Migration
 
-| Task                                                 | Effort | Dependencies | Done |
-| ---------------------------------------------------- | ------ | ------------ | ---- |
-| Create `emacs.json` preset with basic Emacs bindings | 1d     | 2.5          |      |
-| Test preset loading                                  | 0.25d  |              |      |
+| Task | Effort | Dependencies | Done |
+| --- | --- | --- | --- |
+| Add `recalculate(preset, plugin, user)` to HotkeyManager | 0.5d | 2.5 | |
+| Implement removal logic in recalculate (by `hotkeyString`, by command) | 0.25d | | |
+| Create `src/presets/emacs.json` with current bindings in string notation | 0.5d | | |
+| Delete `src/presets/default.ts` | — | | |
+| Update `main.ts`: create ConfigManager, wire onChange → recalculate | 0.25d | | |
+| Update `HotkeyContext`: remove preset param + `loadPreset()` | 0.25d | | |
+| End-to-end test: load preset → apply overrides → verify hotkeys | 0.5d | | |
 
 ### 2.7 Keyboard Layout Service
 
@@ -342,17 +347,12 @@ These are handled by Obsidian's built-in systems:
 | Update KeyPress.key to store layout-normalized character   | 0.25d  |                         |      |
 | Test input normalization on different layouts              | 0.5d   |                         |      |
 
-### 2.9 Config Loader Layout Integration
+### 2.9 ADR Updates
 
-| Task                                                       | Effort | Dependencies            | Done |
-| ---------------------------------------------------------- | ------ | ----------------------- | ---- |
-| Update preset loading to translate number keys             | 0.5d   | Keyboard Layout Service |      |
-| Update preset loading to skip unavailable symbols          | 0.5d   |                         |      |
-| Wire layout change listener to trigger preset reload       | 0.5d   |                         |      |
-| Implement `HotkeyContext.reloadPreset()` method            | 0.25d  |                         |      |
-| Update Settings UI to show translated hotkeys              | 0.5d   | Phase 3                 |      |
-| Test preset translation on different layouts               | 0.5d   |                         |      |
-| Test layout change triggers automatic reload               | 0.5d   |                         |      |
+| Task | Effort | Dependencies | Done |
+| --- | --- | --- | --- |
+| Write ADR-010 Keyboard Layout Translation Timing | 0.25d | | done |
+| Update ADR-008 to remove load-time translation references | 0.25d | | done |
 
 **Phase 2 Total:** ~10-12 days
 
@@ -499,15 +499,15 @@ Phase 1:
 Phase 2:
   Phase 1
     ├── 2.1 Workspace Context (editor operations)
-    └── 2.4 Config Loader
+    └── 2.4 String Parser & Types
 
   2.1
     └── 2.2 Kill Ring (also uses clipboard external API)
       └── 2.3 Kill/Yank Commands
 
   2.4
-    └── 2.5 Configuration Loading Flow
-      └── 2.6 Default Preset
+    └── 2.5 Config Manager
+      └── 2.6 HotkeyManager Recalculate + Preset Migration
 
 Phase 3:
   Phase 2
