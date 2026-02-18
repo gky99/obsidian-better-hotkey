@@ -2,6 +2,7 @@ import { parser } from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
+import prettierConfig from "eslint-config-prettier";
 
 export default defineConfig([
 	{
@@ -39,4 +40,5 @@ export default defineConfig([
 			// "obsidianmd/prefer-file-manager-trash": "error",
 		},
 	},
+	prettierConfig,
 ]);
