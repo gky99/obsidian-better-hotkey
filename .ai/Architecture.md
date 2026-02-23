@@ -89,15 +89,14 @@ External APIs: System Clipboard, Obsidian Editor API, Obsidian Workspace API
 
 **Command Registry** — Stores and executes registered commands. On startup, loads Obsidian's built-in commands. Commands receive the Hotkey Context Engine and optional args at execution time.
 
-**Keyboard Layout Service** — Detects the user's keyboard layout and provides translation between physical key codes and base characters. Uses `navigator.keyboard.getLayoutMap()` to build a code-to-character mapping. Exposes:
+**Keyboard Layout Service** — Detects the user's keyboard layout and provides translation between physical key codes and base characters. Uses `navigator.keyboard.getLayoutMap()` to build a code-to-character mapping, falling back to predefined QWERTY layout data if the API is unavailable. Exposes:
 
-- `getBaseCharacter(code: string): string | null` — Returns the base character for a physical key code
-- `isBaseKey(character: string): boolean` — Checks if a character is available without modifiers
-- `translateNumber(digit: string): string` — Translates a digit (0-9) to the base character of the corresponding physical key (hardcoded digit N → DigitN, then base character from layout map)
-- `getLayoutName(): string | null` — Returns detected layout identifier if available
+- `getBaseCharacter(code: string): string | null` — Returns the actual layout base character for a physical key code (including digit codes — no digit override)
+- `getCode(character: string): string | null` — Reverse lookup: returns the physical key code for a base character. Digits 0-9 are always mapped to their DigitN codes as virtual entries, even if they are not the actual base character on that layout
+- `isBaseKey(character: string): boolean` — Checks if a character is available without modifiers (includes virtual digit entries)
 - `onLayoutChange(callback): Disposable` — Registers callback for layout change events
 
-Monitors for window `focus` events and re-checks the layout map (the `layoutchange` event has no reliable browser support). Notifies a registered callback when the layout changes. Used by the Input Handler for key normalization at match time and by the Settings UI for display translation — NOT used by Config Manager at load time (see [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md)). Initialized once on plugin load. Falls back to identity mapping if the Keyboard API is unavailable. See [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
+Monitors for window `focus` events and re-checks the layout map (the `layoutchange` event has no reliable browser support). Notifies a registered callback when the layout changes. Used by the Input Handler for key normalization at match time and by the Settings UI for display translation — NOT used by Config Manager at load time (see [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md)). Initialized once on plugin load. See [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md).
 
 **Config Manager** — Data provider for all hotkey configuration. Constructed with `adapter: DataAdapter`; file paths derive from the `PLUGIN_DATA_PATH` constant in `constants.ts`. Loads preset JSON and user hotkeys from separate files in the plugin folder (custom file I/O via `app.vault.adapter`, since Obsidian's `loadData()`/`saveData()` only supports `data.json`). Parses string hotkey notation (e.g., `"ctrl+x ctrl+s"`) into `KeyPress` objects via `parseHotkeyString()`. Both preset and user JSON files use the same `RawHotkeyBinding` shape (`{ command, key?, when?, args? }`). Stores entries separately by source (preset, plugin, user) and fires an `onChange` callback when any source changes, enabling HotkeyManager to recalculate the effective hotkey table. Key APIs: `loadAll(presetName)` reads preset + user files; `registerPluginHotkeys(pluginName, bindings[])` bulk-registers plugin hotkeys keyed by plugin name (same name replaces all previous entries), returns `Disposable`; `addUserHotkey(command, key?, when?)` adds a user hotkey and persists to file; `removeHotkey()` is a placeholder stub (deferred to Settings UI). Manages user hotkeys including `"-command"` removal syntax (VSCode-style). Plugin entries are tracked in an in-memory `Map<pluginName, ConfigHotkeyEntry[]>`. Does NOT perform keyboard layout translation — that happens at match time (Input Handler) and display time (Settings UI). See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md), [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md).
 
@@ -198,8 +197,8 @@ Plugin load
 Window focus event
   → Keyboard Layout Service re-checks layout map
   → Compares with cached map; if changed:
-  → Rebuilds internal layout map and digit-to-code mapping
-  → Subsequent keypress events are normalized using the new layout map
+  → Rebuilds internal layout map, charToCode reverse map, and baseCharSet
+  → Matcher invalidates cached keycodes and re-translates via getCode()
   → Stored hotkey definitions are NOT re-translated (see ADR-010)
 ```
 

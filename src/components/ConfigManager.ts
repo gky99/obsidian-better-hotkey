@@ -11,7 +11,7 @@
 
 import type { DataAdapter } from 'obsidian';
 import { normalizePath } from 'obsidian';
-import type { ConfigHotkeyEntry, Disposable } from '../types';
+import type { ConfigHotkeyEntry, Disposable, KeyPress } from '../types';
 import { Priority } from '../types';
 import { parseHotkeyString } from '../utils/hotkey';
 
@@ -147,6 +147,7 @@ export class ConfigManager {
      * @throws Error always (not yet implemented)
      */
     async removeHotkey(_index: number): Promise<void> {
+        // TODO implement remove hotkey
         throw new Error(
             'Not implemented — will be implemented with Settings UI',
         );
@@ -223,7 +224,7 @@ export class ConfigManager {
         }
 
         // Parse key string
-        let keyPresses: ConfigHotkeyEntry['key'] = [];
+        let keyPresses: KeyPress[] = [];
         let hotkeyString = '';
 
         if (keyString !== undefined && keyString !== '') {

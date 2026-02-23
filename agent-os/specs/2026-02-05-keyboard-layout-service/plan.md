@@ -26,15 +26,15 @@ Create `agent-os/specs/2026-02-05-keyboard-layout-service/` with:
 
 Needed because the DOM lib types don't include the Keyboard API:
 - `KeyboardLayoutMap` — minimal interface for the map returned by `getLayoutMap()`
-- `NavigatorKeyboard` — interface for `navigator.keyboard` with `getLayoutMap()`
 
-### Internal constant
+### Internal constants
 
 `DIGIT_CODES` — maps digit strings to physical key codes:
 ```
 "0" → "Digit0", "1" → "Digit1", ..., "9" → "Digit9"
 ```
-Used by `translateNumber()` to look up the base character for each digit's physical key.
+
+`QWERTY_LAYOUT` — predefined `[string, string][]` with full QWERTY key-to-character mapping, used as fallback when Keyboard API is unavailable.
 
 ### Class structure
 
@@ -43,20 +43,14 @@ export class KeyboardLayoutService {
     // Cached layout map: physical code → base character
     private layoutMap: Map<string, string> | null = null;
 
-    // Reverse set of base characters (for isBaseKey)
+    // Reverse map: base character → physical key code (includes virtual digit entries)
+    private charToCode: Map<string, string> | null = null;
+
+    // Set of base characters (for isBaseKey), includes virtual digit entries
     private baseCharSet: Set<string> | null = null;
-
-    // Digit → base character mapping (built from DIGIT_CODES + layoutMap)
-    private digitToChar: Map<string, string> | null = null;
-
-    // Detected layout name (heuristic), or null
-    private detectedLayoutName: string | null = null;
 
     // Single layout change callback (simplified from Set)
     private onLayoutChangeCallback: (() => void) | null = null;
-
-    // Whether the Keyboard API is available
-    private apiAvailable: boolean = false;
 
     // Whether initialization has completed
     private initialized: boolean = false;
@@ -67,15 +61,20 @@ export class KeyboardLayoutService {
 
 **`async initialize(): Promise<void>`**
 
-1. Check if `navigator.keyboard?.getLayoutMap` exists
-2. If yes: set `apiAvailable = true`, call `refreshLayoutMap()`
-3. Register **window focus listener** to detect layout changes (see Task 5)
-4. Set `initialized = true`
+1. Call `refreshLayoutMap()` — always succeeds (QWERTY fallback)
+2. Inline check: if `navigator.keyboard` exists, register **window focus listener** for layout change detection
+3. Set `initialized = true`
 
 **`private async refreshLayoutMap(): Promise<void>`**
 
-1. If API available: call `getLayoutMap()`, build `layoutMap`, `baseCharSet`, `digitToChar`
-2. If unavailable or throws: set all maps to `null` (identity fallback), log warning
+1. Call `getLayoutMap()` — always succeeds (tries API, falls back to QWERTY data)
+2. Build `layoutMap`, `charToCode` (reverse map + virtual digit entries), and `baseCharSet`
+
+**`private async getLayoutMap(): Promise<Map<string, string>>`**
+
+1. Try `navigator.keyboard.getLayoutMap()`, convert API result to `Map<string, string>`
+2. On failure or API unavailable: return `new Map(QWERTY_LAYOUT)`
+3. Always succeeds
 
 **`dispose(): void`** — remove focus listener, clear all state
 
@@ -94,44 +93,31 @@ Pattern from ContextEngine.ts. Instantiated at module load, `initialize()` calle
 ## Task 3: Implement character translation methods
 
 **`getBaseCharacter(code: string): string | null`**
-- With layout map: `layoutMap.get(code) ?? null`
-- Fallback: heuristic — `"KeyA"` → `"a"`, `"DigitN"` → `"N"`, others → `null`
+- Returns actual layout base character for all codes, including digit codes
+- `layoutMap?.get(code) ?? null`
+
+**`getCode(character: string): string | null`**
+- Reverse lookup: base character → physical key code
+- `charToCode?.get(character) ?? null`
+- Digits 0-9 always resolve to their DigitN codes via virtual entries
 
 **`isBaseKey(character: string): boolean`**
-- With layout map: `baseCharSet.has(character)`
-- Fallback: `true` for lowercase a-z, 0-9, common QWERTY base symbols
+- `baseCharSet?.has(character) ?? false`
+- Includes both actual layout base characters and virtual digit entries
 
-Build `baseCharSet` in `refreshLayoutMap()` by collecting all layout map values into a Set.
-
-## Task 4: Implement number translation
-
-**Build `digitToChar` map** in `refreshLayoutMap()`:
-```
-for each (digit, code) in DIGIT_CODES:
-    baseChar = layoutMap.get(code)
-    if baseChar: digitToChar.set(digit, baseChar)
-```
-
-Example on Programmer's Dvorak: `layoutMap.get("Digit3")` → `"}"`, so `digitToChar.set("3", "}")`
-
-**`translateNumber(digit: string): string`**
-- Validate input is "0"-"9", else return unchanged
-- With map: `digitToChar.get(digit) ?? digit`
-- Fallback: return `digit` unchanged (identity)
+Build `charToCode` in `refreshLayoutMap()`: reverse each layoutMap entry (char→code), then add virtual digit entries from `DIGIT_CODES`. Build `baseCharSet` from `charToCode.keys()`.
 
 ## Task 5: Implement layout change detection (window focus)
 
 Since the `layoutchange` event has no reliable browser support, detect changes via **window focus**:
 
-1. In `initialize()`: register `window.addEventListener("focus", handler)`
-2. Handler: call `getLayoutMap()`, compare with cached map
-3. If different: rebuild all maps, notify callback
+1. In `initialize()`: register `window.addEventListener("focus", handler)` if `navigator.keyboard` exists
+2. Handler: call `refreshLayoutMap()`, compare with previous map
+3. If different: notify callback
 4. Remove listener in `dispose()`
 
-**`getLayoutName(): string | null`** — returns `detectedLayoutName`
-- Heuristic: check KeyQ/KeyW/KeyZ mappings → QWERTY/AZERTY/QWERTZ/Dvorak/null
-
 **`onLayoutChange(callback: () => void): Disposable`**
+
 - Sets `this.onLayoutChangeCallback = callback`
 - Returns `{ dispose: () => { this.onLayoutChangeCallback = null } }`
 
@@ -148,11 +134,10 @@ Since the `layoutchange` event has no reliable browser support, detect changes v
 
 ### Test groups
 
-- `initialization` — API available, API unavailable, getLayoutMap rejection, focus listener registration
-- `getBaseCharacter` — QWERTY map, Dvorak map, fallback mode, unknown codes
-- `isBaseKey` — with map (true/false), fallback mode
-- `translateNumber` — QWERTY identity, Dvorak translation, fallback, invalid input
-- `getLayoutName` — before/after init, unknown layout
+- `initialization` — API available, API unavailable (QWERTY fallback), getLayoutMap rejection (QWERTY fallback), focus listener registration
+- `getBaseCharacter` — QWERTY map, Dvorak map (actual layout chars for digit codes), QWERTY fallback mode, unknown codes
+- `getCode` — QWERTY map, Dvorak map (virtual digit entries), QWERTY fallback mode, unknown chars
+- `isBaseKey` — with map (true/false, virtual digit entries), QWERTY fallback mode
 - `onLayoutChange` — callback invoked on focus-triggered change, disposed callback not invoked, map rebuilt before callback
 - `dispose` — removes focus listener, clears state
 
@@ -160,8 +145,9 @@ Since the `layoutchange` event has no reliable browser support, detect changes v
 
 ## Key design decisions
 
-1. **Synchronous public API**: `getBaseCharacter`, `isBaseKey`, `translateNumber` are all sync. They use cached data from async `initialize()`. If queried before init, fallback applies.
-2. **Window focus detection**: Instead of the unsupported `layoutchange` event, re-check layout map on window focus.
-3. **Single callback**: `onLayoutChange` supports one callback. Currently only Config Loader will register.
-4. **Identity fallback**: When API unavailable, assumes QWERTY.
-5. **No main.ts changes yet**: Service created but not wired — that's section 2.8.
+1. **Synchronous public API**: `getBaseCharacter`, `getCode`, and `isBaseKey` are sync. They use cached data from async `initialize()`. Before init, maps are null so methods return conservative defaults.
+2. **Digit virtual entries**: `getBaseCharacter()` returns actual layout base characters for all codes. Digits are accessible via `getCode()` with virtual entries — `getCode("2")` always returns `"Digit2"`. `baseCharSet` includes both actual layout chars and virtual digits.
+3. **QWERTY data fallback**: When API unavailable, `getLayoutMap()` returns predefined QWERTY data. No separate fallback functions.
+4. **Window focus detection**: Instead of the unsupported `layoutchange` event, re-check layout map on window focus.
+5. **Single callback**: `onLayoutChange` supports one callback. Currently only Config Loader will register.
+6. **No main.ts changes yet**: Service created but not wired — that's section 2.8.

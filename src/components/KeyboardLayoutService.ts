@@ -1,11 +1,11 @@
 /**
  * Keyboard Layout Service
  * Responsibility: Detect keyboard layout, translate physical key codes to base characters,
- * handle digit-to-character mapping, and monitor layout changes.
+ * and monitor layout changes.
  * Based on ADR-008: Keyboard Layout Normalization
  */
 
-import type { Disposable } from "../types";
+import type { Disposable } from '../types';
 
 /**
  * Minimal interface for the Keyboard API's layout map.
@@ -13,19 +13,11 @@ import type { Disposable } from "../types";
  * Defined locally because the Web Keyboard API types are not in the DOM lib.
  */
 interface KeyboardLayoutMap {
-	get(key: string): string | undefined;
-	has(key: string): boolean;
-	entries(): IterableIterator<[string, string]>;
-	forEach(callbackfn: (value: string, key: string) => void): void;
-	readonly size: number;
-}
-
-/**
- * Minimal interface for navigator.keyboard.
- * Defined locally for type safety since the Keyboard API is not in standard DOM types.
- */
-interface NavigatorKeyboard {
-	getLayoutMap(): Promise<KeyboardLayoutMap>;
+    get(key: string): string | undefined;
+    has(key: string): boolean;
+    entries(): IterableIterator<[string, string]>;
+    forEach(callbackfn: (value: string, key: string) => void): void;
+    readonly size: number;
 }
 
 /**
@@ -34,308 +26,236 @@ interface NavigatorKeyboard {
  * regardless of keyboard layout (the digit may be base or shifted).
  */
 const DIGIT_CODES = {
-	"0": "Digit0",
-	"1": "Digit1",
-	"2": "Digit2",
-	"3": "Digit3",
-	"4": "Digit4",
-	"5": "Digit5",
-	"6": "Digit6",
-	"7": "Digit7",
-	"8": "Digit8",
-	"9": "Digit9",
+    '0': 'Digit0',
+    '1': 'Digit1',
+    '2': 'Digit2',
+    '3': 'Digit3',
+    '4': 'Digit4',
+    '5': 'Digit5',
+    '6': 'Digit6',
+    '7': 'Digit7',
+    '8': 'Digit8',
+    '9': 'Digit9',
 } as const;
 
-/** Common QWERTY base symbols (available without modifiers) for identity fallback */
-const QWERTY_BASE_SYMBOLS = new Set([
-	";", "'", ",", ".", "/", "[", "]", "-", "=", "`", "\\",
-]);
+/** Predefined QWERTY layout mapping for fallback when Keyboard API is unavailable */
+const QWERTY_LAYOUT: [string, string][] = [
+    ['KeyA', 'a'],
+    ['KeyB', 'b'],
+    ['KeyC', 'c'],
+    ['KeyD', 'd'],
+    ['KeyE', 'e'],
+    ['KeyF', 'f'],
+    ['KeyG', 'g'],
+    ['KeyH', 'h'],
+    ['KeyI', 'i'],
+    ['KeyJ', 'j'],
+    ['KeyK', 'k'],
+    ['KeyL', 'l'],
+    ['KeyM', 'm'],
+    ['KeyN', 'n'],
+    ['KeyO', 'o'],
+    ['KeyP', 'p'],
+    ['KeyQ', 'q'],
+    ['KeyR', 'r'],
+    ['KeyS', 's'],
+    ['KeyT', 't'],
+    ['KeyU', 'u'],
+    ['KeyV', 'v'],
+    ['KeyW', 'w'],
+    ['KeyX', 'x'],
+    ['KeyY', 'y'],
+    ['KeyZ', 'z'],
+    ['Digit0', '0'],
+    ['Digit1', '1'],
+    ['Digit2', '2'],
+    ['Digit3', '3'],
+    ['Digit4', '4'],
+    ['Digit5', '5'],
+    ['Digit6', '6'],
+    ['Digit7', '7'],
+    ['Digit8', '8'],
+    ['Digit9', '9'],
+    ['BracketLeft', '['],
+    ['BracketRight', ']'],
+    ['Semicolon', ';'],
+    ['Quote', "'"],
+    ['Comma', ','],
+    ['Period', '.'],
+    ['Slash', '/'],
+    ['Backquote', '`'],
+    ['Minus', '-'],
+    ['Equal', '='],
+    ['Backslash', '\\'],
+];
 
 export class KeyboardLayoutService {
-	/** Cached layout map: physical code → base character */
-	private layoutMap: Map<string, string> | null = null;
+    /** Cached layout map: physical code → base character */
+    private layoutMap: Map<string, string> | null = null;
 
-	/** Set of characters available as base keys (for isBaseKey) */
-	private baseCharSet: Set<string> | null = null;
+    /** Reverse map: base character → physical key code (includes virtual digit entries) */
+    private charToCode: Map<string, string> | null = null;
 
-	/** Digit → base character mapping (built from DIGIT_CODES + layoutMap) */
-	private digitToChar: Map<string, string> | null = null;
+    /** Set of characters available as base keys (for isBaseKey), includes virtual digit entries */
+    private baseCharSet: Set<string> | null = null;
 
-	/** Detected layout name (heuristic), or null */
-	private detectedLayoutName: string | null = null;
+    /** Single layout change callback */
+    private onLayoutChangeCallback: (() => void) | null = null;
 
-	/** Single layout change callback */
-	private onLayoutChangeCallback: (() => void) | null = null;
+    /** Whether initialization has completed */
+    private initialized: boolean = false;
 
-	/** Whether the Keyboard API is available */
-	private apiAvailable: boolean = false;
+    /** Bound focus handler reference (for cleanup) */
+    private boundFocusHandler: (() => void) | null = null;
 
-	/** Whether initialization has completed */
-	private initialized: boolean = false;
+    /**
+     * Initialize the service: load layout map, register focus listener.
+     * Should be called once during plugin onload().
+     */
+    async initialize(): Promise<void> {
+        await this.refreshLayoutMap();
 
-	/** Bound focus handler reference (for cleanup) */
-	private boundFocusHandler: (() => void) | null = null;
+        // Only monitor focus events if the Keyboard API is available
+        const nav = navigator as unknown as Record<string, unknown>;
+        if (nav.keyboard) {
+            this.boundFocusHandler = () => {
+                this.handleFocusEvent();
+                // TODO check when it is called
+            };
+            window.addEventListener('focus', this.boundFocusHandler);
+        }
 
-	/**
-	 * Initialize the service: detect API, load layout map, register focus listener.
-	 * Should be called once during plugin onload().
-	 */
-	async initialize(): Promise<void> {
-		const keyboard = this.getNavigatorKeyboard();
-		if (keyboard) {
-			this.apiAvailable = true;
-			await this.refreshLayoutMap();
+        this.initialized = true;
+    }
 
-			// Register window focus listener for layout change detection
-			this.boundFocusHandler = () => {
-				this.handleFocusEvent();
-			};
-			window.addEventListener("focus", this.boundFocusHandler);
-		} else {
-			console.warn(
-				"KeyboardLayoutService: navigator.keyboard API not available. Using identity fallback.",
-			);
-		}
+    /**
+     * Returns the base character for a physical key code.
+     */
+    getBaseCharacter(code: string): string | null {
+        return this.layoutMap?.get(code) ?? null;
+    }
 
-		this.initialized = true;
-	}
+    /**
+     * Returns the physical key code for a base character.
+     * Digits 0-9 are always mapped to their DigitN codes as virtual entries,
+     * even if they are not the actual base character on that layout.
+     */
+    getCode(character: string): string | null {
+        // TODO if the digits are base char on the layout but moved. Then don't do the default DigitN map
+        return this.charToCode?.get(character) ?? null;
+    }
 
-	/**
-	 * Returns the base character for a physical key code.
-	 * Uses the layout map when available, falls back to QWERTY heuristic.
-	 */
-	getBaseCharacter(code: string): string | null {
-		if (this.layoutMap) {
-			return this.layoutMap.get(code) ?? null;
-		}
+    /**
+     * Checks if a character is available as a base key (without modifiers)
+     * on the current keyboard layout or is a digit.
+     */
+    isBaseKey(character: string): boolean {
+        return this.baseCharSet?.has(character) ?? false;
+    }
 
-		// Identity fallback: assume QWERTY
-		return this.fallbackGetBaseCharacter(code);
-	}
+    /**
+     * Registers a callback to be invoked when a layout change is detected.
+     * Only one callback is supported (subsequent calls replace the previous one).
+     */
+    setOnLayoutChange(callback: () => void): Disposable {
+        this.onLayoutChangeCallback = callback;
+        return {
+            dispose: () => {
+                this.onLayoutChangeCallback = null;
+            },
+        };
+    }
 
-	/**
-	 * Checks if a character is available as a base key (without modifiers)
-	 * on the current keyboard layout.
-	 */
-	isBaseKey(character: string): boolean {
-		if (this.baseCharSet) {
-			return this.baseCharSet.has(character);
-		}
+    /**
+     * Clean up resources: remove focus listener, clear all state.
+     */
+    dispose(): void {
+        if (this.boundFocusHandler) {
+            window.removeEventListener('focus', this.boundFocusHandler);
+            this.boundFocusHandler = null;
+        }
 
-		// Identity fallback: QWERTY base keys
-		return this.fallbackIsBaseKey(character);
-	}
+        this.layoutMap = null;
+        this.charToCode = null;
+        this.baseCharSet = null;
+        this.onLayoutChangeCallback = null;
+        this.initialized = false;
+    }
 
-	/**
-	 * Translates a digit (0-9) to the base character of the corresponding
-	 * physical key on the current layout.
-	 *
-	 * Example: On Programmer's Dvorak, translateNumber("3") → "}" because
-	 * the physical key Digit3 has base character "}" on that layout.
-	 */
-	translateNumber(digit: string): string {
-		// Validate input is a single digit
-		if (!(digit in DIGIT_CODES)) {
-			return digit;
-		}
+    /**
+     * Reload the layout map and rebuild charToCode + baseCharSet.
+     * Always succeeds — falls back to QWERTY data if API unavailable.
+     */
+    private async refreshLayoutMap(): Promise<void> {
+        this.layoutMap = await this.getLayoutMap();
 
-		if (this.digitToChar) {
-			return this.digitToChar.get(digit) ?? digit;
-		}
+        // Build charToCode: reverse of layoutMap + virtual digit entries
+        const charToCode = new Map<string, string>();
+        for (const [code, char] of this.layoutMap) {
+            charToCode.set(char, code);
+        }
+        // Virtual digit entries: digits always map to their DigitN code
+        for (const [digit, code] of Object.entries(DIGIT_CODES)) {
+            charToCode.set(digit, code);
+        }
+        this.charToCode = charToCode;
 
-		// Identity fallback
-		return digit;
-	}
+        // baseCharSet = all characters that have a physical code mapping
+        this.baseCharSet = new Set(charToCode.keys());
+    }
 
-	/**
-	 * Returns the detected layout name, or null if unknown/unavailable.
-	 * Detection is heuristic-based (checks specific key mappings).
-	 */
-	getLayoutName(): string | null {
-		return this.detectedLayoutName;
-	}
+    /**
+     * Handle window focus event: re-check layout and notify if changed.
+     */
+    private handleFocusEvent(): void {
+        const previousMap = this.layoutMap;
+        void this.refreshLayoutMap().then(() => {
+            if (this.hasLayoutChanged(previousMap, this.layoutMap)) {
+                this.onLayoutChangeCallback?.();
+            }
+        });
+    }
 
-	/**
-	 * Registers a callback to be invoked when a layout change is detected.
-	 * Only one callback is supported (subsequent calls replace the previous one).
-	 */
-	onLayoutChange(callback: () => void): Disposable {
-		this.onLayoutChangeCallback = callback;
-		return {
-			dispose: () => {
-				this.onLayoutChangeCallback = null;
-			},
-		};
-	}
+    /**
+     * Compare two layout maps to detect changes.
+     */
+    private hasLayoutChanged(
+        previous: Map<string, string> | null,
+        current: Map<string, string> | null,
+    ): boolean {
+        if (previous === null && current === null) return false;
+        if (previous === null || current === null) return true;
+        if (previous.size !== current.size) return true;
 
-	/**
-	 * Clean up resources: remove focus listener, clear all state.
-	 */
-	dispose(): void {
-		if (this.boundFocusHandler) {
-			window.removeEventListener("focus", this.boundFocusHandler);
-			this.boundFocusHandler = null;
-		}
+        for (const [key, value] of previous) {
+            if (current.get(key) !== value) return true;
+        }
+        return false;
+    }
 
-		this.layoutMap = null;
-		this.baseCharSet = null;
-		this.digitToChar = null;
-		this.detectedLayoutName = null;
-		this.onLayoutChangeCallback = null;
-		this.apiAvailable = false;
-		this.initialized = false;
-	}
+    /**
+     * Get the keyboard layout map from the Keyboard API.
+     * Falls back to predefined QWERTY layout data if API unavailable or fails.
+     * Always succeeds.
+     */
+    private async getLayoutMap(): Promise<Map<string, string>> {
+        try {
+            const nav = navigator as unknown as Record<string, unknown>;
+            const keyboard = nav.keyboard as
+                | { getLayoutMap?: () => Promise<KeyboardLayoutMap> }
+                | undefined;
+            if (keyboard && typeof keyboard.getLayoutMap === 'function') {
+                const apiMap = await keyboard.getLayoutMap();
+                const result = new Map<string, string>();
+                apiMap.forEach((value, key) => result.set(key, value));
+                return result;
+            }
+        } catch {
+            // Fall through to QWERTY fallback
+        }
 
-	/**
-	 * Reload the layout map from the Keyboard API.
-	 * Builds layoutMap, baseCharSet, digitToChar, and detects layout name.
-	 */
-	private async refreshLayoutMap(): Promise<void> {
-		const keyboard = this.getNavigatorKeyboard();
-		if (!keyboard) {
-			this.layoutMap = null;
-			this.baseCharSet = null;
-			this.digitToChar = null;
-			this.detectedLayoutName = null;
-			return;
-		}
-
-		try {
-			const apiMap = await keyboard.getLayoutMap();
-
-			// Build layoutMap from API response
-			const newLayoutMap = new Map<string, string>();
-			apiMap.forEach((value: string, key: string) => {
-				newLayoutMap.set(key, value);
-			});
-			this.layoutMap = newLayoutMap;
-
-			// Build baseCharSet (reverse lookup)
-			this.baseCharSet = new Set(newLayoutMap.values());
-			
-			// Build digitToChar mapping
-			const newDigitToChar = new Map<string, string>();
-			for (const [digit, code] of Object.entries(DIGIT_CODES)) {
-				const baseChar = newLayoutMap.get(code);
-				if (baseChar !== undefined) {
-					newDigitToChar.set(digit, baseChar);
-				}
-			}
-			this.digitToChar = newDigitToChar;
-
-			// Detect layout name (heuristic)
-			this.detectedLayoutName = this.detectLayoutName(newLayoutMap);
-		} catch (error) {
-			console.warn(
-				"KeyboardLayoutService: Failed to get layout map.",
-				error,
-			);
-			this.layoutMap = null;
-			this.baseCharSet = null;
-			this.digitToChar = null;
-			this.detectedLayoutName = null;
-		}
-	}
-
-	/**
-	 * Handle window focus event: re-check layout and notify if changed.
-	 */
-	private handleFocusEvent(): void {
-		if (!this.apiAvailable) return;
-
-		const previousMap = this.layoutMap;
-		void this.refreshLayoutMap().then(() => {
-			if (this.hasLayoutChanged(previousMap, this.layoutMap)) {
-				this.onLayoutChangeCallback?.();
-			}
-		});
-	}
-
-	/**
-	 * Compare two layout maps to detect changes.
-	 */
-	private hasLayoutChanged(
-		previous: Map<string, string> | null,
-		current: Map<string, string> | null,
-	): boolean {
-		if (previous === null && current === null) return false;
-		if (previous === null || current === null) return true;
-		if (previous.size !== current.size) return true;
-
-		for (const [key, value] of previous) {
-			if (current.get(key) !== value) return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Detect layout name by checking specific key mappings.
-	 * Returns null for unrecognized layouts.
-	 */
-	private detectLayoutName(layoutMap: Map<string, string>): string | null {
-		const keyQ = layoutMap.get("KeyQ");
-		const keyW = layoutMap.get("KeyW");
-		const keyZ = layoutMap.get("KeyZ");
-		const keyA = layoutMap.get("KeyA");
-
-		if (keyQ === "q" && keyW === "w") {
-			if (keyZ === "z") return "QWERTY";
-			if (keyZ === "y") return "QWERTZ";
-		}
-
-		if (keyQ === "a" && keyW === "z") return "AZERTY";
-		if (keyQ === "'" && keyW === ",") return "Dvorak";
-
-		return null;
-	}
-
-	/**
-	 * Get navigator.keyboard with type safety.
-	 * Returns null if the API is not available.
-	 */
-	private getNavigatorKeyboard(): NavigatorKeyboard | null {
-		const nav = navigator as unknown as Record<string, unknown>;
-		const keyboard = nav.keyboard as NavigatorKeyboard | undefined;
-		if (keyboard && typeof keyboard.getLayoutMap === "function") {
-			return keyboard;
-		}
-		return null;
-	}
-
-	/**
-	 * Fallback: extract base character from key code assuming QWERTY.
-	 */
-	private fallbackGetBaseCharacter(code: string): string | null {
-		// "KeyA" → "a", "KeyB" → "b", etc.
-		if (code.startsWith("Key") && code.length === 4) {
-			return code.charAt(3).toLowerCase();
-		}
-
-		// "Digit0" → "0", "Digit1" → "1", etc.
-		if (code.startsWith("Digit") && code.length === 6) {
-			return code.charAt(5);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Fallback: check if character is a QWERTY base key.
-	 */
-	private fallbackIsBaseKey(character: string): boolean {
-		// Lowercase letters
-		if (character.length === 1 && character >= "a" && character <= "z") {
-			return true;
-		}
-
-		// Digits
-		if (character.length === 1 && character >= "0" && character <= "9") {
-			return true;
-		}
-
-		// Common QWERTY base symbols
-		return QWERTY_BASE_SYMBOLS.has(character);
-	}
+        return new Map(QWERTY_LAYOUT);
+    }
 }
 
 /**

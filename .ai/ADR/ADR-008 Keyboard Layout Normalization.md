@@ -29,14 +29,14 @@ Implement a **Keyboard Layout Service** that:
 
 Layout-based translation happens when the user presses a key, **not** when loading presets. See [ADR-010](ADR-010%20Keyboard%20Layout%20Translation%20Timing.md) for the full rationale.
 
-The Input Handler uses the Keyboard Layout Service at match time to:
+The Matcher uses the Keyboard Layout Service to translate hotkey definitions to physical keycodes at cache time, then matches input by keycode:
 
-- **Translate number keys (0-9)**: Two-step translation using hardcoded digit-to-physical-key mapping:
-  1. Map digit N → physical key code `DigitN` (hardcoded; `getLayoutMap()` only returns base/unshifted characters, so reverse lookup is not possible)
-  2. Look up `layoutMap.get("DigitN")` to get the base character on the current layout
-  - Example: User presses Ctrl+Digit3 on Programmer's Dvorak → normalized to "ctrl+{" → matches against stored hotkey
-
-- **Handle symbol availability**: If a symbol key requires a modifier on the user's layout, the normalization accounts for this
+- **Hotkey caching**: The Matcher calls `getCode(character)` to translate each hotkey definition's character to a physical key code. Digits 0-9 always resolve to their DigitN codes via virtual entries.
+- **Input matching**: On keypress, the Input Handler provides `event.code` (physical key). The Matcher compares this against cached keycodes.
+- **Dual matching**: On Programmer's Dvorak, both `ctrl+2` and `ctrl+[` resolve to `Digit2` via `getCode()`, so pressing Ctrl+Digit2 matches both hotkeys.
+  - Example: Hotkey `ctrl+3` → `getCode("3")` → `Digit3`. User presses Ctrl+Digit3 → keycode `Digit3` → match.
+- **Base character lookup**: `getBaseCharacter(event.code)` returns the actual layout base character for all codes, including digit codes (e.g., `getBaseCharacter("Digit3")` returns `"{"` on Programmer's Dvorak).
+- **Symbol availability**: If a symbol key requires a modifier on the user's layout, the normalization accounts for this
 
 ### Display
 
@@ -67,4 +67,4 @@ The Keyboard Layout Service monitors for layout changes:
 - Settings UI uses layout service for display translation
 - Config Manager does **not** use layout service — stores hotkeys in original notation (see [ADR-010](ADR-010%20Keyboard%20Layout%20Translation%20Timing.md))
 - Layout changes update the Input Handler's normalization automatically; no config reload needed
-- Fallback behavior needed if Keyboard API unavailable (mobile, older browsers)
+- Fallback behavior: when Keyboard API is unavailable, the service uses predefined QWERTY layout data so all code paths work uniformly

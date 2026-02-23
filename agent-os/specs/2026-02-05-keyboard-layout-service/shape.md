@@ -15,18 +15,23 @@ Implement the Keyboard Layout Service singleton (Development Plan section 2.7). 
 - **Rationale**: Currently only one consumer (Config Loader for preset reload). Simplifies the implementation.
 
 ### Decision 3: Synchronous Public API
-- **Choice**: All translation methods (`getBaseCharacter`, `isBaseKey`, `translateNumber`) are synchronous
-- **Rationale**: `InputHandler.normalize()` calls `getBaseCharacter()` on every keypress and must be synchronous. Methods use cached data from async `initialize()`. Before init completes, identity fallback applies.
+- **Choice**: All translation methods (`getBaseCharacter`, `getCode`, `isBaseKey`) are synchronous
+- **Rationale**: `InputHandler.normalize()` calls `getBaseCharacter()` on every keypress and must be synchronous. The matcher calls `getCode()` to translate hotkey definitions to keycodes at cache time. Methods use cached data from async `initialize()`. Before init completes, maps are null so methods return conservative defaults (null/false).
 
-### Decision 4: Digit Mapping Approach
-- **Choice**: Hardcoded digit N → physical key DigitN, then look up base character from layout map
-- **Rationale**: `getLayoutMap()` only returns base (unshifted) characters. Digits 0-9 always correspond to Digit0-Digit9 physical keys (UI Events spec). The base character of that physical key is what we need for translation.
+### Decision 4: Digit Mapping via Reverse Map with Virtual Entries
+- **Choice**: `getBaseCharacter()` returns the actual layout base character for all codes, including digit codes. Digits are handled via a reverse map (`charToCode`) with virtual entries — `getCode("2")` always returns `"Digit2"` regardless of layout. `DIGIT_CODES` constant provides the virtual digit → code mappings. `baseCharSet` includes both actual layout base characters and virtual digit entries.
+- **Rationale**: On Programmer's Dvorak, pressing Ctrl+Digit2 should match both `ctrl+2` and `ctrl+[` (the actual base char). The matcher translates hotkey character definitions to physical keycodes via `getCode()` and matches at the keycode level. Virtual digit entries ensure digits always resolve to their DigitN codes.
 
-### Decision 5: Identity Fallback
-- **Choice**: Identity mapping (QWERTY-assumed) when API unavailable
-- **Rationale**: Chrome 138 in Obsidian's Electron supports the API. Fallback is for robustness. Since presets are authored for QWERTY, identity is correct degradation.
+### Decision 5: QWERTY Data Fallback
+- **Choice**: When the Keyboard API is unavailable or `getLayoutMap()` fails, `getLayoutMap()` returns a predefined QWERTY layout map. This means `layoutMap` and `baseCharSet` are always populated after initialization — no separate fallback functions needed.
+- **Rationale**: Chrome 138 in Obsidian's Electron supports the API. Fallback is for robustness. Since presets are authored for QWERTY, feeding QWERTY data into the same code path is the correct degradation and eliminates branching in `getBaseCharacter()` and `isBaseKey()`.
 
-### Decision 6: No main.ts Wiring
+### Decision 6: Layout Name Detection Removed
+
+- **Choice**: Remove `getLayoutName()`, `detectLayoutName()`, and `detectedLayoutName`. No layout name tracking.
+- **Rationale**: There is no reliable way to determine the actual layout name, and no significant consumer for this information. The service translates physical key codes to characters — knowing the layout name adds no value.
+
+### Decision 7: No main.ts Wiring
 - **Choice**: Create the service and singleton export, but don't wire into plugin startup
 - **Rationale**: Wiring `initialize()` into `onload()` and updating InputHandler is part of section 2.8 (InputHandler Layout Integration).
 
