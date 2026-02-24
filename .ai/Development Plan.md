@@ -21,9 +21,9 @@
 
 | Task                                                                                                | Effort | Dependencies | Done |
 | --------------------------------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Initialize Obsidian plugin scaffold                                                                 | 0.5d   | —            | done |
-| Set up TypeScript config, linting, build                                                            | 0.5d   | —            | done |
-| Define shared data types (`KeyPress`, `HotkeyEntry`, `HotkeyPreset`, `Command`, `Disposable`, etc.) | 0.5d   | —            | done |
+| Initialize Obsidian plugin scaffold                                                                 | 0.5d   | —            | ✅   |
+| Set up TypeScript config, linting, build                                                            | 0.5d   | —            | ✅   |
+| Define shared data types (`KeyPress`, `HotkeyEntry`, `HotkeyPreset`, `Command`, `Disposable`, etc.) | 0.5d   | —            | ✅   |
 
 ### 1.2 Hotkey Context Components
 
@@ -31,63 +31,63 @@ Components inside the Hotkey Context group, built individually before the Input 
 
 | Task                                                                    | Effort | Dependencies            | Done |
 | ----------------------------------------------------------------------- | ------ | ----------------------- | ---- |
-| Wire Matcher rebuild as onChange callback on Hotkey Manager during init | 0.25d  | Hotkey Manager, Matcher |      |
+| Wire Matcher rebuild as onChange callback on Hotkey Manager during init | 0.25d  | Hotkey Manager, Matcher | ✅   |
 
 #### ChordSequenceBuffer
 
 | Task                               | Effort | Dependencies | Done |
 | ---------------------------------- | ------ | ------------ | ---- |
-| Implement pending state management | 0.25d  | 1.1          | Done |
-| Implement `append`, `clear`        | 0.5d   | 1.1          | Done |
-| Implement timeout logic            | 0.5d   | 1.1          | Done |
-| Test sequence building and timeout | 0.25d  |              | Done |
+| Implement pending state management | 0.25d  | 1.1          | ✅   |
+| Implement `append`, `clear`        | 0.5d   | 1.1          | ✅   |
+| Implement timeout logic            | 0.5d   | 1.1          | ✅   |
+| Test sequence building and timeout | 0.25d  |              | ✅   |
 
 #### Hotkey Manager
 
 | Task                                                       | Effort | Dependencies | Done |
 | ---------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement source hotkey table (keyed by sequence::command) | 0.5d   | 1.1          | Done |
-| Implement `insert`, `remove`, `clear`                      | 0.5d   |              | Done |
-| Implement onChange callback support                        | 0.25d  |              | Done |
-| Test table operations                                      | 0.25d  |              | Done |
+| Implement source hotkey table (keyed by sequence::command) | 0.5d   | 1.1          | ✅   |
+| Implement `insert`, `remove`, `clear`                      | 0.5d   |              | ✅   |
+| Implement onChange callback support                        | 0.25d  |              | ✅   |
+| Test table operations                                      | 0.25d  |              | ✅   |
 
 #### Hotkey Matcher
 
 | Task                                                    | Effort | Dependencies | Done |
 | ------------------------------------------------------- | ------ | ------------ | ---- |
-| Define matching table interface (TODO: Trie vs HashMap) | 0.25d  | 1.1          | Done |
-| Implement Map-based matching table for MVP              | 0.5d   |              | Done |
-| Implement `match(sequence): MatchResult`                | 0.5d   |              | Done |
-| Implement `isEscape`, `isChord`, `hasPrefix`            | 0.25d  |              | Done |
-| Implement rebuild from Hotkey Manager source data       | 0.5d   |              | Done |
-| Test exact match, prefix match, no match                | 0.5d   |              | Done |
+| Define matching table interface (TODO: Trie vs HashMap) | 0.25d  | 1.1          | ✅   |
+| Implement Map-based matching table for MVP              | 0.5d   |              | ✅   |
+| Implement `match(sequence): MatchResult`                | 0.5d   |              | ✅   |
+| Implement `isEscape`, `isChord`, `hasPrefix`            | 0.25d  |              | ✅   |
+| Implement rebuild from Hotkey Manager source data       | 0.5d   |              | ✅   |
+| Test exact match, prefix match, no match                | 0.5d   |              | ✅   |
 
 #### Status Indicator
 
 | Task                             | Effort | Dependencies | Done |
 | -------------------------------- | ------ | ------------ | ---- |
-| Create status bar element        | 0.25d  | 1.1          | Done |
-| Implement `showPending`, `clear` | 0.25d  |              | Done |
-| Style indicator                  | 0.25d  |              | Done |
+| Create status bar element        | 0.25d  | 1.1          | ✅   |
+| Implement `showPending`, `clear` | 0.25d  |              | ✅   |
+| Style indicator                  | 0.25d  |              | ✅   |
 
 ### 1.3 Hotkey Context Engine (Stub)
 
 | Task                                                  | Effort | Dependencies | Done |
 | ----------------------------------------------------- | ------ | ------------ | ---- |
-| Implement global singleton with `state` Map           | 0.25d  | 1.1          | Done |
-| Implement `setContext`, `getContext`, `getAllContext` | 0.25d  |              | Done |
-| Stub `evaluate(whenClause)` as `() => true`           | 0.25d  |              | Done |
-| Implement `filter(entries)` using stub evaluation     | 0.25d  |              | Done |
+| Implement global singleton with `state` Map           | 0.25d  | 1.1          | ✅   |
+| Implement `setContext`, `getContext`, `getAllContext` | 0.25d  |              | ✅   |
+| Stub `evaluate(whenClause)` as `() => true`           | 0.25d  |              | ✅   |
+| Implement `filter(entries)` using stub evaluation     | 0.25d  |              | ✅   |
 
 ### 1.4 Command Registry
 
 | Task                                      | Effort | Dependencies | Done |
 | ----------------------------------------- | ------ | ------------ | ---- |
-| Implement commands Map                    | 0.25d  | 1.1          | Done |
-| Implement `registerCommand`, `getCommand` | 0.5d   |              | Done |
-| Implement `execute(commandId, args)`      | 0.5d   |              | Done |
-| Implement `loadObsidianCommands`          | 0.5d   |              | Done |
-| Test command registration and execution   | 0.25d  |              | Done |
+| Implement commands Map                    | 0.25d  | 1.1          | ✅   |
+| Implement `registerCommand`, `getCommand` | 0.5d   |              | ✅   |
+| Implement `execute(commandId, args)`      | 0.5d   |              | ✅   |
+| Implement `loadObsidianCommands`          | 0.5d   |              | ✅   |
+| Test command registration and execution   | 0.25d  |              | ✅   |
 
 ### 1.5 Input Handler
 
@@ -95,17 +95,17 @@ The main orchestrator. Registers a global `keydown` listener and drives the full
 
 | Task                                                                                         | Effort | Dependencies  | Done |
 | -------------------------------------------------------------------------------------------- | ------ | ------------- | ---- |
-| Implement global `keydown` listener registration and teardown                                | 0.5d   | 1.1           | Done |
-| Implement `normalize(KeyboardEvent): KeyPress`                                               | 0.5d   | 1.1           | Done |
-| Wire pipeline: normalize → ChordSequenceBuffer → Matcher → Command Registry                  | 0.5d   | 1.2, 1.3, 1.4 | Done |
-| Wire ChordSequenceBuffer → Status Indicator for pending display                              | 0.25d  | 1.2           | Done |
-| Implement exact match flow: clear buffer → execute command → update `lastActionWasYank` flag | 0.5d   |               | Done |
-| Implement prefix match flow: buffer key, show pending, suppress event                        | 0.25d  |               | Done |
-| Implement no match (chord) flow: clear buffer, suppress event                                | 0.25d  |               | Done |
-| Implement no match (non-chord) flow: clear buffer, pass through to Obsidian                  | 0.25d  |               | Done |
-| Implement timeout → clear flow                                                               | 0.25d  |               | Done |
-| Implement escape → clear flow                                                                | 0.25d  |               | Done |
-| End-to-end testing with hardcoded hotkeys                                                    | 0.5d   |               | Done |
+| Implement global `keydown` listener registration and teardown                                | 0.5d   | 1.1           | ✅   |
+| Implement `normalize(KeyboardEvent): KeyPress`                                               | 0.5d   | 1.1           | ✅   |
+| Wire pipeline: normalize → ChordSequenceBuffer → Matcher → Command Registry                  | 0.5d   | 1.2, 1.3, 1.4 | ✅   |
+| Wire ChordSequenceBuffer → Status Indicator for pending display                              | 0.25d  | 1.2           | ✅   |
+| Implement exact match flow: clear buffer → execute command → update `lastActionWasYank` flag | 0.5d   |               | ✅   |
+| Implement prefix match flow: buffer key, show pending, suppress event                        | 0.25d  |               | ✅   |
+| Implement no match (chord) flow: clear buffer, suppress event                                | 0.25d  |               | ✅   |
+| Implement no match (non-chord) flow: clear buffer, pass through to Obsidian                  | 0.25d  |               | ✅   |
+| Implement timeout → clear flow                                                               | 0.25d  |               | ✅   |
+| Implement escape → clear flow                                                                | 0.25d  |               | ✅   |
+| End-to-end testing with hardcoded hotkeys                                                    | 0.5d   |               | ✅   |
 
 **Phase 1 Total:** ~5-6 days
 
@@ -123,12 +123,12 @@ Editor operations abstracted through Workspace Context. No separate Editor Inter
 
 | Task                                                      | Effort | Dependencies | Done |
 | --------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement active editor accessor                          | 0.25d  | Phase 1      |      |
-| Implement selection operations: has, get, getRange        | 0.5d   |              |      |
-| Implement `getTextAtCursor(unit)` for line                | 0.5d   |              |      |
-| Implement `deleteRange`, `insertAtCursor`, `replaceRange` | 0.5d   |              |      |
-| Implement `isFocused`                                     | 0.25d  |              |      |
-| Test editor operations                                    | 0.25d  |              |      |
+| Implement active editor accessor                          | 0.25d  | Phase 1      | ✅   |
+| Implement selection operations: has, get, getRange        | 0.5d   |              | ✅   |
+| Implement `getTextAtCursor(unit)` for line                | 0.5d   |              | ✅   |
+| Implement `deleteRange`, `insertAtCursor`, `replaceRange` | 0.5d   |              | ✅   |
+| Implement `isFocused`                                     | 0.25d  |              | ✅   |
+| Test editor operations                                    | 0.25d  |              | ✅   |
 
 ### 2.2 Kill Ring
 
@@ -136,15 +136,15 @@ System clipboard is accessed directly via `navigator.clipboard` — it's an exte
 
 | Task                                                                            | Effort | Dependencies | Done |
 | ------------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement clipboard read/write utilities with permission/error handling         | 0.5d   | Phase 1      | Done |
-| Implement entries ring buffer with `maxSize`                                    | 0.25d  |              | Done |
-| Implement `push(text)` with clipboard sync                                      | 0.5d   |              | Done |
-| Implement `yank()` with external clipboard detection                            | 0.5d   |              | Done |
-| Implement `yankPop()` with pointer cycling                                      | 0.5d   |              | Done |
-| Implement `canYankPop()` — reads `lastActionWasYank` from Hotkey Context Engine | 0.25d  |              | Done |
-| Implement yank range tracking (`setYankRange`, `getYankRange`)                  | 0.25d  |              | Done |
-| Implement `getEntries()` for future browser UI                                  | 0.25d  |              | Done |
-| Test kill ring flows                                                            | 0.5d   |              | Done |
+| Implement clipboard read/write utilities with permission/error handling         | 0.5d   | Phase 1      | ✅   |
+| Implement entries ring buffer with `maxSize`                                    | 0.25d  |              | ✅   |
+| Implement `push(text)` with clipboard sync                                      | 0.5d   |              | ✅   |
+| Implement `yank()` with external clipboard detection                            | 0.5d   |              | ✅   |
+| Implement `yankPop()` with pointer cycling                                      | 0.5d   |              | ✅   |
+| Implement `canYankPop()` — reads `lastActionWasYank` from Hotkey Context Engine | 0.25d  |              | ✅   |
+| Implement yank range tracking (`setYankRange`, `getYankRange`)                  | 0.25d  |              | ✅   |
+| Implement `getEntries()` for future browser UI                                  | 0.25d  |              | ✅   |
+| Test kill ring flows                                                            | 0.5d   |              | ✅   |
 
 ### 2.3 Editor Commands
 
@@ -157,51 +157,51 @@ Commands implemented as part of Phase 2. Each command is registered in the Comma
 
 7 commands. **Custom implementation** — these interact with the Kill Ring and must capture text before deletion. Kill-word commands use CM6's `selectGroupForward`/`selectGroupBackward` to compute word ranges.
 
-| Command              | Hotkey        | Implementation                                                          |
-| -------------------- | ------------- | ----------------------------------------------------------------------- |
-| `kill-line`          | `C-k`         | Compute cursor-to-EOL range → capture text → Kill Ring push → delete   |
-| `kill-region`        | `C-w`         | Read selection → capture text → Kill Ring push → delete selection       |
-| `kill-word`          | `M-d`         | `selectGroupForward` for range → capture text → Kill Ring push → delete |
-| `backward-kill-word` | `M-Backspace` | `selectGroupBackward` for range → capture text → Kill Ring push → delete|
-| `copy-region`        | `M-w`         | Read selection → capture text → Kill Ring push (no delete)              |
-| `yank`               | `C-y`         | Kill Ring yank → insert at cursor → set yank range                      |
-| `yank-pop`           | `M-y`         | Check lastActionWasYank → cycle Kill Ring → replace yank range          |
+| Command              | Hotkey        | Implementation                                                           |
+| -------------------- | ------------- | ------------------------------------------------------------------------ |
+| `kill-line`          | `C-k`         | Compute cursor-to-EOL range → capture text → Kill Ring push → delete     |
+| `kill-region`        | `C-w`         | Read selection → capture text → Kill Ring push → delete selection        |
+| `kill-word`          | `M-d`         | `selectGroupForward` for range → capture text → Kill Ring push → delete  |
+| `backward-kill-word` | `M-Backspace` | `selectGroupBackward` for range → capture text → Kill Ring push → delete |
+| `copy-region`        | `M-w`         | Read selection → capture text → Kill Ring push (no delete)               |
+| `yank`               | `C-y`         | Kill Ring yank → insert at cursor → set yank range                       |
+| `yank-pop`           | `M-y`         | Check lastActionWasYank → cycle Kill Ring → replace yank range           |
 
 | Task                                                                         | Effort | Dependencies | Done |
 | ---------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement `kill-line` (C-k): cursor-to-EOL text → Kill Ring push            | 0.5d   | 2.1, 2.2     |      |
+| Implement `kill-line` (C-k): cursor-to-EOL text → Kill Ring push             | 0.5d   | 2.1, 2.2     |      |
 | Implement `kill-region` (C-w): selection → Kill Ring push → delete           | 0.25d  | 2.1, 2.2     |      |
 | Implement `kill-word` (M-d): forward word → Kill Ring push → delete          | 0.25d  | 2.1, 2.2     |      |
 | Implement `backward-kill-word` (M-Backspace): backward word → Kill Ring push | 0.25d  | 2.1, 2.2     |      |
 | Implement `copy-region` (M-w): selection → Kill Ring (no delete)             | 0.25d  | 2.1, 2.2     |      |
-| Implement `yank` (C-y): insert from Kill Ring, set yank range               | 0.5d   | 2.1, 2.2     |      |
-| Implement `yank-pop` (M-y): cycle Kill Ring, replace last yank range        | 0.5d   | 2.1, 2.2     |      |
+| Implement `yank` (C-y): insert from Kill Ring, set yank range                | 0.5d   | 2.1, 2.2     |      |
+| Implement `yank-pop` (M-y): cycle Kill Ring, replace last yank range         | 0.5d   | 2.1, 2.2     |      |
 | Test kill/yank flows end-to-end (including yank tracking)                    | 0.5d   |              |      |
 
 #### 2.3.2 Cursor Movement Commands
 
 12 commands. **CM6 Direct Call** — each calls a CM6 built-in function (e.g., `cursorCharForward(editorView)`). CM6 handles bidi, wrapped lines, goal column, and multiple cursors.
 
-| Command                   | Hotkey         | CM6 Function (`@codemirror/commands`) |
-| ------------------------- | -------------- | ------------------------------------- |
-| `forward-char`            | `C-f`          | `cursorCharForward`                   |
-| `backward-char`           | `C-b`          | `cursorCharBackward`                  |
-| `next-line`               | `C-n`          | `cursorLineDown`                      |
-| `previous-line`           | `C-p`          | `cursorLineUp`                        |
-| `move-beginning-of-line`  | `C-a`          | `cursorLineStart`                     |
-| `move-end-of-line`        | `C-e`          | `cursorLineEnd`                       |
-| `forward-word`            | `M-f`          | `cursorGroupForward`                  |
-| `backward-word`           | `M-b`          | `cursorGroupBackward`                 |
-| `scroll-up`               | `C-v`          | `cursorPageDown`                      |
-| `scroll-down`             | `M-v`          | `cursorPageUp`                        |
-| `beginning-of-buffer`     | `M-<` (S-M-,) | `cursorDocStart`                      |
-| `end-of-buffer`           | `M->` (S-M-.) | `cursorDocEnd`                        |
+| Command                  | Hotkey        | CM6 Function (`@codemirror/commands`) |
+| ------------------------ | ------------- | ------------------------------------- |
+| `forward-char`           | `C-f`         | `cursorCharForward`                   |
+| `backward-char`          | `C-b`         | `cursorCharBackward`                  |
+| `next-line`              | `C-n`         | `cursorLineDown`                      |
+| `previous-line`          | `C-p`         | `cursorLineUp`                        |
+| `move-beginning-of-line` | `C-a`         | `cursorLineStart`                     |
+| `move-end-of-line`       | `C-e`         | `cursorLineEnd`                       |
+| `forward-word`           | `M-f`         | `cursorGroupForward`                  |
+| `backward-word`          | `M-b`         | `cursorGroupBackward`                 |
+| `scroll-up`              | `C-v`         | `cursorPageDown`                      |
+| `scroll-down`            | `M-v`         | `cursorPageUp`                        |
+| `beginning-of-buffer`    | `M-<` (S-M-,) | `cursorDocStart`                      |
+| `end-of-buffer`          | `M->` (S-M-.) | `cursorDocEnd`                        |
 
-| Task                                                               | Effort | Dependencies | Done |
-| ------------------------------------------------------------------ | ------ | ------------ | ---- |
-| Register 12 cursor movement commands as CM6 direct-call wrappers  | 0.5d   | 2.1          |      |
-| Add cursor movement hotkeys to default preset                      | 0.25d  |              |      |
-| Test cursor movement commands with active editor                   | 0.25d  |              |      |
+| Task                                                             | Effort | Dependencies | Done |
+| ---------------------------------------------------------------- | ------ | ------------ | ---- |
+| Register 12 cursor movement commands as CM6 direct-call wrappers | 0.5d   | 2.1          | ✅   |
+| Add cursor movement hotkeys to default preset                    | 0.25d  |              | ✅   |
+| Test cursor movement commands with active editor                 | 0.25d  |              |      |
 
 #### 2.3.3 Basic Editing Commands
 
@@ -213,22 +213,22 @@ Commands implemented as part of Phase 2. Each command is registered in the Comma
 | `transpose-chars` | `C-t`  | `transposeChars`                      |
 | `open-line`       | `C-o`  | `splitLine`                           |
 
-| Task                                                               | Effort | Dependencies | Done |
-| ------------------------------------------------------------------ | ------ | ------------ | ---- |
-| Register 3 basic editing commands as CM6 direct-call wrappers     | 0.25d  | 2.1          |      |
-| Add basic editing hotkeys to default preset                        | 0.25d  |              |      |
-| Test basic editing commands                                        | 0.25d  |              |      |
+| Task                                                          | Effort | Dependencies | Done |
+| ------------------------------------------------------------- | ------ | ------------ | ---- |
+| Register 3 basic editing commands as CM6 direct-call wrappers | 0.25d  | 2.1          |      |
+| Add basic editing hotkeys to default preset                   | 0.25d  |              |      |
+| Test basic editing commands                                   | 0.25d  |              |      |
 
 #### 2.3.4 Case Transformation Commands
 
 4 commands. **Custom implementation** — no CM6 built-in exists. Uses `view.dispatch()` with `changeByRange()` to transform text in-place.
 
-| Command          | Hotkey     | Implementation                                               |
-| ---------------- | ---------- | ------------------------------------------------------------ |
-| `upcase-word`    | `M-u`      | Find next word range → transform `.toUpperCase()` → dispatch |
-| `downcase-word`  | `M-l`      | Find next word range → transform `.toLowerCase()` → dispatch |
-| `upcase-region`  | `C-x C-u`  | Get selection → transform `.toUpperCase()` → dispatch        |
-| `downcase-region`| `C-x C-l`  | Get selection → transform `.toLowerCase()` → dispatch        |
+| Command           | Hotkey    | Implementation                                               |
+| ----------------- | --------- | ------------------------------------------------------------ |
+| `upcase-word`     | `M-u`     | Find next word range → transform `.toUpperCase()` → dispatch |
+| `downcase-word`   | `M-l`     | Find next word range → transform `.toLowerCase()` → dispatch |
+| `upcase-region`   | `C-x C-u` | Get selection → transform `.toUpperCase()` → dispatch        |
+| `downcase-region` | `C-x C-l` | Get selection → transform `.toLowerCase()` → dispatch        |
 
 | Task                                                                         | Effort | Dependencies | Done |
 | ---------------------------------------------------------------------------- | ------ | ------------ | ---- |
@@ -241,42 +241,42 @@ Commands implemented as part of Phase 2. Each command is registered in the Comma
 
 3 commands. **Custom implementation** — plugin state management and editor control.
 
-| Command               | Hotkey         | Implementation                                            |
-| --------------------- | -------------- | --------------------------------------------------------- |
-| `keyboard-quit`       | `C-g`          | Clear selection + clear chord buffer + reset plugin state |
+| Command               | Hotkey         | Implementation                                             |
+| --------------------- | -------------- | ---------------------------------------------------------- |
+| `keyboard-quit`       | `C-g`          | Clear selection + clear chord buffer + reset plugin state  |
 | `recenter-top-bottom` | `C-l`          | `EditorView.scrollIntoView` cycling: center → top → bottom |
-| `undo`                | `C-/`, `C-x u` | Delegate to Obsidian `editor.undo()`                     |
+| `undo`                | `C-/`, `C-x u` | Delegate to Obsidian `editor.undo()`                       |
 
-| Task                                                                         | Effort | Dependencies | Done |
-| ---------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement `keyboard-quit` (C-g): clear selection + chord buffer + state      | 0.5d   | 2.1          |      |
-| Implement `recenter-top-bottom` (C-l): scrollIntoView with position cycling  | 0.5d   | 2.1          |      |
-| Implement `undo` (C-/): delegate to editor.undo()                            | 0.25d  | 2.1          |      |
-| Add control command hotkeys to default preset                                | 0.25d  |              |      |
-| Test control commands                                                        | 0.25d  |              |      |
+| Task                                                                        | Effort | Dependencies | Done |
+| --------------------------------------------------------------------------- | ------ | ------------ | ---- |
+| Implement `keyboard-quit` (C-g): clear selection + chord buffer + state     | 0.5d   | 2.1          |      |
+| Implement `recenter-top-bottom` (C-l): scrollIntoView with position cycling | 0.5d   | 2.1          |      |
+| Implement `undo` (C-/): delegate to editor.undo()                           | 0.25d  | 2.1          |      |
+| Add control command hotkeys to default preset                               | 0.25d  |              |      |
+| Test control commands                                                       | 0.25d  |              |      |
 
 #### Phase 2 Commands Summary
 
-| Group               | Count | Strategy                      |
-| ------------------- | ----- | ----------------------------- |
-| Kill & Yank         | 7     | Custom (Kill Ring)            |
-| Cursor Movement     | 12    | CM6 Direct Call               |
-| Basic Editing       | 3     | CM6 Direct Call               |
-| Case Transformation | 4     | Custom (`changeByRange`)      |
-| Control             | 3     | Custom / Obsidian delegation  |
-| **Total**           | **29**|                               |
+| Group               | Count  | Strategy                     |
+| ------------------- | ------ | ---------------------------- |
+| Kill & Yank         | 7      | Custom (Kill Ring)           |
+| Cursor Movement     | 12     | CM6 Direct Call              |
+| Basic Editing       | 3      | CM6 Direct Call              |
+| Case Transformation | 4      | Custom (`changeByRange`)     |
+| Control             | 3      | Custom / Obsidian delegation |
+| **Total**           | **29** |                              |
 
 #### Deferred Commands (Phase 3+)
 
 These require the mark/region system (Phase 3 P2):
 
-| Command                    | Hotkey     | Phase |
-| -------------------------- | ---------- | ----- |
-| `set-mark-command`         | `C-Space`  | 3     |
-| `exchange-point-and-mark`  | `C-x C-x`  | 3     |
-| `select-all`               | `C-x h`    | 3     |
-| `mark-paragraph`           | `M-h`      | 3     |
-| `mark-word`                | `M-@`      | 3     |
+| Command                   | Hotkey    | Phase |
+| ------------------------- | --------- | ----- |
+| `set-mark-command`        | `C-Space` | 3     |
+| `exchange-point-and-mark` | `C-x C-x` | 3     |
+| `select-all`              | `C-x h`   | 3     |
+| `mark-paragraph`          | `M-h`     | 3     |
+| `mark-word`               | `M-@`     | 3     |
 
 #### Not Implementing (Obsidian Native)
 
@@ -292,69 +292,69 @@ These are handled by Obsidian's built-in systems:
 
 ### 2.4 String Parser & Types
 
-| Task | Effort | Dependencies | Done |
-| --- | --- | --- | --- |
-| Add `ConfigHotkeyEntry` interface extending `HotkeyEntry` in `types.ts` | 0.25d | Phase 1 | done |
-| Implement `parseHotkeyString()` in `utils/hotkey.ts` | 0.5d | | done |
-| Add constants: `VALID_MODIFIERS`, `SPECIAL_KEY_MAP` | 0.25d | | done |
-| Handle bare second chord (no modifier required) | — | | done |
-| Console warn + skip for `+` as base key | — | | done |
-| Test: chords, modifiers, special keys, bare second chord, edge cases | 0.5d | | done |
+| Task                                                                    | Effort | Dependencies | Done |
+| ----------------------------------------------------------------------- | ------ | ------------ | ---- |
+| Add `ConfigHotkeyEntry` interface extending `HotkeyEntry` in `types.ts` | 0.25d  | Phase 1      | ✅   |
+| Implement `parseHotkeyString()` in `utils/hotkey.ts`                    | 0.5d   |              | ✅   |
+| Add constants: `VALID_MODIFIERS`, `SPECIAL_KEY_MAP`                     | 0.25d  |              | ✅   |
+| Handle bare second chord (no modifier required)                         | —      |              | ✅   |
+| Console warn + skip for `+` as base key                                 | —      |              | ✅   |
+| Test: chords, modifiers, special keys, bare second chord, edge cases    | 0.5d   |              | ✅   |
 
 ### 2.5 Config Manager
 
-| Task | Effort | Dependencies | Done |
-| --- | --- | --- | --- |
-| Add `PLUGIN_DATA_PATH` constant in `constants.ts` | — | 2.4 | done |
-| Implement ConfigManager class with `constructor(adapter)` + `setOnChange` | 0.5d | 2.4 | done |
-| Implement custom file I/O (`readJsonFile`, `writeJsonFile` via vault adapter) | 0.5d | | done |
-| Implement `loadAll()` — read preset + user hotkeys, parse, fire onChange | 0.5d | | done |
-| Implement `registerPluginHotkeys(pluginName, bindings[])` returning Disposable | 0.25d | | done |
-| Implement `addUserHotkey(command, key?, when?)` with file persistence | 0.5d | | done |
-| Implement `removeHotkey()` placeholder (stub, throws "not implemented") | — | | done |
-| Test: loading, persistence, plugin registration, round-trip | 0.5d | | done |
+| Task                                                                           | Effort | Dependencies | Done |
+| ------------------------------------------------------------------------------ | ------ | ------------ | ---- |
+| Add `PLUGIN_DATA_PATH` constant in `constants.ts`                              | —      | 2.4          | ✅   |
+| Implement ConfigManager class with `constructor(adapter)` + `setOnChange`      | 0.5d   | 2.4          | ✅   |
+| Implement custom file I/O (`readJsonFile`, `writeJsonFile` via vault adapter)  | 0.5d   |              | ✅   |
+| Implement `loadAll()` — read preset + user hotkeys, parse, fire onChange       | 0.5d   |              | ✅   |
+| Implement `registerPluginHotkeys(pluginName, bindings[])` returning Disposable | 0.25d  |              | ✅   |
+| Implement `addUserHotkey(command, key?, when?)` with file persistence          | 0.5d   |              | ✅   |
+| Implement `removeHotkey()` placeholder (stub, throws "not implemented")        | —      |              | ✅   |
+| Test: loading, persistence, plugin registration, round-trip                    | 0.5d   |              | ✅   |
 
 ### 2.6 HotkeyManager Recalculate + Preset Migration
 
-| Task | Effort | Dependencies | Done |
-| --- | --- | --- | --- |
-| Add `recalculate(preset, plugin, user)` to HotkeyManager | 0.5d | 2.5 | |
-| Implement removal logic in recalculate (by `hotkeyString`, by command) | 0.25d | | |
-| Create `src/presets/emacs.json` with current bindings in string notation | 0.5d | | |
-| Delete `src/presets/default.ts` | — | | |
-| Update `main.ts`: create ConfigManager, wire onChange → recalculate | 0.25d | | |
-| Update `HotkeyContext`: remove preset param + `loadPreset()` | 0.25d | | |
-| End-to-end test: load preset → apply overrides → verify hotkeys | 0.5d | | |
+| Task                                                                     | Effort | Dependencies | Done |
+| ------------------------------------------------------------------------ | ------ | ------------ | ---- |
+| Add `recalculate(preset, plugin, user)` to HotkeyManager                 | 0.5d   | 2.5          |      |
+| Implement removal logic in recalculate (by `hotkeyString`, by command)   | 0.25d  |              |      |
+| Create `src/presets/emacs.json` with current bindings in string notation | 0.5d   |              |      |
+| Delete `src/presets/default.ts`                                          | —      |              |      |
+| Update `main.ts`: create ConfigManager, wire onChange → recalculate      | 0.25d  |              |      |
+| Update `HotkeyContext`: remove preset param + `loadPreset()`             | 0.25d  |              |      |
+| End-to-end test: load preset → apply overrides → verify hotkeys          | 0.5d   |              |      |
 
 ### 2.7 Keyboard Layout Service
 
 | Task                                                               | Effort | Dependencies | Done |
 | ------------------------------------------------------------------ | ------ | ------------ | ---- |
-| Implement Keyboard Layout Service singleton                        | 0.5d   | Phase 1      | done |
-| Implement `getLayoutMap()` wrapper with error handling             | 0.5d   |              | done |
-| Implement `getBaseCharacter(code): string \| null`                 | 0.25d  |              | done |
-| Implement `isBaseKey(character): boolean`                          | 0.25d  |              | done |
-| Implement dynamic digit-to-code mapping from layout                | 0.5d   |              | done |
-| Implement `translateNumber(digit): string` using dynamic mapping   | 0.25d  |              | done |
-| Implement window focus listener for layout change detection        | 0.25d  |              | done |
-| Implement `onLayoutChange(callback): Disposable` (single callback) | 0.25d  |              | done |
-| Implement identity fallback for unsupported environments           | 0.5d   |              | done |
-| Test layout detection, translation, and change handling            | 0.5d   |              | done |
+| Implement Keyboard Layout Service singleton                        | 0.5d   | Phase 1      | ✅   |
+| Implement `getLayoutMap()` wrapper with error handling             | 0.5d   |              | ✅   |
+| Implement `getBaseCharacter(code): string \| null`                 | 0.25d  |              | ✅   |
+| Implement `isBaseKey(character): boolean`                          | 0.25d  |              | ✅   |
+| Implement dynamic digit-to-code mapping from layout                | 0.5d   |              | ✅   |
+| Implement `translateNumber(digit): string` using dynamic mapping   | 0.25d  |              | ✅   |
+| Implement window focus listener for layout change detection        | 0.25d  |              | ✅   |
+| Implement `onLayoutChange(callback): Disposable` (single callback) | 0.25d  |              | ✅   |
+| Implement identity fallback for unsupported environments           | 0.5d   |              | ✅   |
+| Test layout detection, translation, and change handling            | 0.5d   |              | ✅   |
 
 ### 2.8 Input Handler Layout Integration
 
-| Task                                                       | Effort | Dependencies            | Done |
-| ---------------------------------------------------------- | ------ | ----------------------- | ---- |
-| Update `normalize()` to use Keyboard Layout Service        | 0.5d   | Keyboard Layout Service |      |
-| Update KeyPress.key to store layout-normalized character   | 0.25d  |                         |      |
-| Test input normalization on different layouts              | 0.5d   |                         |      |
+| Task                                                     | Effort | Dependencies            | Done |
+| -------------------------------------------------------- | ------ | ----------------------- | ---- |
+| Update `normalize()` to use Keyboard Layout Service      | 0.5d   | Keyboard Layout Service |      |
+| Update KeyPress.key to store layout-normalized character | 0.25d  |                         |      |
+| Test input normalization on different layouts            | 0.5d   |                         |      |
 
 ### 2.9 ADR Updates
 
-| Task | Effort | Dependencies | Done |
-| --- | --- | --- | --- |
-| Write ADR-010 Keyboard Layout Translation Timing | 0.25d | | done |
-| Update ADR-008 to remove load-time translation references | 0.25d | | done |
+| Task                                                      | Effort | Dependencies | Done |
+| --------------------------------------------------------- | ------ | ------------ | ---- |
+| Write ADR-010 Keyboard Layout Translation Timing          | 0.25d  |              | done |
+| Update ADR-008 to remove load-time translation references | 0.25d  |              | done |
 
 **Phase 2 Total:** ~10-12 days
 
