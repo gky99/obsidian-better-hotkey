@@ -1,12 +1,10 @@
 /**
  * Hotkey Context Component
- * Responsibility: Wrapper for all hotkey processing components + preset loading
+ * Responsibility: Wrapper for all hotkey processing components
  * Coordinates HotkeyManager, HotkeyMatcher, ChordSequenceBuffer, StatusIndicator
  * Based on Architecture.md § 3 - Hotkey Context
  */
 
-import type { HotkeyPreset } from "../../types";
-import { Priority } from "../../types";
 import { HotkeyManager } from "./HotkeyManager";
 import { HotkeyMatcher } from "./HotkeyMatcher";
 import { ChordSequenceBuffer } from "./ChordSequenceBuffer";
@@ -20,15 +18,15 @@ export class HotkeyContext {
 	public readonly statusIndicator: StatusIndicator;
 
 	/**
-	 * Create hotkey context and initialize components
+	 * Create hotkey context and initialize components.
+	 * Hotkeys are loaded externally via HotkeyManager.recalculate(),
+	 * wired from ConfigManager.onChange in main.ts.
 	 * @param chordTimeout - Timeout in ms for chord sequences (from settings)
 	 * @param statusBarItem - Status bar element for pending chord display
-	 * @param preset - Initial preset to load (TypeScript object, future: JSON string)
 	 */
 	constructor(
 		chordTimeout: number,
 		statusBarItem: HTMLElement,
-		preset: HotkeyPreset
 	) {
 		// Initialize components
 		this.hotkeyManager = new HotkeyManager();
@@ -45,26 +43,6 @@ export class HotkeyContext {
 		this.chordBuffer.setTimeoutCallback(() => {
 			this.statusIndicator.clear();
 		});
-
-		// Load preset hotkeys
-		this.loadPreset(preset);
-	}
-
-	/**
-	 * Load preset hotkeys into HotkeyManager
-	 * Registers all hotkeys from preset with Preset priority
-	 * TODO: Implement JSON preset loading in Phase 2
-	 */
-	loadPreset(preset: HotkeyPreset): void {
-		// Clear existing preset hotkeys (preserves plugin and user overrides)
-		this.hotkeyManager.clear(Priority.Preset);
-
-		// Register all hotkeys from preset
-		for (const entry of preset.hotkeys) {
-			this.hotkeyManager.insert(entry, Priority.Preset);
-		}
-
-		// HotkeyManager.insert() automatically triggers onChange → rebuild
 	}
 
 	/**

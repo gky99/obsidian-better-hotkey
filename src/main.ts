@@ -4,15 +4,15 @@ import {
     MyPluginSettings,
     SampleSettingTab,
 } from './settings';
-import { defaultPreset } from './presets';
 import { createCursorCommands, createTestCommands } from './commands';
-import { InputHandler, CommandRegistry, HotkeyContext } from './components';
+import { InputHandler, CommandRegistry, HotkeyContext, ConfigManager } from './components';
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	private inputHandler: InputHandler;
 	private commandRegistry: CommandRegistry;
 	private hotkeyContext: HotkeyContext;
+	private configManager: ConfigManager;
 
 	async onload() {
 		await this.loadSettings();
@@ -34,13 +34,22 @@ export default class MyPlugin extends Plugin {
 			this.commandRegistry.registerCommand(cmd);
 		}
 
-		// Create Hotkey Context (wraps all hotkey components + loads preset)
+		// Create Hotkey Context (wraps all hotkey components)
 		const statusBarItem = this.addStatusBarItem();
 		this.hotkeyContext = new HotkeyContext(
 			this.settings.chordTimeout,
 			statusBarItem,
-			defaultPreset
 		);
+
+		// Create ConfigManager and wire onChange → HotkeyManager.recalculate
+		const pluginDataPath = `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
+		this.configManager = new ConfigManager(this.app.vault.adapter, pluginDataPath);
+		this.configManager.setOnChange((preset, plugin, user) => {
+			this.hotkeyContext.hotkeyManager.recalculate(preset, plugin, user);
+		});
+
+		// Load config (triggers onChange → recalculate → Matcher.rebuild)
+		await this.configManager.loadAll(this.settings.selectedPreset);
 
 		// Create and start Input Handler (creates ExecutionContext internally)
 		this.inputHandler = new InputHandler(
@@ -53,8 +62,8 @@ export default class MyPlugin extends Plugin {
 
 	onunload() {
 		// Event listener cleanup handled automatically by Plugin.registerDomEvent
-		// Cleanup Hotkey Context
 		this.hotkeyContext?.destroy();
+		this.configManager?.dispose();
 	}
 
 	async loadSettings() {

@@ -8,7 +8,7 @@ export interface MyPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
-	selectedPreset: 'default',
+	selectedPreset: 'emacs',
 	chordTimeout: 5000,  // ms
 	killRingMaxSize: 60
 }
@@ -30,7 +30,7 @@ export class SampleSettingTab extends PluginSettingTab {
 			.setName('Preset')
 			.setDesc('Select the keybinding preset')
 			.addDropdown(dropdown => dropdown
-				.addOption('default', 'Default emacs-like')
+				.addOption('emacs', 'Emacs')
 				.setValue(this.plugin.settings.selectedPreset)
 				.onChange(async (value) => {
 					this.plugin.settings.selectedPreset = value;

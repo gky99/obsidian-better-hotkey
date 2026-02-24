@@ -318,13 +318,13 @@ These are handled by Obsidian's built-in systems:
 
 | Task                                                                     | Effort | Dependencies | Done |
 | ------------------------------------------------------------------------ | ------ | ------------ | ---- |
-| Add `recalculate(preset, plugin, user)` to HotkeyManager                 | 0.5d   | 2.5          |      |
-| Implement removal logic in recalculate (by `hotkeyString`, by command)   | 0.25d  |              |      |
-| Create `src/presets/emacs.json` with current bindings in string notation | 0.5d   |              |      |
-| Delete `src/presets/default.ts`                                          | —      |              |      |
-| Update `main.ts`: create ConfigManager, wire onChange → recalculate      | 0.25d  |              |      |
-| Update `HotkeyContext`: remove preset param + `loadPreset()`             | 0.25d  |              |      |
-| End-to-end test: load preset → apply overrides → verify hotkeys          | 0.5d   |              |      |
+| Add `recalculate(preset, plugin, user)` to HotkeyManager                 | 0.5d   | 2.5          | ✅   |
+| Implement removal logic in recalculate (by `hotkeyString`)               | 0.25d  |              | ✅   |
+| Create `presets/emacs.json` with current bindings in string notation     | 0.5d   |              | ✅   |
+| Delete `src/presets/default.ts`                                          | —      |              | ✅   |
+| Update `main.ts`: create ConfigManager, wire onChange → recalculate      | 0.25d  |              | ✅   |
+| Update `HotkeyContext`: remove preset param + `loadPreset()`             | 0.25d  |              | ✅   |
+| End-to-end test: load preset → apply overrides → verify hotkeys          | 0.5d   |              | ✅   |
 
 ### 2.7 Keyboard Layout Service
 

@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HotkeyManager } from '../HotkeyManager';
-import type { HotkeyEntry, KeyPress } from '../../../types';
+import { HotkeyMatcher } from '../HotkeyMatcher';
+import type { HotkeyEntry, KeyPress, ConfigHotkeyEntry } from '../../../types';
 import { Priority } from '../../../types';
+import { parseHotkeyString } from '../../../utils/hotkey';
 
 function key(key: string, code?: string, modifiers: Array<'ctrl'|'alt'|'shift'|'meta'> = []): KeyPress {
   return {
@@ -13,6 +15,22 @@ function key(key: string, code?: string, modifiers: Array<'ctrl'|'alt'|'shift'|'
 
 function entry(command: string, seq: KeyPress[], priority: Priority = Priority.User): HotkeyEntry {
   return { command, key: seq, priority };
+}
+
+function configEntry(
+  command: string,
+  keyString: string,
+  priority: Priority,
+  removal = false,
+): ConfigHotkeyEntry {
+  const keyPresses = keyString ? parseHotkeyString(keyString) : [];
+  return {
+    command,
+    key: keyPresses,
+    priority,
+    removal,
+    hotkeyString: keyString,
+  };
 }
 
 describe('HotkeyManager', () => {
@@ -136,7 +154,178 @@ describe('HotkeyManager', () => {
       const all2 = manager.getAll();
       expect(all2).toHaveLength(2);
     });
+  });
 
-    // Note: reindexMatcher() not implemented yet - deferred to Phase 2
+  describe('recalculate', () => {
+    it('clears existing table and inserts preset + plugin entries', () => {
+      // Pre-populate with something
+      manager.insert(entry('old-cmd', [key('z')]), Priority.User);
+      mockOnChange.mockClear();
+
+      manager.recalculate(
+        [configEntry('preset-cmd', 'ctrl+k', Priority.Preset)],
+        [configEntry('plugin-cmd', 'ctrl+p', Priority.Plugin)],
+        [],
+      );
+
+      expect(mockOnChange).toHaveBeenCalledTimes(1);
+      const [entries] = mockOnChange.mock.calls[0]!;
+      expect(entries).toHaveLength(2);
+      expect(entries.find((e: HotkeyEntry) => e.command === 'old-cmd')).toBeUndefined();
+      expect(entries.find((e: HotkeyEntry) => e.command === 'preset-cmd')).toBeDefined();
+      expect(entries.find((e: HotkeyEntry) => e.command === 'plugin-cmd')).toBeDefined();
+    });
+
+    it('inserts preset entries with Preset priority and plugin entries with Plugin priority', () => {
+      manager.recalculate(
+        [configEntry('preset-cmd', 'ctrl+k', Priority.Preset)],
+        [configEntry('plugin-cmd', 'ctrl+p', Priority.Plugin)],
+        [],
+      );
+
+      const [entries] = mockOnChange.mock.calls[0]!;
+      expect(entries.find((e: HotkeyEntry) => e.command === 'preset-cmd')!.priority).toBe(Priority.Preset);
+      expect(entries.find((e: HotkeyEntry) => e.command === 'plugin-cmd')!.priority).toBe(Priority.Plugin);
+    });
+
+    it('inserts user entries with User priority', () => {
+      manager.recalculate(
+        [],
+        [],
+        [configEntry('user-cmd', 'ctrl+u', Priority.User)],
+      );
+
+      const [entries] = mockOnChange.mock.calls[0]!;
+      expect(entries).toHaveLength(1);
+      expect(entries[0].command).toBe('user-cmd');
+      expect(entries[0].priority).toBe(Priority.User);
+    });
+
+    it('removal by hotkeyString removes specific binding, keeps others for same command', () => {
+      manager.recalculate(
+        [
+          configEntry('kill-line', 'ctrl+k', Priority.Preset),
+          configEntry('kill-line', 'ctrl+shift+k', Priority.Preset),
+        ],
+        [],
+        [configEntry('kill-line', 'ctrl+k', Priority.User, true)],
+      );
+
+      const [entries] = mockOnChange.mock.calls[0]!;
+      // Only ctrl+shift+k should remain
+      expect(entries).toHaveLength(1);
+      expect(entries[0].command).toBe('kill-line');
+    });
+
+    it('removal without hotkeyString is silently ignored', () => {
+      manager.recalculate(
+        [
+          configEntry('kill-word', 'meta+d', Priority.Preset),
+          configEntry('kill-word', 'ctrl+d', Priority.Preset),
+        ],
+        [],
+        [configEntry('kill-word', '', Priority.User, true)],
+      );
+
+      const [entries] = mockOnChange.mock.calls[0]!;
+      // Both entries should remain — removal without key is ignored
+      expect(entries).toHaveLength(2);
+    });
+
+    it('fires onChange exactly once', () => {
+      manager.recalculate(
+        [
+          configEntry('a', 'ctrl+a', Priority.Preset),
+          configEntry('b', 'ctrl+b', Priority.Preset),
+        ],
+        [configEntry('c', 'ctrl+c', Priority.Plugin)],
+        [configEntry('d', 'ctrl+d', Priority.User)],
+      );
+
+      expect(mockOnChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('user entry overrides preset with same key+command (higher priority)', () => {
+      manager.recalculate(
+        [configEntry('cmd', 'ctrl+k', Priority.Preset)],
+        [],
+        [configEntry('cmd', 'ctrl+k', Priority.User)],
+      );
+
+      const [entries] = mockOnChange.mock.calls[0]!;
+      expect(entries).toHaveLength(1);
+      expect(entries[0].priority).toBe(Priority.User);
+    });
+
+    it('removal of non-existent binding is silently ignored', () => {
+      manager.recalculate(
+        [configEntry('other', 'ctrl+o', Priority.Preset)],
+        [],
+        [configEntry('nonexistent', 'ctrl+z', Priority.User, true)],
+      );
+
+      const [entries] = mockOnChange.mock.calls[0]!;
+      expect(entries).toHaveLength(1);
+      expect(entries[0].command).toBe('other');
+    });
+
+    it('strips config metadata from stored entries', () => {
+      manager.recalculate(
+        [configEntry('test', 'ctrl+t', Priority.Preset)],
+        [],
+        [],
+      );
+
+      const [entries] = mockOnChange.mock.calls[0]!;
+      expect(entries[0]).not.toHaveProperty('removal');
+      expect(entries[0]).not.toHaveProperty('hotkeyString');
+    });
+
+    it('processes user entries in order (add then remove in sequence)', () => {
+      manager.recalculate(
+        [],
+        [],
+        [
+          configEntry('cmd', 'ctrl+a', Priority.User),
+          configEntry('cmd', 'ctrl+a', Priority.User, true),
+        ],
+      );
+
+      const [entries] = mockOnChange.mock.calls[0]!;
+      expect(entries).toHaveLength(0); // added then removed
+    });
+  });
+
+  describe('recalculate integration with HotkeyMatcher', () => {
+    it('recalculate populates Matcher so match() finds exact matches', () => {
+      const matcher = new HotkeyMatcher();
+      manager.setOnChange((entries) => matcher.rebuild(entries));
+
+      manager.recalculate(
+        [configEntry('kill-line', 'ctrl+k', Priority.Preset)],
+        [],
+        [],
+      );
+
+      const result = matcher.match(parseHotkeyString('ctrl+k'));
+      expect(result.type).toBe('exact');
+      if (result.type === 'exact') {
+        expect(result.entry.command).toBe('kill-line');
+      }
+    });
+
+    it('user removal removes preset binding from Matcher', () => {
+      const matcher = new HotkeyMatcher();
+      manager.setOnChange((entries) => matcher.rebuild(entries));
+
+      manager.recalculate(
+        [configEntry('kill-line', 'ctrl+k', Priority.Preset)],
+        [],
+        [configEntry('kill-line', 'ctrl+k', Priority.User, true)],
+      );
+
+      const result = matcher.match(parseHotkeyString('ctrl+k'));
+      expect(result.type).toBe('none');
+    });
   });
 });

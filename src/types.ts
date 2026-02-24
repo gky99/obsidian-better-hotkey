@@ -37,17 +37,6 @@ export interface ConfigHotkeyEntry extends HotkeyEntry {
 }
 
 /**
- * Represents a hotkey preset configuration
- */
-export interface HotkeyPreset {
-	name: string;
-	description: string;
-	version: string;
-	author?: string;
-	hotkeys: HotkeyEntry[];
-}
-
-/**
  * Priority levels for hotkey resolution
  * Lower number = higher priority
  */
@@ -80,11 +69,6 @@ export interface Command {
 export interface Disposable {
 	dispose(): void;
 }
-
-/**
- * Lightweight preset info for listing without loading all hotkeys
- */
-export type HotkeyPresetMeta = Omit<HotkeyPreset, 'hotkeys'>;
 
 /**
  * Plugin settings

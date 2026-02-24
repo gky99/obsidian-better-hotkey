@@ -4,7 +4,8 @@
  * Based on Architecture.md § 3 - Hotkey Context
  */
 
-import type { HotkeyEntry, Priority } from "../../types";
+import type { ConfigHotkeyEntry, HotkeyEntry } from "../../types";
+import { Priority } from "../../types";
 import { canonicalizeSequence } from "../../utils/hotkey";
 
 /**
@@ -76,6 +77,41 @@ export class HotkeyManager {
 	}
 
 	/**
+	 * Batch replace the entire hotkey table from ConfigManager sources.
+	 * Processes preset → plugin → user entries, applies user removal directives,
+	 * then fires onChange exactly once.
+	 */
+	recalculate(
+		preset: ConfigHotkeyEntry[],
+		plugin: ConfigHotkeyEntry[],
+		user: ConfigHotkeyEntry[],
+	): void {
+		this.hotkeyTable.clear();
+
+		for (const entry of preset) {
+			if (!entry.removal) {
+				this.insertEntry(entry, Priority.Preset);
+			}
+		}
+
+		for (const entry of plugin) {
+			if (!entry.removal) {
+				this.insertEntry(entry, Priority.Plugin);
+			}
+		}
+
+		for (const entry of user) {
+			if (entry.removal) {
+				this.applyRemoval(entry);
+			} else {
+				this.insertEntry(entry, Priority.User);
+			}
+		}
+
+		this.triggerOnChange();
+	}
+
+	/**
 	 * Get all hotkey entries
 	 */
 	getAll(): HotkeyEntry[] {
@@ -90,5 +126,35 @@ export class HotkeyManager {
 			const entries = this.getAll();
 			this.onChange(entries);
 		}
+	}
+
+	/**
+	 * Insert entry into table without triggering onChange.
+	 * Strips ConfigHotkeyEntry metadata (removal, hotkeyString) to store plain HotkeyEntry.
+	 */
+	private insertEntry(entry: ConfigHotkeyEntry, priority: Priority): void {
+		const hotkeyEntry: HotkeyEntry = {
+			command: entry.command,
+			key: entry.key,
+			priority,
+			...(entry.when !== undefined && { when: entry.when }),
+			...(entry.args !== undefined && { args: entry.args }),
+		};
+		const key = makeCompositeKey(hotkeyEntry);
+		this.hotkeyTable.set(key, hotkeyEntry);
+	}
+
+	/**
+	 * Remove matching entries from the table.
+	 * With hotkeyString (key.length > 0): remove specific binding by canonical sequence + command.
+	 * Without hotkeyString (key.length === 0): silently ignored.
+	 */
+	private applyRemoval(entry: ConfigHotkeyEntry): void {
+		if (entry.key.length > 0) {
+			const canonical = canonicalizeSequence(entry.key);
+			const compositeKey = `${canonical}::${entry.command}`;
+			this.hotkeyTable.delete(compositeKey);
+		}
+		// Removal without hotkeyString is silently ignored
 	}
 }
