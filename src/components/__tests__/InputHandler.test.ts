@@ -1,31 +1,49 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InputHandler } from '../InputHandler';
 import { KILL_YANK_COMMANDS } from '../../constants';
 import type { KeyPress, MatchResult } from '../../types';
 import { Priority } from '../../types';
-import type { Plugin, App } from 'obsidian';
+import type { Plugin, App, KeymapContext } from 'obsidian';
 
-// Mock obsidian module
+// Mock Scope instance shared across tests
+const mockScopeInstance = {
+    register: vi.fn().mockReturnValue({}),
+    unregister: vi.fn(),
+};
+
+// Track Scope constructor calls
+const ScopeConstructorSpy = vi.fn();
+
+// Mock obsidian module — Scope must work as a constructor with `new`
 vi.mock('obsidian', () => ({
+    Scope: class MockScope {
+        constructor(parent?: any) {
+            ScopeConstructorSpy(parent);
+            Object.assign(this, mockScopeInstance);
+        }
+    },
     MarkdownView: vi.fn(),
     App: vi.fn(),
     Plugin: vi.fn(),
 }));
 
-// Mock factory for Plugin
+// Mock factory for Plugin with Scope API support
 function createMockPlugin() {
     const mockApp = {
+        scope: {}, // root scope — parent for our scope
+        keymap: {
+            pushScope: vi.fn(),
+            popScope: vi.fn(),
+        },
         workspace: {
             getActiveViewOfType: vi.fn().mockReturnValue(null),
             activeLeaf: null,
-            on: vi.fn().mockReturnValue({
-                /* EventRef mock */
-            }),
+            on: vi.fn().mockReturnValue({}),
         },
     } as unknown as App;
     return {
         app: mockApp,
-        registerDomEvent: vi.fn(),
+        register: vi.fn(),
         registerEvent: vi.fn(),
     } as unknown as Plugin;
 }
@@ -41,6 +59,11 @@ function key(
         code: code ?? key,
         modifiers: new Set(modifiers),
     };
+}
+
+// Helper to create a minimal KeymapContext for handler invocation
+function ctx(vkey: string): KeymapContext {
+    return { vkey, modifiers: null, key: null } as unknown as KeymapContext;
 }
 
 // Mock factory for HotkeyContext
@@ -74,28 +97,35 @@ describe('InputHandler', () => {
     let mockHotkeyContext: ReturnType<typeof createMockHotkeyContext>;
     let mockCommandRegistry: ReturnType<typeof createMockCommandRegistry>;
     let mockPlugin: Plugin;
-    let capturedKeydownHandler: ((event: KeyboardEvent) => void) | null = null;
+    let capturedScopeHandler:
+        | ((evt: KeyboardEvent, ctx: KeymapContext) => false | undefined)
+        | null = null;
+
+    /** Invoke the captured scope handler with a KeyboardEvent */
+    function invokeHandler(event: KeyboardEvent): false | undefined {
+        return capturedScopeHandler!(event, ctx(event.key));
+    }
 
     beforeEach(() => {
+        vi.clearAllMocks();
+
         // Create fresh mocks
         mockHotkeyContext = createMockHotkeyContext();
         mockCommandRegistry = createMockCommandRegistry();
         mockPlugin = createMockPlugin();
 
-        // Capture the keydown handler when registerDomEvent is called
-        (
-            mockPlugin.registerDomEvent as ReturnType<typeof vi.fn>
-        ).mockImplementation(
+        // Capture handler when scope.register is called
+        mockScopeInstance.register.mockImplementation(
             (
-                target: Window,
-                event: string,
-                handler: (event: KeyboardEvent) => void,
+                _modifiers: any,
+                _key: any,
+                handler: (
+                    evt: KeyboardEvent,
+                    ctx: KeymapContext,
+                ) => false | undefined,
             ) => {
-                if (event === 'keydown') {
-                    capturedKeydownHandler = handler;
-                    // Also register it on window so tests can dispatch events
-                    window.addEventListener('keydown', handler, true);
-                }
+                capturedScopeHandler = handler;
+                return {};
             },
         );
 
@@ -107,34 +137,58 @@ describe('InputHandler', () => {
         );
     });
 
-    afterEach(() => {
-        // Cleanup - remove the captured handler if it exists
-        if (capturedKeydownHandler) {
-            window.removeEventListener('keydown', capturedKeydownHandler, true);
-            capturedKeydownHandler = null;
-        }
-        vi.clearAllMocks();
-    });
-
-    describe('Lifecycle Management', () => {
-        it('start() registers keydown listener via plugin.registerDomEvent', () => {
+    describe('Scope Lifecycle', () => {
+        it('start() creates Scope with app.scope as parent', () => {
             inputHandler.start();
-
-            expect(mockPlugin.registerDomEvent).toHaveBeenCalledWith(
-                window,
-                'keydown',
-                expect.any(Function),
-                true, // capture phase
+            expect(ScopeConstructorSpy).toHaveBeenCalledWith(
+                (mockPlugin.app as any).scope,
             );
         });
 
-        it('start() calls registerDomEvent each time (plugin handles deduplication)', () => {
+        it('start() registers catch-all handler (null, null)', () => {
             inputHandler.start();
-            inputHandler.start();
-            inputHandler.start();
+            expect(mockScopeInstance.register).toHaveBeenCalledWith(
+                null,
+                null,
+                expect.any(Function),
+            );
+        });
 
-            // registerDomEvent is called each time - plugin handles lifecycle
-            expect(mockPlugin.registerDomEvent).toHaveBeenCalledTimes(3);
+        it('start() pushes scope onto keymap', () => {
+            inputHandler.start();
+            expect(
+                (mockPlugin.app as any).keymap.pushScope,
+            ).toHaveBeenCalled();
+        });
+
+        it('start() registers teardown callback via plugin.register', () => {
+            inputHandler.start();
+            expect(
+                (mockPlugin as any).register,
+            ).toHaveBeenCalledWith(expect.any(Function));
+        });
+
+        it('stop() pops scope from keymap', () => {
+            inputHandler.start();
+            inputHandler.stop();
+            expect(
+                (mockPlugin.app as any).keymap.popScope,
+            ).toHaveBeenCalled();
+        });
+
+        it('stop() is idempotent when not started', () => {
+            expect(() => inputHandler.stop()).not.toThrow();
+        });
+
+        it('stop() clears scope references', () => {
+            inputHandler.start();
+            inputHandler.stop();
+            // Calling stop again should not call popScope again
+            (mockPlugin.app as any).keymap.popScope.mockClear();
+            inputHandler.stop();
+            expect(
+                (mockPlugin.app as any).keymap.popScope,
+            ).not.toHaveBeenCalled();
         });
     });
 
@@ -152,10 +206,8 @@ describe('InputHandler', () => {
             const event = new KeyboardEvent('keydown', {
                 key: 'a',
                 code: 'KeyA',
-                bubbles: true,
-                cancelable: true,
             });
-            window.dispatchEvent(event);
+            invokeHandler(event);
 
             // Verify pipeline flow
             expect(mockHotkeyContext.chordBuffer.append).toHaveBeenCalled();
@@ -169,12 +221,10 @@ describe('InputHandler', () => {
             const event = new KeyboardEvent('keydown', {
                 key: 'Control',
                 code: 'ControlLeft',
-                bubbles: true,
-                cancelable: true,
             });
-            window.dispatchEvent(event);
+            const result = invokeHandler(event);
 
-            // Verify pipeline was NOT triggered
+            expect(result).toBeUndefined();
             expect(mockHotkeyContext.chordBuffer.append).not.toHaveBeenCalled();
             expect(
                 mockHotkeyContext.hotkeyMatcher.match,
@@ -189,13 +239,11 @@ describe('InputHandler', () => {
                 const event = new KeyboardEvent('keydown', {
                     key: mod,
                     code: `${mod}Left`,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                const result = invokeHandler(event);
+                expect(result).toBeUndefined();
             });
 
-            // Verify pipeline was NOT triggered for any modifier
             expect(mockHotkeyContext.chordBuffer.append).not.toHaveBeenCalled();
             expect(
                 mockHotkeyContext.hotkeyMatcher.match,
@@ -209,22 +257,18 @@ describe('InputHandler', () => {
             const event = new KeyboardEvent('keydown', {
                 key: 'Escape',
                 code: 'Escape',
-                bubbles: true,
-                cancelable: true,
             });
-            window.dispatchEvent(event);
+            const result = invokeHandler(event);
 
-            // Verify escape handling
+            expect(result).toBeUndefined();
             expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
             expect(mockHotkeyContext.statusIndicator.clear).toHaveBeenCalled();
-            // Matcher should NOT be called for escape
             expect(
                 mockHotkeyContext.hotkeyMatcher.match,
             ).not.toHaveBeenCalled();
         });
 
         it('escape key clears buffer even with pending sequence', () => {
-            // Simulate pending sequence
             mockHotkeyContext.chordBuffer.append.mockReturnValue([
                 key('x', 'KeyX', ['ctrl']),
             ]);
@@ -234,12 +278,10 @@ describe('InputHandler', () => {
             const event = new KeyboardEvent('keydown', {
                 key: 'Escape',
                 code: 'Escape',
-                bubbles: true,
-                cancelable: true,
             });
-            window.dispatchEvent(event);
+            const result = invokeHandler(event);
 
-            // Verify buffer and status are cleared
+            expect(result).toBeUndefined();
             expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
             expect(mockHotkeyContext.statusIndicator.clear).toHaveBeenCalled();
         });
@@ -267,32 +309,30 @@ describe('InputHandler', () => {
                     key: 's',
                     code: 'KeyS',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
             });
 
             it('executes command via commandRegistry', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'test:command',
                     undefined,
-                    expect.anything(), // executionContext
+                    expect.anything(),
                 );
             });
 
-            it('prevents event propagation', () => {
+            it('returns false to suppress event', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                const result = invokeHandler(testEvent);
 
-                expect(testEvent.defaultPrevented).toBe(true);
+                expect(result).toBe(false);
             });
 
             it('clears buffer and status', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
                 expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
                 expect(
@@ -301,7 +341,6 @@ describe('InputHandler', () => {
             });
 
             it('passes command args to registry', () => {
-                // Override with args for this specific test
                 const exactMatchWithArgs: MatchResult = {
                     type: 'exact',
                     entry: {
@@ -316,7 +355,7 @@ describe('InputHandler', () => {
                 );
 
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'test:command',
@@ -340,8 +379,6 @@ describe('InputHandler', () => {
                     key: 'x',
                     code: 'KeyX',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
             });
 
@@ -350,25 +387,24 @@ describe('InputHandler', () => {
                 mockHotkeyContext.chordBuffer.append.mockReturnValue(sequence);
 
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
                 expect(
                     mockHotkeyContext.statusIndicator.showPending,
                 ).toHaveBeenCalledWith(sequence);
             });
 
-            it('prevents event propagation', () => {
+            it('returns false to suppress event', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                const result = invokeHandler(testEvent);
 
-                expect(testEvent.defaultPrevented).toBe(true);
+                expect(result).toBe(false);
             });
 
             it('does NOT clear buffer (keeps pending sequence)', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
-                // Buffer should NOT be cleared for prefix match
                 expect(
                     mockHotkeyContext.chordBuffer.clear,
                 ).not.toHaveBeenCalled();
@@ -389,28 +425,26 @@ describe('InputHandler', () => {
                     key: 'z',
                     code: 'KeyZ',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
             });
 
             it('clears buffer', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
                 expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
             });
 
-            it('prevents event propagation', () => {
+            it('returns false to suppress event', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                const result = invokeHandler(testEvent);
 
-                expect(testEvent.defaultPrevented).toBe(true);
+                expect(result).toBe(false);
             });
 
             it('clears status', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
                 expect(
                     mockHotkeyContext.statusIndicator.clear,
@@ -431,29 +465,26 @@ describe('InputHandler', () => {
                 testEvent = new KeyboardEvent('keydown', {
                     key: 'a',
                     code: 'KeyA',
-                    bubbles: true,
-                    cancelable: true,
                 });
             });
 
             it('clears buffer', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
                 expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
             });
 
-            it('allows event propagation (normal typing)', () => {
+            it('returns undefined to pass through (normal typing)', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                const result = invokeHandler(testEvent);
 
-                // Event should NOT be prevented for normal typing
-                expect(testEvent.defaultPrevented).toBe(false);
+                expect(result).toBeUndefined();
             });
 
             it('clears status', () => {
                 inputHandler.start();
-                window.dispatchEvent(testEvent);
+                invokeHandler(testEvent);
 
                 expect(
                     mockHotkeyContext.statusIndicator.clear,
@@ -472,12 +503,9 @@ describe('InputHandler', () => {
                 const event = new KeyboardEvent('keydown', {
                     key: 's',
                     code: 'KeyS',
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
-                // Matcher should be called with the sequence from buffer
                 expect(
                     mockHotkeyContext.hotkeyMatcher.match,
                 ).toHaveBeenCalledWith(sequence);
@@ -492,10 +520,8 @@ describe('InputHandler', () => {
                     key: 'x',
                     code: 'KeyX',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
                 expect(
                     mockHotkeyContext.hotkeyMatcher.match,
@@ -511,10 +537,8 @@ describe('InputHandler', () => {
                 const event = new KeyboardEvent('keydown', {
                     key: 'a',
                     code: 'KeyA',
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
                 expect(
                     mockHotkeyContext.hotkeyMatcher.isEscape,
@@ -529,10 +553,8 @@ describe('InputHandler', () => {
                 const event = new KeyboardEvent('keydown', {
                     key: 'a',
                     code: 'KeyA',
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
                 expect(
                     mockHotkeyContext.hotkeyMatcher.match,
@@ -557,10 +579,8 @@ describe('InputHandler', () => {
                     key: 'x',
                     code: 'KeyX',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
                 expect(
                     mockHotkeyContext.statusIndicator.showPending,
@@ -585,10 +605,8 @@ describe('InputHandler', () => {
                     key: 's',
                     code: 'KeyS',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
                 expect(
                     mockHotkeyContext.statusIndicator.clear,
@@ -602,10 +620,8 @@ describe('InputHandler', () => {
                 const event = new KeyboardEvent('keydown', {
                     key: 'Escape',
                     code: 'Escape',
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
                 expect(
                     mockHotkeyContext.statusIndicator.clear,
@@ -632,10 +648,8 @@ describe('InputHandler', () => {
                     key: 't',
                     code: 'KeyT',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'cmd:test',
@@ -663,10 +677,8 @@ describe('InputHandler', () => {
                     key: 't',
                     code: 'KeyT',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'cmd:test',
@@ -693,12 +705,9 @@ describe('InputHandler', () => {
                     key: 't',
                     code: 'KeyT',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
-                // Third argument should be executionContext
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'cmd:test',
                     undefined,
@@ -728,14 +737,9 @@ describe('InputHandler', () => {
                     key: 'y',
                     code: 'KeyY',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event);
+                invokeHandler(event);
 
-                // Verify updateLastActionWasYank was called
-                // Note: executionContext is created internally by InputHandler
-                // We verify it exists by checking if execute was called with it
                 expect(mockCommandRegistry.execute).toHaveBeenCalled();
             });
         });
@@ -743,8 +747,7 @@ describe('InputHandler', () => {
 
     describe('Edge Cases & Complex Scenarios', () => {
         describe('Error handling', () => {
-            it('catches errors in onKeyDown and clears state', () => {
-                // Force an error by making matcher throw
+            it('catches errors in handler and clears state', () => {
                 mockHotkeyContext.hotkeyMatcher.match.mockImplementation(() => {
                     throw new Error('Test error');
                 });
@@ -757,14 +760,11 @@ describe('InputHandler', () => {
                 const event = new KeyboardEvent('keydown', {
                     key: 'a',
                     code: 'KeyA',
-                    bubbles: true,
-                    cancelable: true,
                 });
 
-                // Should not throw
-                expect(() => window.dispatchEvent(event)).not.toThrow();
+                const result = invokeHandler(event);
 
-                // Should clear state
+                expect(result).toBeUndefined();
                 expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
                 expect(
                     mockHotkeyContext.statusIndicator.clear,
@@ -775,7 +775,6 @@ describe('InputHandler', () => {
             });
 
             it('clears state after error before processing next key', () => {
-                // First key causes error
                 mockHotkeyContext.hotkeyMatcher.match
                     .mockImplementationOnce(() => {
                         throw new Error('Test error');
@@ -792,24 +791,27 @@ describe('InputHandler', () => {
                 const event1 = new KeyboardEvent('keydown', {
                     key: 'a',
                     code: 'KeyA',
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event1);
+                invokeHandler(event1);
 
                 // Clear the mocks to check second key
                 vi.clearAllMocks();
+
+                // Recapture handler since mocks were cleared
+                mockScopeInstance.register.mockImplementation(
+                    (_m: any, _k: any, handler: any) => {
+                        capturedScopeHandler = handler;
+                        return {};
+                    },
+                );
 
                 // Second key should process normally
                 const event2 = new KeyboardEvent('keydown', {
                     key: 'b',
                     code: 'KeyB',
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event2);
+                invokeHandler(event2);
 
-                // Second key should flow through pipeline normally
                 expect(mockHotkeyContext.chordBuffer.append).toHaveBeenCalled();
                 expect(
                     mockHotkeyContext.hotkeyMatcher.match,
@@ -828,25 +830,20 @@ describe('InputHandler', () => {
 
                 inputHandler.start();
 
-                // Dispatch 5 keys rapidly
                 for (let i = 0; i < 5; i++) {
                     const event = new KeyboardEvent('keydown', {
                         key: 'a',
                         code: 'KeyA',
-                        bubbles: true,
-                        cancelable: true,
                     });
-                    window.dispatchEvent(event);
+                    invokeHandler(event);
                 }
 
-                // Each key should be processed independently
                 expect(
                     mockHotkeyContext.chordBuffer.append,
                 ).toHaveBeenCalledTimes(5);
                 expect(
                     mockHotkeyContext.hotkeyMatcher.match,
                 ).toHaveBeenCalledTimes(5);
-                // Buffer should be cleared after each no-match
                 expect(
                     mockHotkeyContext.chordBuffer.clear,
                 ).toHaveBeenCalledTimes(5);
@@ -881,21 +878,18 @@ describe('InputHandler', () => {
                     key: 'x',
                     code: 'KeyX',
                     ctrlKey: true,
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event1);
+                const result1 = invokeHandler(event1);
+                expect(result1).toBe(false);
 
                 // Second key immediately (exact match)
                 const event2 = new KeyboardEvent('keydown', {
                     key: 's',
                     code: 'KeyS',
-                    bubbles: true,
-                    cancelable: true,
                 });
-                window.dispatchEvent(event2);
+                const result2 = invokeHandler(event2);
+                expect(result2).toBe(false);
 
-                // Command should be executed
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'test:chord',
                     undefined,
@@ -913,19 +907,15 @@ describe('InputHandler', () => {
 
                 inputHandler.start();
 
-                // Dispatch three unrelated keys
                 const keys = ['a', 'b', 'c'];
                 keys.forEach((k) => {
                     const event = new KeyboardEvent('keydown', {
                         key: k,
                         code: `Key${k.toUpperCase()}`,
-                        bubbles: true,
-                        cancelable: true,
                     });
-                    window.dispatchEvent(event);
+                    invokeHandler(event);
                 });
 
-                // Each key should independently trigger clear
                 expect(
                     mockHotkeyContext.chordBuffer.clear,
                 ).toHaveBeenCalledTimes(3);

@@ -1,6 +1,6 @@
 # ADR-005: Event Interception Strategy
 
-**Status:** Accepted (revised)
+**Status:** Implemented
 
 ## Context
 

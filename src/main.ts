@@ -59,17 +59,16 @@ export default class MyPlugin extends Plugin {
         // Load config (triggers onChange → recalculate → Matcher.rebuild)
         await this.configManager.loadAll(this.settings.selectedPreset);
 
-        // Create and start Input Handler (creates ExecutionContext internally)
+        // Create and start Input Handler (uses Obsidian Scope API per ADR-005)
         this.inputHandler = new InputHandler(
             this.commandRegistry,
             this.hotkeyContext,
-            this, // Plugin instance (provides access to plugin.app and registerDomEvent)
+            this,
         );
         this.inputHandler.start();
     }
 
     onunload() {
-        // Event listener cleanup handled automatically by Plugin.registerDomEvent
         this.hotkeyContext?.destroy();
         this.configManager?.dispose();
     }
