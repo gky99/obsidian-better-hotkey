@@ -7,23 +7,28 @@ import type { KeyPress } from '../types';
 /**
  * Valid modifier names accepted in string notation
  */
-export const VALID_MODIFIERS: ReadonlySet<string> = new Set(["ctrl", "alt", "shift", "meta"]);
+export const VALID_MODIFIERS: ReadonlySet<string> = new Set([
+    'ctrl',
+    'alt',
+    'shift',
+    'meta',
+]);
 
 /**
  * Maps special key names in string notation to their KeyPress.key values.
  * Keys not in this map are lowercased as-is.
  */
 export const SPECIAL_KEY_MAP = {
-	space: " ",
-	backspace: "Backspace",
-	tab: "Tab",
-	enter: "Enter",
-	escape: "Escape",
-	delete: "Delete",
-	up: "ArrowUp",
-	down: "ArrowDown",
-	left: "ArrowLeft",
-	right: "ArrowRight",
+    space: ' ',
+    backspace: 'Backspace',
+    tab: 'Tab',
+    enter: 'Enter',
+    escape: 'Escape',
+    delete: 'Delete',
+    up: 'ArrowUp',
+    down: 'ArrowDown',
+    left: 'ArrowLeft',
+    right: 'ArrowRight',
 } as const;
 
 type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta';
@@ -43,53 +48,58 @@ type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta';
  * @throws Error if notation is invalid (empty, bad modifier, >2 steps, etc.)
  */
 export function parseHotkeyString(notation: string): KeyPress[] {
-	const trimmed = notation.trim();
-	if (trimmed === "") {
-		throw new Error("Hotkey notation cannot be empty");
-	}
+    const trimmed = notation.trim();
+    if (trimmed === '') {
+        throw new Error('Hotkey notation cannot be empty');
+    }
 
-	const steps = trimmed.split(" ");
-	if (steps.length > 2) {
-		throw new Error(`Chord sequences support at most 2 steps, got ${steps.length}: "${notation}"`);
-	}
+    const steps = trimmed.split(' ');
+    if (steps.length > 2) {
+        throw new Error(
+            `Chord sequences support at most 2 steps, got ${steps.length}: "${notation}"`,
+        );
+    }
 
-	const result: KeyPress[] = [];
-	for (const step of steps) {
-		result.push(parseStep(step));
-	}
-	return result;
+    const result: KeyPress[] = [];
+    for (const step of steps) {
+        result.push(parseStep(step));
+    }
+    return result;
 }
 
 /**
  * Parses a single chord step (e.g., "ctrl+x" or "b")
  */
 function parseStep(step: string): KeyPress {
-	const parts = step.split("+");
-	const keyPart = parts[parts.length - 1];
+    const parts = step.split('+');
+    const keyPart = parts[parts.length - 1];
 
-	if (keyPart === undefined || keyPart === "") {
-		throw new Error(`Plus sign cannot be used as a base key: "${step}"`);
-	}
+    if (keyPart === undefined || keyPart === '') {
+        throw new Error(`Plus sign cannot be used as a base key: "${step}"`);
+    }
 
-	const modifiers = new Set<Modifier>();
-	for (let i = 0; i < parts.length - 1; i++) {
-		const mod = parts[i]!.toLowerCase();
-		if (!VALID_MODIFIERS.has(mod)) {
-			throw new Error(`Invalid modifier "${parts[i]!}" in "${step}". Valid modifiers: ctrl, alt, shift, meta`);
-		}
-		modifiers.add(mod as Modifier);
-	}
+    const modifiers = new Set<Modifier>();
+    for (let i = 0; i < parts.length - 1; i++) {
+        const mod = parts[i]!.toLowerCase();
+        if (!VALID_MODIFIERS.has(mod)) {
+            throw new Error(
+                `Invalid modifier "${parts[i]!}" in "${step}". Valid modifiers: ctrl, alt, shift, meta`,
+            );
+        }
+        modifiers.add(mod as Modifier);
+    }
 
-	const lowerKey = keyPart.toLowerCase();
-	const key = lowerKey in SPECIAL_KEY_MAP
-		? SPECIAL_KEY_MAP[lowerKey as keyof typeof SPECIAL_KEY_MAP]
-		: lowerKey;
+    const lowerKey = keyPart.toLowerCase();
+    const key =
+        lowerKey in SPECIAL_KEY_MAP
+            ? SPECIAL_KEY_MAP[lowerKey as keyof typeof SPECIAL_KEY_MAP]
+            : lowerKey;
 
-	return {
-		modifiers,
-		key,
-		code: "",
-	};
+    return {
+        modifiers,
+        key,
+        code: '',
+    };
 }
 
 /**
@@ -105,26 +115,26 @@ function parseStep(step: string): KeyPress {
  * @returns Canonical string representation
  */
 export function canonicalizeKeyPress(keyPress: KeyPress): string {
-	const parts: string[] = [];
+    const parts: string[] = [];
 
-	// Add modifiers in consistent order: Ctrl, Meta, Alt, Shift
-	if (keyPress.modifiers.has('ctrl')) {
-		parts.push('C');
-	}
-	if (keyPress.modifiers.has('meta')) {
-		parts.push('M');
-	}
-	if (keyPress.modifiers.has('alt')) {
-		parts.push('A');
-	}
-	if (keyPress.modifiers.has('shift')) {
-		parts.push('S');
-	}
+    // Add modifiers in consistent order: Ctrl, Meta, Alt, Shift
+    if (keyPress.modifiers.has('ctrl')) {
+        parts.push('C');
+    }
+    if (keyPress.modifiers.has('meta')) {
+        parts.push('M');
+    }
+    if (keyPress.modifiers.has('alt')) {
+        parts.push('A');
+    }
+    if (keyPress.modifiers.has('shift')) {
+        parts.push('S');
+    }
 
-	// Add the key itself
-	parts.push(keyPress.key);
+    // Add the key itself
+    parts.push(keyPress.key);
 
-	return parts.join('-');
+    return parts.join('-');
 }
 
 /**
@@ -137,5 +147,5 @@ export function canonicalizeKeyPress(keyPress: KeyPress): string {
  * @returns Canonical string representation of the sequence
  */
 export function canonicalizeSequence(sequence: KeyPress[]): string {
-	return sequence.map(canonicalizeKeyPress).join(' ');
+    return sequence.map(canonicalizeKeyPress).join(' ');
 }

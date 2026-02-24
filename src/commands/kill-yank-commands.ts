@@ -7,18 +7,18 @@
  * Yank commands use WorkspaceContext for EditorRange compatibility with KillRing.
  */
 
-import type { EditorState } from "@codemirror/state";
-import type { EditorView } from "@codemirror/view";
-import type { Command } from "../types";
-import type { ExecutionContext } from "../components";
-import { KILL_YANK_COMMANDS } from "../constants";
+import type { EditorState } from '@codemirror/state';
+import type { EditorView } from '@codemirror/view';
+import type { Command } from '../types';
+import type { ExecutionContext } from '../components';
+import { KILL_YANK_COMMANDS } from '../constants';
 
 /**
  * Get EditorView from ExecutionContext, or null if unavailable.
  */
 function getEditorView(context?: ExecutionContext): EditorView | null {
-	if (!context) return null;
-	return context.workspaceContext.getEditorProxy().getEditorView();
+    if (!context) return null;
+    return context.workspaceContext.getEditorProxy().getEditorView();
 }
 
 /**
@@ -27,24 +27,24 @@ function getEditorView(context?: ExecutionContext): EditorView | null {
  * to find the end of the next word.
  */
 export function forwardWordEnd(state: EditorState, head: number): number {
-	const docLength = state.doc.length;
-	let pos = head;
+    const docLength = state.doc.length;
+    let pos = head;
 
-	// Skip non-word chars (whitespace, newlines, punctuation)
-	while (pos < docLength) {
-		const char = state.sliceDoc(pos, pos + 1);
-		if (/\w/.test(char)) break;
-		pos++;
-	}
+    // Skip non-word chars (whitespace, newlines, punctuation)
+    while (pos < docLength) {
+        const char = state.sliceDoc(pos, pos + 1);
+        if (/\w/.test(char)) break;
+        pos++;
+    }
 
-	// Skip word chars
-	while (pos < docLength) {
-		const char = state.sliceDoc(pos, pos + 1);
-		if (!/\w/.test(char)) break;
-		pos++;
-	}
+    // Skip word chars
+    while (pos < docLength) {
+        const char = state.sliceDoc(pos, pos + 1);
+        if (!/\w/.test(char)) break;
+        pos++;
+    }
 
-	return pos;
+    return pos;
 }
 
 /**
@@ -53,185 +53,209 @@ export function forwardWordEnd(state: EditorState, head: number): number {
  * to find the start of the previous word.
  */
 export function backwardWordStart(state: EditorState, head: number): number {
-	let pos = head;
+    let pos = head;
 
-	// Skip non-word chars backward
-	while (pos > 0) {
-		const char = state.sliceDoc(pos - 1, pos);
-		if (/\w/.test(char)) break;
-		pos--;
-	}
+    // Skip non-word chars backward
+    while (pos > 0) {
+        const char = state.sliceDoc(pos - 1, pos);
+        if (/\w/.test(char)) break;
+        pos--;
+    }
 
-	// Skip word chars backward
-	while (pos > 0) {
-		const char = state.sliceDoc(pos - 1, pos);
-		if (!/\w/.test(char)) break;
-		pos--;
-	}
+    // Skip word chars backward
+    while (pos > 0) {
+        const char = state.sliceDoc(pos - 1, pos);
+        if (!/\w/.test(char)) break;
+        pos--;
+    }
 
-	return pos;
+    return pos;
 }
 
 export function createKillYankCommands(): Command[] {
-	return [
-		// kill-line (C-k): Cursor to EOL, or kill newline at EOL
-		{
-			id: KILL_YANK_COMMANDS.KILL_LINE,
-			name: "Kill Line",
-			execute: (_args?: Record<string, unknown>, context?: ExecutionContext) => {
-				const view = getEditorView(context);
-				if (!view || !context) return;
+    return [
+        // kill-line (C-k): Cursor to EOL, or kill newline at EOL
+        {
+            id: KILL_YANK_COMMANDS.KILL_LINE,
+            name: 'Kill Line',
+            execute: (
+                _args?: Record<string, unknown>,
+                context?: ExecutionContext,
+            ) => {
+                const view = getEditorView(context);
+                if (!view || !context) return;
 
-				const { state } = view;
-				const head = state.selection.main.head;
-				const line = state.doc.lineAt(head);
+                const { state } = view;
+                const head = state.selection.main.head;
+                const line = state.doc.lineAt(head);
 
-				if (head === line.to) {
-					// At end of line — kill the newline character (join lines)
-					if (head < state.doc.length) {
-						context.killRing.push("\n");
-						view.dispatch({
-							changes: { from: head, to: head + 1 },
-						});
-					}
-					// At end of document — no-op
-				} else {
-					// Kill from cursor to end of line
-					const text = state.sliceDoc(head, line.to);
-					if (text) {
-						context.killRing.push(text);
-						view.dispatch({
-							changes: { from: head, to: line.to },
-						});
-					}
-				}
-			},
-		},
+                if (head === line.to) {
+                    // At end of line — kill the newline character (join lines)
+                    if (head < state.doc.length) {
+                        context.killRing.push('\n');
+                        view.dispatch({
+                            changes: { from: head, to: head + 1 },
+                        });
+                    }
+                    // At end of document — no-op
+                } else {
+                    // Kill from cursor to end of line
+                    const text = state.sliceDoc(head, line.to);
+                    if (text) {
+                        context.killRing.push(text);
+                        view.dispatch({
+                            changes: { from: head, to: line.to },
+                        });
+                    }
+                }
+            },
+        },
 
-		// kill-region (C-w): Kill selected text
-		{
-			id: KILL_YANK_COMMANDS.KILL_REGION,
-			name: "Kill Region",
-			execute: (_args?: Record<string, unknown>, context?: ExecutionContext) => {
-				const view = getEditorView(context);
-				if (!view || !context) return;
+        // kill-region (C-w): Kill selected text
+        {
+            id: KILL_YANK_COMMANDS.KILL_REGION,
+            name: 'Kill Region',
+            execute: (
+                _args?: Record<string, unknown>,
+                context?: ExecutionContext,
+            ) => {
+                const view = getEditorView(context);
+                if (!view || !context) return;
 
-				const { state } = view;
-				const range = state.selection.main;
+                const { state } = view;
+                const range = state.selection.main;
 
-				if (range.empty) return;
+                if (range.empty) return;
 
-				const text = state.sliceDoc(range.from, range.to);
-				context.killRing.push(text);
-				view.dispatch({
-					changes: { from: range.from, to: range.to },
-					selection: { anchor: range.from },
-				});
-			},
-		},
+                const text = state.sliceDoc(range.from, range.to);
+                context.killRing.push(text);
+                view.dispatch({
+                    changes: { from: range.from, to: range.to },
+                    selection: { anchor: range.from },
+                });
+            },
+        },
 
-		// kill-word (M-d): Kill forward word
-		{
-			id: KILL_YANK_COMMANDS.KILL_WORD,
-			name: "Kill Word",
-			execute: (_args?: Record<string, unknown>, context?: ExecutionContext) => {
-				const view = getEditorView(context);
-				if (!view || !context) return;
+        // kill-word (M-d): Kill forward word
+        {
+            id: KILL_YANK_COMMANDS.KILL_WORD,
+            name: 'Kill Word',
+            execute: (
+                _args?: Record<string, unknown>,
+                context?: ExecutionContext,
+            ) => {
+                const view = getEditorView(context);
+                if (!view || !context) return;
 
-				const { state } = view;
-				const head = state.selection.main.head;
-				const target = forwardWordEnd(state, head);
+                const { state } = view;
+                const head = state.selection.main.head;
+                const target = forwardWordEnd(state, head);
 
-				if (target === head) return;
+                if (target === head) return;
 
-				const text = state.sliceDoc(head, target);
-				context.killRing.push(text);
-				view.dispatch({
-					changes: { from: head, to: target },
-				});
-			},
-		},
+                const text = state.sliceDoc(head, target);
+                context.killRing.push(text);
+                view.dispatch({
+                    changes: { from: head, to: target },
+                });
+            },
+        },
 
-		// backward-kill-word (M-Backspace): Kill backward word
-		{
-			id: KILL_YANK_COMMANDS.BACKWARD_KILL_WORD,
-			name: "Backward Kill Word",
-			execute: (_args?: Record<string, unknown>, context?: ExecutionContext) => {
-				const view = getEditorView(context);
-				if (!view || !context) return;
+        // backward-kill-word (M-Backspace): Kill backward word
+        {
+            id: KILL_YANK_COMMANDS.BACKWARD_KILL_WORD,
+            name: 'Backward Kill Word',
+            execute: (
+                _args?: Record<string, unknown>,
+                context?: ExecutionContext,
+            ) => {
+                const view = getEditorView(context);
+                if (!view || !context) return;
 
-				const { state } = view;
-				const head = state.selection.main.head;
-				const target = backwardWordStart(state, head);
+                const { state } = view;
+                const head = state.selection.main.head;
+                const target = backwardWordStart(state, head);
 
-				if (target === head) return;
+                if (target === head) return;
 
-				const text = state.sliceDoc(target, head);
-				context.killRing.push(text);
-				view.dispatch({
-					changes: { from: target, to: head },
-				});
-			},
-		},
+                const text = state.sliceDoc(target, head);
+                context.killRing.push(text);
+                view.dispatch({
+                    changes: { from: target, to: head },
+                });
+            },
+        },
 
-		// copy-region (M-w): Copy selected text to kill ring (no delete)
-		{
-			id: KILL_YANK_COMMANDS.COPY_REGION,
-			name: "Copy Region",
-			execute: (_args?: Record<string, unknown>, context?: ExecutionContext) => {
-				const view = getEditorView(context);
-				if (!view || !context) return;
+        // copy-region (M-w): Copy selected text to kill ring (no delete)
+        {
+            id: KILL_YANK_COMMANDS.COPY_REGION,
+            name: 'Copy Region',
+            execute: (
+                _args?: Record<string, unknown>,
+                context?: ExecutionContext,
+            ) => {
+                const view = getEditorView(context);
+                if (!view || !context) return;
 
-				const { state } = view;
-				const range = state.selection.main;
+                const { state } = view;
+                const range = state.selection.main;
 
-				if (range.empty) return;
+                if (range.empty) return;
 
-				const text = state.sliceDoc(range.from, range.to);
-				context.killRing.push(text);
+                const text = state.sliceDoc(range.from, range.to);
+                context.killRing.push(text);
 
-				// Deselect — move cursor to head position
-				view.dispatch({
-					selection: { anchor: range.head },
-				});
-			},
-		},
+                // Deselect — move cursor to head position
+                view.dispatch({
+                    selection: { anchor: range.head },
+                });
+            },
+        },
 
-		// yank (C-y): Insert from kill ring
-		{
-			id: KILL_YANK_COMMANDS.YANK,
-			name: "Yank",
-			execute: async (_args?: Record<string, unknown>, context?: ExecutionContext) => {
-				if (!context) return;
+        // yank (C-y): Insert from kill ring
+        {
+            id: KILL_YANK_COMMANDS.YANK,
+            name: 'Yank',
+            execute: async (
+                _args?: Record<string, unknown>,
+                context?: ExecutionContext,
+            ) => {
+                if (!context) return;
 
-				const text = await context.killRing.yank();
-				if (!text) return;
+                const text = await context.killRing.yank();
+                if (!text) return;
 
-				const range = context.workspaceContext.insertAtCursor(text);
-				if (range) {
-					context.killRing.setYankRange(range);
-				}
-			},
-		},
+                const range = context.workspaceContext.insertAtCursor(text);
+                if (range) {
+                    context.killRing.setYankRange(range);
+                }
+            },
+        },
 
-		// yank-pop (M-y): Cycle kill ring, replace last yank
-		{
-			id: KILL_YANK_COMMANDS.YANK_POP,
-			name: "Yank Pop",
-			execute: (_args?: Record<string, unknown>, context?: ExecutionContext) => {
-				if (!context) return;
+        // yank-pop (M-y): Cycle kill ring, replace last yank
+        {
+            id: KILL_YANK_COMMANDS.YANK_POP,
+            name: 'Yank Pop',
+            execute: (
+                _args?: Record<string, unknown>,
+                context?: ExecutionContext,
+            ) => {
+                if (!context) return;
 
-				const text = context.killRing.yankPop();
-				if (!text) return;
+                const text = context.killRing.yankPop();
+                if (!text) return;
 
-				const yankRange = context.killRing.getYankRange();
-				if (!yankRange) return;
+                const yankRange = context.killRing.getYankRange();
+                if (!yankRange) return;
 
-				const newRange = context.workspaceContext.replaceRange(yankRange, text);
-				if (newRange) {
-					context.killRing.setYankRange(newRange);
-				}
-			},
-		},
-	];
+                const newRange = context.workspaceContext.replaceRange(
+                    yankRange,
+                    text,
+                );
+                if (newRange) {
+                    context.killRing.setYankRange(newRange);
+                }
+            },
+        },
+    ];
 }

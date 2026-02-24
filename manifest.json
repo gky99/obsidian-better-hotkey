@@ -1,11 +1,11 @@
 {
-	"id": "better-hotkey",
-	"name": "Better hotkey",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Better hotkey manager",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+    "id": "obsidian-better-hotkey",
+    "name": "Better hotkey",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "Better hotkey manager",
+    "author": "Obsidian",
+    "authorUrl": "https://obsidian.md",
+    "fundingUrl": "https://obsidian.md/pricing",
+    "isDesktopOnly": false
 }

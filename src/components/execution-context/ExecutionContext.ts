@@ -5,20 +5,20 @@
  * Based on Architecture.md § 3 - Execution Context
  */
 
-import type { Plugin } from "obsidian";
-import { KillRing } from "./KillRing";
-import { WorkspaceContext } from "./WorkspaceContext";
+import type { Plugin } from 'obsidian';
+import { KillRing } from './KillRing';
+import { WorkspaceContext } from './WorkspaceContext';
 
 export class ExecutionContext {
-	public readonly killRing: KillRing;
-	public readonly workspaceContext: WorkspaceContext;
+    public readonly killRing: KillRing;
+    public readonly workspaceContext: WorkspaceContext;
 
-	/**
-	 * Create execution context with plugin instance
-	 * @param plugin - Obsidian Plugin instance (provides app + lifecycle management)
-	 */
-	constructor(plugin: Plugin) {
-		this.killRing = new KillRing();
-		this.workspaceContext = new WorkspaceContext(plugin);
-	}
+    /**
+     * Create execution context with plugin instance
+     * @param plugin - Obsidian Plugin instance (provides app + lifecycle management)
+     */
+    constructor(plugin: Plugin) {
+        this.killRing = new KillRing();
+        this.workspaceContext = new WorkspaceContext(plugin);
+    }
 }

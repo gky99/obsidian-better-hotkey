@@ -1,29 +1,24 @@
 {
-	"compilerOptions": {
-		"inlineSourceMap": true,
-		"inlineSources": true,
-		"module": "ESNext",
-		"target": "ES6",
-		"allowJs": true,
-		"noImplicitAny": true,
-		"noImplicitThis": true,
-		"noImplicitReturns": true,
-		"moduleResolution": "Bundler",
-		"importHelpers": true,
-		"noUncheckedIndexedAccess": true,
-		"isolatedModules": true,
-		"strictNullChecks": true,
-		"strictBindCallApply": true,
-		"allowSyntheticDefaultImports": true,
-		"useUnknownInCatchVariables": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"lib": [
-			"DOM",
-			"ES2018"
-		]
-	},
-	"include": [
-		"src/**/*.ts"
-	]
+    "compilerOptions": {
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "module": "ESNext",
+        "target": "ES6",
+        "allowJs": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "moduleResolution": "Bundler",
+        "importHelpers": true,
+        "noUncheckedIndexedAccess": true,
+        "isolatedModules": true,
+        "strictNullChecks": true,
+        "strictBindCallApply": true,
+        "allowSyntheticDefaultImports": true,
+        "useUnknownInCatchVariables": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "lib": ["DOM", "ES2018"]
+    },
+    "include": ["src/**/*.ts"]
 }
