@@ -16,7 +16,9 @@
       "Bash(pnpm run lint:*)",
       "Bash(pnpm test:*)",
       "Bash(pnpm vitest run:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Skill(plannotator:plannotator-annotate)",
+      "Skill(plannotator:plannotator-annotate:*)"
     ]
   }
 }

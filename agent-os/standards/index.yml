@@ -6,7 +6,7 @@ architecture:
 
 development:
   git-worktree-workflow:
-    description: MANDATORY Task 0 in all plans; call /using-git-worktrees before any implementation
+    description: MANDATORY worktree isolation before implementation; Task 1 in all plans via /using-git-worktrees
   string-constants:
     description: Command IDs and context keys as constants with 'as const', never hard-code
   stub-implementations:

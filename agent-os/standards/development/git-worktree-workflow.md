@@ -28,19 +28,19 @@ Planning Phase → /using-git-worktrees → Implementation
 
 ## Plan Integration (MANDATORY)
 
-**Every generated plan or spec MUST include worktree setup as Task 0.**
+**Every generated plan or spec MUST include worktree setup as Task 1.**
 
 When `/writing-plans`, `/shape-spec`, or any planning skill generates an implementation plan:
 
 ```
-Task 0: Call /using-git-worktrees to create isolated workspace
-Task 1: [First actual implementation task]
-Task 2: ...
+Task 1: Call /using-git-worktrees to create isolated workspace
+Task 2: [First actual implementation task]
+Task 3: ...
 ```
 
-- Task 0 is non-negotiable for any plan involving code changes
+- Task 1 is non-negotiable for any plan involving code changes
 - Skills that generate plans must inject this automatically
-- Reviewers should reject plans missing Task 0
+- Reviewers should reject plans missing Task 1
 
 ## Complete Workflow
 
