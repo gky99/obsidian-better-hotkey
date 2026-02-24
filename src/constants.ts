@@ -21,6 +21,34 @@ export const KILL_YANK_COMMANDS = {
  */
 export const CONTEXT_KEYS = {
     LAST_ACTION_WAS_YANK: 'lastActionWasYank',
+    RECENTER_CYCLE_POSITION: 'recenterCyclePosition',
+} as const;
+
+/**
+ * Editing command IDs (Dev Plan 2.3.3 + 2.3.4)
+ * Basic editing: CM6 Direct Call
+ * Case transformation: Custom implementation via view.dispatch
+ */
+export const EDITING_COMMANDS = {
+    // Basic Editing (2.3.3) — CM6 Direct Call
+    DELETE_CHAR: 'editor:delete-char',
+    TRANSPOSE_CHARS: 'editor:transpose-chars',
+    OPEN_LINE: 'editor:open-line',
+    // Case Transformation (2.3.4) — Custom
+    UPCASE_WORD: 'editor:upcase-word',
+    DOWNCASE_WORD: 'editor:downcase-word',
+    UPCASE_REGION: 'editor:upcase-region',
+    DOWNCASE_REGION: 'editor:downcase-region',
+} as const;
+
+/**
+ * Control command IDs (Dev Plan 2.3.5)
+ * Custom implementation / Obsidian API delegation
+ */
+export const CONTROL_COMMANDS = {
+    KEYBOARD_QUIT: 'editor:keyboard-quit',
+    RECENTER_TOP_BOTTOM: 'editor:recenter-top-bottom',
+    UNDO: 'editor:undo',
 } as const;
 
 /**

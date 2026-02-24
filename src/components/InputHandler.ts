@@ -12,6 +12,8 @@ import type { Plugin, App, KeymapEventHandler, KeymapContext } from 'obsidian';
 import { Scope } from 'obsidian';
 import { CommandRegistry } from './CommandRegistry';
 import { ExecutionContext } from './execution-context/ExecutionContext';
+import { contextEngine } from './ContextEngine';
+import { CONTROL_COMMANDS, CONTEXT_KEYS } from '../constants';
 
 export class InputHandler {
     // Hotkey context (passed from main.ts)
@@ -140,6 +142,13 @@ export class InputHandler {
                 this.executionContext.killRing.updateLastActionWasYank(
                     result.entry.command,
                 );
+
+                // TODO: Phase 3+ — consider optimizing this per-command check (e.g., command metadata flags)
+                // Reset recenter cycle if command is not recenter-top-bottom
+                if (result.entry.command !== CONTROL_COMMANDS.RECENTER_TOP_BOTTOM) {
+                    contextEngine.setContext(CONTEXT_KEYS.RECENTER_CYCLE_POSITION, 0);
+                }
+
                 return false; // Suppress — Obsidian auto-preventDefault
             }
 

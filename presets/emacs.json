@@ -21,6 +21,20 @@
     { "command": "editor:backward-kill-word", "key": "alt+backspace" },
     { "command": "editor:copy-region", "key": "alt+w" },
     { "command": "editor:yank", "key": "ctrl+y" },
-    { "command": "editor:yank-pop", "key": "alt+y" }
+    { "command": "editor:yank-pop", "key": "alt+y" },
+
+    { "command": "editor:delete-char", "key": "ctrl+d" },
+    { "command": "editor:transpose-chars", "key": "ctrl+t" },
+    { "command": "editor:open-line", "key": "ctrl+o" },
+
+    { "command": "editor:upcase-word", "key": "alt+u" },
+    { "command": "editor:downcase-word", "key": "alt+l" },
+    { "command": "editor:upcase-region", "key": "ctrl+x ctrl+u" },
+    { "command": "editor:downcase-region", "key": "ctrl+x ctrl+l" },
+
+    { "command": "editor:keyboard-quit", "key": "ctrl+g" },
+    { "command": "editor:recenter-top-bottom", "key": "ctrl+l" },
+    { "command": "editor:undo", "key": "ctrl+/" },
+    { "command": "editor:undo", "key": "ctrl+x u" }
   ]
 }

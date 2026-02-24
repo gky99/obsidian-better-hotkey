@@ -4,7 +4,7 @@ import {
     MyPluginSettings,
     SampleSettingTab,
 } from './settings';
-import { createCursorCommands, createKillYankCommands } from './commands';
+import { createCursorCommands, createKillYankCommands, createEditingCommands, createControlCommands } from './commands';
 import {
     InputHandler,
     CommandRegistry,
@@ -36,6 +36,18 @@ export default class MyPlugin extends Plugin {
         // Register kill/yank commands (2.3.1)
         const killYankCommands = createKillYankCommands();
         for (const cmd of killYankCommands) {
+            this.commandRegistry.registerCommand(cmd);
+        }
+
+        // Register editing commands (2.3.3 + 2.3.4)
+        const editingCommands = createEditingCommands();
+        for (const cmd of editingCommands) {
+            this.commandRegistry.registerCommand(cmd);
+        }
+
+        // Register control commands (2.3.5)
+        const controlCommands = createControlCommands();
+        for (const cmd of controlCommands) {
             this.commandRegistry.registerCommand(cmd);
         }
 
