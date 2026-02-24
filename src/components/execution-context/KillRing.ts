@@ -6,7 +6,7 @@
 
 import type { EditorRange } from "obsidian";
 import { contextEngine } from "../ContextEngine";
-import { COMMAND_NAMES, CONTEXT_KEYS } from "../../constants";
+import { KILL_YANK_COMMANDS, CONTEXT_KEYS } from "../../constants";
 
 export class KillRing {
 	private entries: string[] = [];
@@ -104,9 +104,9 @@ export class KillRing {
 	 * - OR current command is YANK_POP AND last action was already YANK or YANK_POP
 	 */
 	updateLastActionWasYank(command: string): void {
-		const isYankCommand = command === COMMAND_NAMES.YANK;
+		const isYankCommand = command === KILL_YANK_COMMANDS.YANK;
 		const isYankPopAfterYank =
-			command === COMMAND_NAMES.YANK_POP && this.lastActionWasYank();
+			command === KILL_YANK_COMMANDS.YANK_POP && this.lastActionWasYank();
 
 		const isValidYank = isYankCommand || isYankPopAfterYank;
 

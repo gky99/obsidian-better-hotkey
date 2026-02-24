@@ -3,14 +3,17 @@
  */
 
 /**
- * Command names used throughout the application
+ * Kill & Yank command IDs (Dev Plan 2.3.1)
+ * Custom implementation — Kill Ring integration, word boundary computation
  */
-export const COMMAND_NAMES = {
+export const KILL_YANK_COMMANDS = {
+	KILL_LINE: "editor:kill-line",
+	KILL_REGION: "editor:kill-region",
+	KILL_WORD: "editor:kill-word",
+	BACKWARD_KILL_WORD: "editor:backward-kill-word",
+	COPY_REGION: "editor:copy-region",
 	YANK: "editor:yank",
 	YANK_POP: "editor:yank-pop",
-	DELETE_WORD: "editor:delete-word",
-	TEST_CHORD_X: "test:chord-x",
-	TEST_SAVE: "test:save",
 } as const;
 
 /**

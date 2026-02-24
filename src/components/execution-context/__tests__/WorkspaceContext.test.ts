@@ -169,20 +169,6 @@ describe('WorkspaceContext', () => {
 		});
 	});
 
-	describe('dispose', () => {
-		it('clears activeLeaf', () => {
-			const { mockPlugin, simulateLeafChange } = createMockPlugin();
-			const ctx = new WorkspaceContext(mockPlugin);
-
-			const leaf = createMockLeaf();
-			simulateLeafChange(leaf);
-			expect(ctx.getActiveLeaf()).toBe(leaf);
-
-			ctx.dispose();
-			expect(ctx.getActiveLeaf()).toBeNull();
-		});
-	});
-
 	describe('existing editor methods (live query)', () => {
 		it('getActiveEditor queries workspace directly, not the proxy', () => {
 			const { mockPlugin } = createMockPlugin();

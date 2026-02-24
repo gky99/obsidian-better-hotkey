@@ -3,20 +3,24 @@
   "description": "Standard Emacs keybindings",
   "version": "1.0.0",
   "hotkeys": [
-    { "command": "test:save", "key": "ctrl+x ctrl+s" },
-    { "command": "editor:delete-word", "key": "meta+d" },
-    { "command": "editor:yank", "key": "ctrl+y" },
     { "command": "editor:forward-char", "key": "ctrl+f" },
     { "command": "editor:backward-char", "key": "ctrl+b" },
     { "command": "editor:next-line", "key": "ctrl+n" },
     { "command": "editor:previous-line", "key": "ctrl+p" },
     { "command": "editor:move-beginning-of-line", "key": "ctrl+a" },
     { "command": "editor:move-end-of-line", "key": "ctrl+e" },
-    { "command": "editor:forward-word", "key": "meta+f" },
-    { "command": "editor:backward-word", "key": "meta+b" },
+    { "command": "editor:forward-word", "key": "alt+f" },
+    { "command": "editor:backward-word", "key": "alt+b" },
     { "command": "editor:scroll-up", "key": "ctrl+v" },
-    { "command": "editor:scroll-down", "key": "meta+v" },
-    { "command": "editor:beginning-of-buffer", "key": "shift+meta+," },
-    { "command": "editor:end-of-buffer", "key": "shift+meta+." }
+    { "command": "editor:scroll-down", "key": "alt+v" },
+    { "command": "editor:beginning-of-buffer", "key": "shift+alt+," },
+    { "command": "editor:end-of-buffer", "key": "shift+alt+." },
+    { "command": "editor:kill-line", "key": "ctrl+k" },
+    { "command": "editor:kill-region", "key": "ctrl+w" },
+    { "command": "editor:kill-word", "key": "alt+d" },
+    { "command": "editor:backward-kill-word", "key": "alt+backspace" },
+    { "command": "editor:copy-region", "key": "alt+w" },
+    { "command": "editor:yank", "key": "ctrl+y" },
+    { "command": "editor:yank-pop", "key": "alt+y" }
   ]
 }

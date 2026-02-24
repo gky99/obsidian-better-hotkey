@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { InputHandler } from '../InputHandler';
-import { COMMAND_NAMES } from '../../constants';
+import { KILL_YANK_COMMANDS } from '../../constants';
 import type { KeyPress, MatchResult } from '../../types';
 import { Priority } from '../../types';
 import type { Plugin, App } from 'obsidian';
@@ -645,7 +645,7 @@ describe('InputHandler', () => {
 				const exactMatch: MatchResult = {
 					type: 'exact',
 					entry: {
-						command: COMMAND_NAMES.YANK,
+						command: KILL_YANK_COMMANDS.YANK,
 						key: [key('y', 'KeyY', ['ctrl'])],
 						priority: Priority.User,
 					},

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { KillRing } from '../KillRing';
-import { COMMAND_NAMES, CONTEXT_KEYS } from '../../../constants';
+import { KILL_YANK_COMMANDS, CONTEXT_KEYS } from '../../../constants';
 import type { EditorRange } from 'obsidian';
 
 // Mock contextEngine module
@@ -204,7 +204,7 @@ describe('KillRing', () => {
 
 	describe('updateLastActionWasYank', () => {
 		it('sets flag to true for YANK command', () => {
-			killRing.updateLastActionWasYank(COMMAND_NAMES.YANK);
+			killRing.updateLastActionWasYank(KILL_YANK_COMMANDS.YANK);
 
 			expect(contextEngine.setContext).toHaveBeenCalledWith(
 				CONTEXT_KEYS.LAST_ACTION_WAS_YANK,
@@ -216,7 +216,7 @@ describe('KillRing', () => {
 			// Simulate lastActionWasYank = true
 			vi.mocked(contextEngine.getContext).mockReturnValue(true);
 
-			killRing.updateLastActionWasYank(COMMAND_NAMES.YANK_POP);
+			killRing.updateLastActionWasYank(KILL_YANK_COMMANDS.YANK_POP);
 
 			expect(contextEngine.setContext).toHaveBeenCalledWith(
 				CONTEXT_KEYS.LAST_ACTION_WAS_YANK,
@@ -228,7 +228,7 @@ describe('KillRing', () => {
 			// Simulate lastActionWasYank = false
 			vi.mocked(contextEngine.getContext).mockReturnValue(false);
 
-			killRing.updateLastActionWasYank(COMMAND_NAMES.YANK_POP);
+			killRing.updateLastActionWasYank(KILL_YANK_COMMANDS.YANK_POP);
 
 			expect(contextEngine.setContext).toHaveBeenCalledWith(
 				CONTEXT_KEYS.LAST_ACTION_WAS_YANK,
@@ -237,7 +237,7 @@ describe('KillRing', () => {
 		});
 
 		it('clears flag for non-yank commands', () => {
-			killRing.updateLastActionWasYank(COMMAND_NAMES.DELETE_WORD);
+			killRing.updateLastActionWasYank("editor:some-other-command");
 
 			expect(contextEngine.setContext).toHaveBeenCalledWith(
 				CONTEXT_KEYS.LAST_ACTION_WAS_YANK,

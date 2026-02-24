@@ -4,7 +4,7 @@ import {
     MyPluginSettings,
     SampleSettingTab,
 } from './settings';
-import { createCursorCommands, createTestCommands } from './commands';
+import { createCursorCommands, createKillYankCommands } from './commands';
 import { InputHandler, CommandRegistry, HotkeyContext, ConfigManager } from './components';
 
 export default class MyPlugin extends Plugin {
@@ -22,15 +22,15 @@ export default class MyPlugin extends Plugin {
 		// Initialize command registry
 		this.commandRegistry = new CommandRegistry(this.app);
 
-		// Register test commands
-		const testCommands = createTestCommands();
-		for (const cmd of testCommands) {
-			this.commandRegistry.registerCommand(cmd);
-		}
-
 		// Register cursor movement commands (2.3.2)
 		const cursorCommands = createCursorCommands();
 		for (const cmd of cursorCommands) {
+			this.commandRegistry.registerCommand(cmd);
+		}
+
+		// Register kill/yank commands (2.3.1)
+		const killYankCommands = createKillYankCommands();
+		for (const cmd of killYankCommands) {
 			this.commandRegistry.registerCommand(cmd);
 		}
 
