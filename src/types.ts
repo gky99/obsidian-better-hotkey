@@ -6,13 +6,13 @@
 import type { ExecutionContext } from './components/execution-context/ExecutionContext';
 
 /**
- * Represents a normalized key press event
- * Character-based matching by default
+ * Represents a normalized key press event.
+ * Matching uses the physical key code (code field).
  */
 export interface KeyPress {
     modifiers: Set<'ctrl' | 'alt' | 'shift' | 'meta'>;
-    key: string; // Character-based, e.g., "x", "s", "/"
-    code: string; // Physical key code, e.g., "KeyX", "KeyS", "Space"
+    key: string; // Display character from layout service, e.g., "x", "s", "/" — NOT used for matching
+    code: string; // Physical key code, e.g., "KeyX", "KeyS", "Space" — used for matching
 }
 
 /**

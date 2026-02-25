@@ -104,9 +104,9 @@ Monitors for window `focus` events and re-checks the layout map (the `layoutchan
 
 The input processing group — everything involved in capturing keystrokes and resolving them to a matched hotkey entry.
 
-**Hotkey Manager** — Manages the source hotkey table, keyed by `${canonicalSequence}::${commandName}`. Provides CRUD operations (insert, remove, clear) with priority assignment. When the table changes, triggers a rebuild of the Matcher's optimized matching table. Acts as the single source of truth for all registered hotkeys. See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md).
+**Hotkey Manager** — Manages the source hotkey table, keyed by `${canonicalSequence}::${commandName}` (character-based composite key for dedup). Provides CRUD operations (insert, remove, clear) with priority assignment. During `insertEntry()`, translates each `KeyPress.key` character to its physical key code via `keyboardLayoutService.getCode()` (for layout-mapped keys) or `SPECIAL_KEY_CODE_MAP` (for Space, Escape, etc.), populating `KeyPress.code`. When the table changes, triggers a rebuild of the Matcher's optimized matching table. Acts as the single source of truth for all registered hotkeys. See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md).
 
-**Hotkey Matcher** — Maintains an optimized matching table built from hotkey entries provided by the Manager. Given a key sequence, returns: exact match (with the winning `HotkeyEntry`), prefix match (sequence is incomplete), or no match. Handles priority resolution when multiple entries match the same sequence. Filters candidates through the Hotkey Context Engine for "when" clause evaluation.
+**Hotkey Matcher** — Maintains an optimized matching table built from hotkey entries provided by the Manager, keyed by code-based canonical strings (e.g., `"C-KeyK"`). Given a key sequence, returns: exact match (with the winning `HotkeyEntry`), prefix match (sequence is incomplete), or no match. Matches by physical key code (`KeyPress.code`), not by character. Handles priority resolution when multiple entries match the same sequence. Filters candidates through the Hotkey Context Engine for "when" clause evaluation.
 
 **ChordSequenceBuffer** — Tracks a pending key sequence of up to 2 keypresses. Manages a configurable timeout (~5000ms) after the first keypress. Feeds the current sequence to the Matcher and displays pending state via Status Indicator.
 
@@ -198,8 +198,11 @@ Window focus event
   → Keyboard Layout Service re-checks layout map
   → Compares with cached map; if changed:
   → Rebuilds internal layout map, charToCode reverse map, and baseCharSet
-  → Matcher invalidates cached keycodes and re-translates via getCode()
-  → Stored hotkey definitions are NOT re-translated (see ADR-010)
+  → Notifies callback → triggers ConfigManager.loadAll()
+  → ConfigManager fires onChange → HotkeyManager.recalculate()
+  → HotkeyManager re-translates all KeyPress.key → KeyPress.code via updated layout
+  → HotkeyMatcher.rebuild() with new code-based entries
+  → Input Handler automatically uses updated layout for KeyPress.key (display)
 ```
 
 ### Kill / Yank
@@ -276,7 +279,7 @@ See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) and [ADR-006](ADR/ADR-0
 
 ## 6. Key Constraints
 
-- Key matching uses **layout-normalized characters** — physical key codes are translated to base characters via the Keyboard Layout Service at match time (not at config load time). See [ADR-001](ADR/ADR-001%20Key%20Representation.md), [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md), and [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md).
+- Key matching uses **physical key codes** (`KeyPress.code`) — config characters are translated to physical codes by HotkeyManager at load time via the Keyboard Layout Service; input events provide `event.code` directly. `KeyPress.key` is derived from the layout service for display only. See [ADR-001](ADR/ADR-001%20Key%20Representation.md), [ADR-008](ADR/ADR-008%20Keyboard%20Layout%20Normalization.md), and [ADR-010](ADR/ADR-010%20Keyboard%20Layout%20Translation%20Timing.md).
 - Chord sequences support **at most 2 keypresses**.
 - "When" clause syntax supports: `key`, `!key`, `&&`, `||`, `== "value"`. Parentheses are deferred (P2).
 - The Hotkey Context Engine is a **global singleton** initialized at plugin load, accessible to all components.
@@ -292,7 +295,7 @@ See [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) and [ADR-006](ADR/ADR-0
 
 | ADR | Decision |
 | --- | --- |
-| [ADR-001](ADR/ADR-001%20Key%20Representation.md) | Character-based key matching by default |
+| [ADR-001](ADR/ADR-001%20Key%20Representation.md) | Physical code-based key matching |
 | [ADR-002](ADR/ADR-002%20Configuration%20Priority.md) | User > Preset > Plugin priority |
 | [ADR-003](ADR/ADR-003%20Clipboard%20Sync%20Strategy.md) | Sync kill→clipboard, detect external on yank |
 | [ADR-004](ADR/ADR-004%20Lifecycle%20Management.md) | Return Disposable, auto-cleanup deferred |

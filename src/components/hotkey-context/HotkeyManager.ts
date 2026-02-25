@@ -6,7 +6,8 @@
 
 import type { ConfigHotkeyEntry, HotkeyEntry } from '../../types';
 import { Priority } from '../../types';
-import { canonicalizeSequence } from '../../utils/hotkey';
+import { canonicalizeSequence, SPECIAL_KEY_CODE_MAP } from '../../utils/hotkey';
+import { keyboardLayoutService } from '../KeyboardLayoutService';
 
 /**
  * Create composite key from hotkey entry
@@ -130,19 +131,35 @@ export class HotkeyManager {
     }
 
     /**
+     * Translate a parsed key character to its physical key code.
+     * Tries the Keyboard Layout Service first (letter/symbol/digit keys),
+     * then falls back to the special key code map (Space, Escape, etc.).
+     */
+    private translateCode(key: string): string {
+        const code = keyboardLayoutService.getCode(key);
+        if (code !== null) return code;
+        if (key in SPECIAL_KEY_CODE_MAP) return SPECIAL_KEY_CODE_MAP[key]!;
+        return '';
+    }
+
+    /**
      * Insert entry into table without triggering onChange.
      * Strips ConfigHotkeyEntry metadata (removal, hotkeyString) to store plain HotkeyEntry.
+     * Translates each KeyPress.key to its physical code via the Keyboard Layout Service.
      */
     private insertEntry(entry: ConfigHotkeyEntry, priority: Priority): void {
         const hotkeyEntry: HotkeyEntry = {
             command: entry.command,
-            key: entry.key,
+            key: entry.key.map((kp) => ({
+                ...kp,
+                code: this.translateCode(kp.key),
+            })),
             priority,
             ...(entry.when !== undefined && { when: entry.when }),
             ...(entry.args !== undefined && { args: entry.args }),
         };
-        const key = makeCompositeKey(hotkeyEntry);
-        this.hotkeyTable.set(key, hotkeyEntry);
+        const compositeKey = makeCompositeKey(hotkeyEntry);
+        this.hotkeyTable.set(compositeKey, hotkeyEntry);
     }
 
     /**

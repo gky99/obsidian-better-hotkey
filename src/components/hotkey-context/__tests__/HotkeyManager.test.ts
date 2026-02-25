@@ -388,4 +388,88 @@ describe('HotkeyManager', () => {
             expect(result.type).toBe('none');
         });
     });
+
+    describe('code translation in insertEntry', () => {
+        it('populates KeyPress.code via layout service for letter keys', async () => {
+            const { keyboardLayoutService } = await import('../../KeyboardLayoutService');
+            await keyboardLayoutService.initialize();
+
+            const freshManager = new HotkeyManager();
+            const mockCb = vi.fn();
+            freshManager.setOnChange(mockCb);
+
+            freshManager.recalculate(
+                [configEntry('kill-line', 'ctrl+k', Priority.Preset)],
+                [],
+                [],
+            );
+
+            const [entries] = mockCb.mock.calls[0]!;
+            expect(entries[0].key[0].code).toBe('KeyK');
+            expect(entries[0].key[0].key).toBe('k');
+
+            keyboardLayoutService.dispose();
+        });
+
+        it('populates KeyPress.code for special keys via SPECIAL_KEY_CODE_MAP', async () => {
+            const { keyboardLayoutService } = await import('../../KeyboardLayoutService');
+            await keyboardLayoutService.initialize();
+
+            const freshManager = new HotkeyManager();
+            const mockCb = vi.fn();
+            freshManager.setOnChange(mockCb);
+
+            freshManager.recalculate(
+                [configEntry('keyboard-quit', 'escape', Priority.Preset)],
+                [],
+                [],
+            );
+
+            const [entries] = mockCb.mock.calls[0]!;
+            expect(entries[0].key[0].code).toBe('Escape');
+
+            keyboardLayoutService.dispose();
+        });
+
+        it('populates KeyPress.code for space key', async () => {
+            const { keyboardLayoutService } = await import('../../KeyboardLayoutService');
+            await keyboardLayoutService.initialize();
+
+            const freshManager = new HotkeyManager();
+            const mockCb = vi.fn();
+            freshManager.setOnChange(mockCb);
+
+            freshManager.recalculate(
+                [configEntry('set-mark', 'ctrl+space', Priority.Preset)],
+                [],
+                [],
+            );
+
+            const [entries] = mockCb.mock.calls[0]!;
+            expect(entries[0].key[0].code).toBe('Space');
+
+            keyboardLayoutService.dispose();
+        });
+
+        it('translates chord sequence codes', async () => {
+            const { keyboardLayoutService } = await import('../../KeyboardLayoutService');
+            await keyboardLayoutService.initialize();
+
+            const freshManager = new HotkeyManager();
+            const mockCb = vi.fn();
+            freshManager.setOnChange(mockCb);
+
+            freshManager.recalculate(
+                [configEntry('save', 'ctrl+x ctrl+s', Priority.Preset)],
+                [],
+                [],
+            );
+
+            const [entries] = mockCb.mock.calls[0]!;
+            expect(entries[0].key[0].code).toBe('KeyX');
+            expect(entries[0].key[1].code).toBe('KeyS');
+
+            keyboardLayoutService.dispose();
+        });
+    });
 });

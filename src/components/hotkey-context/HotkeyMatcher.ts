@@ -5,7 +5,7 @@
  */
 
 import type { KeyPress, HotkeyEntry, MatchResult } from '../../types';
-import { canonicalizeSequence } from '../../utils/hotkey';
+import { canonicalizeSequenceByCode } from '../../utils/hotkey';
 import { contextEngine } from '../ContextEngine';
 
 /**
@@ -18,11 +18,11 @@ export class HotkeyMatcher {
     private matchingTable: MatchingTable = new Map();
 
     /**
-     * Match sequence against matching table
-     * Uses Context Engine for "when" clause filtering
+     * Match sequence against matching table using physical key codes.
+     * Uses Context Engine for "when" clause filtering.
      */
     match(sequence: KeyPress[]): MatchResult {
-        const canonical = canonicalizeSequence(sequence);
+        const canonical = canonicalizeSequenceByCode(sequence);
 
         // Check for exact match
         const exactMatches = this.matchingTable.get(canonical);
@@ -45,21 +45,22 @@ export class HotkeyMatcher {
     }
 
     /**
-     * Check if key is escape
+     * Check if key is escape by physical key code.
      * TODO: Support custom hotkey to synthesize escape event
      */
     isEscape(key: KeyPress): boolean {
-        return key.key === 'Escape';
+        return key.code === 'Escape';
     }
 
     /**
-     * Rebuild matching table from hotkey entries
+     * Rebuild matching table from hotkey entries using physical key codes.
+     * Entries must already have their code fields populated by HotkeyManager.
      */
     rebuild(entries: HotkeyEntry[]): void {
         this.matchingTable.clear();
 
         for (const entry of entries) {
-            const canonical = canonicalizeSequence(entry.key);
+            const canonical = canonicalizeSequenceByCode(entry.key);
             const existing = this.matchingTable.get(canonical) || [];
             existing.push(entry);
             this.matchingTable.set(canonical, existing);
@@ -67,12 +68,12 @@ export class HotkeyMatcher {
     }
 
     /**
-     * Find all matching entries for a sequence
+     * Find all matching entries for a sequence by physical key code.
      * First filters by key sequence (matchingTable lookup)
      * Then filters by "when" clause using Context Engine
      */
     private findCandidates(sequence: KeyPress[]): HotkeyEntry[] {
-        const canonical = canonicalizeSequence(sequence);
+        const canonical = canonicalizeSequenceByCode(sequence);
         const entries = this.matchingTable.get(canonical) || [];
 
         // Filter by "when" clause using Context Engine
@@ -102,12 +103,12 @@ export class HotkeyMatcher {
     }
 
     /**
-     * Check if sequence is a prefix of any registered sequence
-     * Only checks when sequence has exactly one key press
+     * Check if sequence is a prefix of any registered sequence by physical key code.
+     * Only checks when sequence has exactly one key press.
      */
     private hasPrefix(sequence: KeyPress[]): boolean {
         if (sequence.length === 1) {
-            const canonical = canonicalizeSequence(sequence);
+            const canonical = canonicalizeSequenceByCode(sequence);
             for (const key of this.matchingTable.keys()) {
                 if (key.startsWith(canonical + ' ')) {
                     return true;

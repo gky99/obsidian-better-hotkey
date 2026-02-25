@@ -13,6 +13,7 @@ import { Scope } from 'obsidian';
 import { CommandRegistry } from './CommandRegistry';
 import { ExecutionContext } from './execution-context/ExecutionContext';
 import { contextEngine } from './ContextEngine';
+import { keyboardLayoutService } from './KeyboardLayoutService';
 import { CONTROL_COMMANDS, CONTEXT_KEYS } from '../constants';
 
 export class InputHandler {
@@ -181,7 +182,10 @@ export class InputHandler {
     }
 
     /**
-     * Convert browser KeyboardEvent to internal KeyPress representation
+     * Convert browser KeyboardEvent to internal KeyPress representation.
+     * Uses Keyboard Layout Service to derive display key from physical code,
+     * bypassing OS-level character transformations (e.g., macOS Option key).
+     * The key field is for display only (status indicator); matching uses code.
      */
     private normalize(event: KeyboardEvent): KeyPress {
         const modifiers = new Set<'ctrl' | 'alt' | 'shift' | 'meta'>();
@@ -191,23 +195,13 @@ export class InputHandler {
         if (event.shiftKey) modifiers.add('shift');
         if (event.metaKey) modifiers.add('meta');
 
-        // Get the character representation of the key
-        let { key, code } = event;
+        const { code } = event;
 
-        // Normalize special keys to lowercase
-        if (key.length === 1) {
-            key = key.toLowerCase();
-        }
+        // Layout-aware normalization: derive display key from physical code
+        // For letter/symbol keys: layout service returns base char (e.g., "a", "[")
+        // For special keys (Escape, Enter, etc.): returns null, use event.key
+        const key = keyboardLayoutService.getBaseCharacter(code) ?? event.key;
 
-        // Handle special cases
-        if (key === ' ') {
-            key = 'space';
-        }
-
-        return {
-            modifiers,
-            key,
-            code,
-        };
+        return { modifiers, key, code };
     }
 }

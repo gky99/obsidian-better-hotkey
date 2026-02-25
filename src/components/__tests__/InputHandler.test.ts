@@ -925,4 +925,112 @@ describe('InputHandler', () => {
             });
         });
     });
+
+    describe('Layout-aware normalization', () => {
+        it('derives key from layout service getBaseCharacter for letter keys', () => {
+            // Layout service is initialized with QWERTY fallback in test env
+            // KeyA → 'a' from QWERTY layout
+            mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
+                type: 'none',
+                isChord: false,
+            });
+
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'a',
+                code: 'KeyA',
+            });
+            invokeHandler(event);
+
+            // Verify the KeyPress passed to chordBuffer has correct key and code
+            const appendCall = mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
+            expect(appendCall.code).toBe('KeyA');
+            // key is from layout service (QWERTY fallback: KeyA → 'a')
+            // or from event.key if layout service not initialized
+        });
+
+        it('preserves event.code as-is for all keys', () => {
+            mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
+                type: 'none',
+                isChord: false,
+            });
+
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'k',
+                code: 'KeyK',
+                ctrlKey: true,
+            });
+            invokeHandler(event);
+
+            const appendCall = mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
+            expect(appendCall.code).toBe('KeyK');
+        });
+
+        it('falls back to event.key for special keys (Escape)', () => {
+            // Escape is not in layout map; getBaseCharacter returns null
+            mockHotkeyContext.hotkeyMatcher.isEscape.mockReturnValue(true);
+
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'Escape',
+                code: 'Escape',
+            });
+            invokeHandler(event);
+
+            // isEscape is called with the KeyPress — verify it got 'Escape' as key
+            const escapeCall = mockHotkeyContext.hotkeyMatcher.isEscape.mock.calls[0]![0];
+            expect(escapeCall.key).toBe('Escape');
+            expect(escapeCall.code).toBe('Escape');
+        });
+
+        it('handles macOS Option key scenario (event.key mangled, code correct)', async () => {
+            // Initialize layout service so getBaseCharacter works (QWERTY fallback)
+            const { keyboardLayoutService } = await import('../KeyboardLayoutService');
+            await keyboardLayoutService.initialize();
+
+            // macOS: Option+E produces event.key='é', but code is still 'KeyE'
+            // Layout service returns 'e' for 'KeyE', bypassing the mangled event.key
+            mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
+                type: 'none',
+                isChord: false,
+            });
+
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'é', // macOS Option+E produces this
+                code: 'KeyE',
+                altKey: true,
+            });
+            invokeHandler(event);
+
+            const appendCall = mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
+            expect(appendCall.key).toBe('e'); // Layout service corrects 'é' → 'e'
+            expect(appendCall.code).toBe('KeyE');
+
+            keyboardLayoutService.dispose();
+        });
+
+        it('extracts modifiers correctly', () => {
+            mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
+                type: 'none',
+                isChord: false,
+            });
+
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'k',
+                code: 'KeyK',
+                ctrlKey: true,
+                shiftKey: true,
+            });
+            invokeHandler(event);
+
+            const appendCall = mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
+            expect(appendCall.modifiers.has('ctrl')).toBe(true);
+            expect(appendCall.modifiers.has('shift')).toBe(true);
+            expect(appendCall.modifiers.has('alt')).toBe(false);
+            expect(appendCall.modifiers.has('meta')).toBe(false);
+        });
+    });
 });

@@ -31,6 +31,24 @@ export const SPECIAL_KEY_MAP = {
     right: 'ArrowRight',
 } as const;
 
+/**
+ * Maps parsed special key values to their physical key codes.
+ * Used by HotkeyManager to translate keys not in the Keyboard Layout Service
+ * (which only covers letter/symbol/digit keys from the layout map).
+ */
+export const SPECIAL_KEY_CODE_MAP: Record<string, string> = {
+    ' ': 'Space',
+    'Backspace': 'Backspace',
+    'Tab': 'Tab',
+    'Enter': 'Enter',
+    'Escape': 'Escape',
+    'Delete': 'Delete',
+    'ArrowUp': 'ArrowUp',
+    'ArrowDown': 'ArrowDown',
+    'ArrowLeft': 'ArrowLeft',
+    'ArrowRight': 'ArrowRight',
+};
+
 type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta';
 
 /**
@@ -148,4 +166,34 @@ export function canonicalizeKeyPress(keyPress: KeyPress): string {
  */
 export function canonicalizeSequence(sequence: KeyPress[]): string {
     return sequence.map(canonicalizeKeyPress).join(' ');
+}
+
+/**
+ * Converts a KeyPress to a canonical string using the physical key code.
+ * Used by HotkeyMatcher for code-based matching.
+ *
+ * Format: Same modifier order as canonicalizeKeyPress (C-M-A-S) but uses code instead of key.
+ * Examples:
+ *   - Ctrl+KeyX -> "C-KeyX"
+ *   - Ctrl+Shift+KeyX -> "C-S-KeyX"
+ */
+export function canonicalizeKeyPressByCode(keyPress: KeyPress): string {
+    const parts: string[] = [];
+
+    if (keyPress.modifiers.has('ctrl')) parts.push('C');
+    if (keyPress.modifiers.has('meta')) parts.push('M');
+    if (keyPress.modifiers.has('alt')) parts.push('A');
+    if (keyPress.modifiers.has('shift')) parts.push('S');
+
+    parts.push(keyPress.code);
+
+    return parts.join('-');
+}
+
+/**
+ * Converts a key sequence to a canonical string using physical key codes.
+ * Used by HotkeyMatcher for code-based matching table keys.
+ */
+export function canonicalizeSequenceByCode(sequence: KeyPress[]): string {
+    return sequence.map(canonicalizeKeyPressByCode).join(' ');
 }

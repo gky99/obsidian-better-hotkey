@@ -11,6 +11,7 @@ import {
     HotkeyContext,
     ConfigManager,
 } from './components';
+import { keyboardLayoutService } from './components/KeyboardLayoutService';
 
 export default class MyPlugin extends Plugin {
     settings: MyPluginSettings;
@@ -51,6 +52,9 @@ export default class MyPlugin extends Plugin {
             this.commandRegistry.registerCommand(cmd);
         }
 
+        // Initialize Keyboard Layout Service (must be before config loading)
+        await keyboardLayoutService.initialize();
+
         // Create Hotkey Context (wraps all hotkey components)
         const statusBarItem = this.addStatusBarItem();
         this.hotkeyContext = new HotkeyContext(
@@ -71,6 +75,11 @@ export default class MyPlugin extends Plugin {
         // Load config (triggers onChange → recalculate → Matcher.rebuild)
         await this.configManager.loadAll(this.settings.selectedPreset);
 
+        // Wire layout change → reload config (re-translates codes in HotkeyManager)
+        keyboardLayoutService.setOnLayoutChange(() => {
+            void this.configManager.loadAll(this.settings.selectedPreset);
+        });
+
         // Create and start Input Handler (uses Obsidian Scope API per ADR-005)
         this.inputHandler = new InputHandler(
             this.commandRegistry,
@@ -83,6 +92,7 @@ export default class MyPlugin extends Plugin {
     onunload() {
         this.hotkeyContext?.destroy();
         this.configManager?.dispose();
+        keyboardLayoutService.dispose();
     }
 
     async loadSettings() {
