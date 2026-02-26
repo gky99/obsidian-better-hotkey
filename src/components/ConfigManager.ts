@@ -166,6 +166,24 @@ export class ConfigManager {
         return all;
     }
 
+    /**
+     * Get plugin entries with their associated plugin names preserved.
+     * Used by the settings tab to display the source plugin name.
+     */
+    getPluginEntriesWithNames(): {
+        pluginName: string;
+        entries: ConfigHotkeyEntry[];
+    }[] {
+        const result: {
+            pluginName: string;
+            entries: ConfigHotkeyEntry[];
+        }[] = [];
+        for (const [name, entries] of this.pluginEntries) {
+            result.push({ pluginName: name, entries: [...entries] });
+        }
+        return result;
+    }
+
     getUserEntries(): ConfigHotkeyEntry[] {
         return [...this.userEntries];
     }

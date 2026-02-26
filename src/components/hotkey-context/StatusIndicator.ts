@@ -12,10 +12,13 @@ export class StatusIndicator {
     private indicatorRef: HTMLElement | null = null;
 
     /**
-     * Initialize the status indicator with a status bar element
+     * Initialize the status indicator with a status bar element.
+     * Pass null to start with the indicator disabled.
      */
-    constructor(statusBarEl: HTMLElement) {
-        this.indicatorRef = this.createStatusBarElement(statusBarEl);
+    constructor(statusBarEl: HTMLElement | null) {
+        if (statusBarEl) {
+            this.indicatorRef = this.createStatusBarElement(statusBarEl);
+        }
     }
 
     /**
@@ -34,6 +37,23 @@ export class StatusIndicator {
     clear(): void {
         if (!this.indicatorRef) return;
         this.render('');
+    }
+
+    /**
+     * Update the status bar element reference.
+     * Used by the settings tab to show/hide the status indicator dynamically.
+     */
+    setElement(statusBarEl: HTMLElement | null): void {
+        // Clean up old element
+        if (this.indicatorRef) {
+            this.indicatorRef.remove();
+            this.indicatorRef = null;
+        }
+
+        // Set up new element
+        if (statusBarEl) {
+            this.indicatorRef = this.createStatusBarElement(statusBarEl);
+        }
     }
 
     /**

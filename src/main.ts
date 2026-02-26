@@ -2,9 +2,14 @@ import { Plugin } from 'obsidian';
 import {
     DEFAULT_SETTINGS,
     MyPluginSettings,
-    SampleSettingTab,
+    BetterHotkeySettingTab,
 } from './settings';
-import { createCursorCommands, createKillYankCommands, createEditingCommands, createControlCommands } from './commands';
+import {
+    createCursorCommands,
+    createKillYankCommands,
+    createEditingCommands,
+    createControlCommands,
+} from './commands';
 import {
     InputHandler,
     CommandRegistry,
@@ -16,14 +21,15 @@ import { keyboardLayoutService } from './components/KeyboardLayoutService';
 export default class MyPlugin extends Plugin {
     settings: MyPluginSettings;
     private inputHandler: InputHandler;
-    private commandRegistry: CommandRegistry;
-    private hotkeyContext: HotkeyContext;
-    private configManager: ConfigManager;
+    commandRegistry: CommandRegistry;
+    hotkeyContext: HotkeyContext;
+    configManager: ConfigManager;
+    private statusBarItem: HTMLElement | null = null;
 
     async onload() {
         await this.loadSettings();
 
-        this.addSettingTab(new SampleSettingTab(this.app, this));
+        this.addSettingTab(new BetterHotkeySettingTab(this.app, this));
 
         // Initialize command registry
         this.commandRegistry = new CommandRegistry(this.app);
@@ -55,11 +61,15 @@ export default class MyPlugin extends Plugin {
         // Initialize Keyboard Layout Service (must be before config loading)
         await keyboardLayoutService.initialize();
 
+        // Create status bar item (conditionally based on settings)
+        if (this.settings.showStatusIndicator) {
+            this.statusBarItem = this.addStatusBarItem();
+        }
+
         // Create Hotkey Context (wraps all hotkey components)
-        const statusBarItem = this.addStatusBarItem();
         this.hotkeyContext = new HotkeyContext(
             this.settings.chordTimeout,
-            statusBarItem,
+            this.statusBarItem,
         );
 
         // Create ConfigManager and wire onChange → HotkeyManager.recalculate
@@ -105,5 +115,20 @@ export default class MyPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    /**
+     * Toggle the status bar indicator visibility.
+     * Called from the settings tab when the toggle changes.
+     */
+    updateStatusIndicatorVisibility(visible: boolean): void {
+        if (visible && !this.statusBarItem) {
+            this.statusBarItem = this.addStatusBarItem();
+            this.hotkeyContext?.statusIndicator.setElement(this.statusBarItem);
+        } else if (!visible && this.statusBarItem) {
+            this.statusBarItem.remove();
+            this.statusBarItem = null;
+            this.hotkeyContext?.statusIndicator.setElement(null);
+        }
     }
 }

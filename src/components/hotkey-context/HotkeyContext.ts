@@ -22,9 +22,9 @@ export class HotkeyContext {
      * Hotkeys are loaded externally via HotkeyManager.recalculate(),
      * wired from ConfigManager.onChange in main.ts.
      * @param chordTimeout - Timeout in ms for chord sequences (from settings)
-     * @param statusBarItem - Status bar element for pending chord display
+     * @param statusBarItem - Status bar element for pending chord display, or null to start disabled
      */
-    constructor(chordTimeout: number, statusBarItem: HTMLElement) {
+    constructor(chordTimeout: number, statusBarItem: HTMLElement | null) {
         // Initialize components
         this.hotkeyManager = new HotkeyManager();
         this.hotkeyMatcher = new HotkeyMatcher();

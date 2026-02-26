@@ -1,8 +1,112 @@
-/*
+/* Better Hotkey Settings Tab */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.bhk-hotkey-list-empty {
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 8px 0;
+}
 
-If your plugin does not need CSS, delete this file.
+/* Table container - scrollable */
+.bhk-hotkey-table-container {
+    margin-top: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+}
 
-*/
+/* Table */
+.bhk-hotkey-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-ui-small);
+}
+
+.bhk-hotkey-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--background-secondary);
+    z-index: 1;
+}
+
+.bhk-hotkey-table th {
+    text-align: left;
+    padding: 6px 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.bhk-sortable-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.bhk-sortable-header:hover {
+    color: var(--text-normal);
+}
+
+.bhk-hotkey-table td {
+    padding: 4px 12px;
+    border-bottom: 1px solid var(--background-modifier-border-hover);
+    vertical-align: middle;
+}
+
+.bhk-hotkey-table tbody tr:hover {
+    background: var(--background-modifier-hover);
+}
+
+/* Command column */
+.bhk-hotkey-command {
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-smaller);
+    color: var(--text-normal);
+}
+
+/* Key binding display */
+.bhk-kbd {
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-smaller);
+    background: var(--background-secondary-alt);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    white-space: nowrap;
+}
+
+/* When clause */
+.bhk-hotkey-when {
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-smaller);
+    color: var(--text-faint);
+}
+
+/* Empty binding/source placeholder */
+.bhk-hotkey-empty {
+    color: var(--text-faint);
+    font-style: italic;
+}
+
+/* Source badges */
+.bhk-source-badge {
+    display: inline-block;
+    font-size: var(--font-ui-smaller);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.bhk-source-preset {
+    background: var(--background-secondary-alt);
+    color: var(--text-muted);
+}
+
+.bhk-source-user {
+    background: var(--color-accent);
+    color: var(--text-on-accent);
+}
+
+.bhk-source-plugin {
+    background: var(--background-modifier-border);
+    color: var(--text-normal);
+}
