@@ -4,6 +4,7 @@
  */
 
 import type { ExecutionContext } from './components/execution-context/ExecutionContext';
+import type { ContextKeyExpression } from './components/context-key-expression';
 
 /**
  * Represents a normalized key press event.
@@ -22,7 +23,8 @@ export interface KeyPress {
 export interface HotkeyEntry {
     command: string; // "editor:save" or "-editor:save" for removal
     key: KeyPress[]; // Key sequence array
-    when?: string; // Context condition: "editorFocused && !suggestionModalRendered"
+    when?: string; // Context condition (raw string): "editorFocused && !suggestionModalRendered"
+    whenExpr: ContextKeyExpression; // Pre-parsed AST — always defined (TrueExpr when no "when" clause)
     args?: Record<string, unknown>;
     priority: Priority; // Priority level for conflict resolution
 }

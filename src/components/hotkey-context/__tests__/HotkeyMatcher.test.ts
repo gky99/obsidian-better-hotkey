@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { HotkeyMatcher } from '../HotkeyMatcher';
 import type { HotkeyEntry, KeyPress } from '../../../types';
 import { Priority } from '../../../types';
+import { CONTEXT_KEY_TRUE } from '../../context-key-expression';
 
 function key(
     key: string,
@@ -20,7 +21,7 @@ function entry(
     seq: KeyPress[],
     priority: Priority = Priority.User,
 ): HotkeyEntry {
-    return { command, key: seq, priority };
+    return { command, key: seq, priority, whenExpr: CONTEXT_KEY_TRUE };
 }
 
 describe('HotkeyMatcher', () => {

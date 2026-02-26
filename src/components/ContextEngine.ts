@@ -1,10 +1,10 @@
 /**
- * Context Engine Component (Stub Version - Phase 1.5)
+ * Context Engine Component
  * Responsibility: Track context state, evaluate "when" clauses
  * Based on Design Documents/Components/Context Engine.md
  *
- * NOTE: This is a stub implementation. evaluate() always returns true.
- * Full implementation with real "when" clause parsing in Phase 3.1
+ * Implements ContextReader interface so expression nodes can evaluate
+ * against context state via getContext().
  */
 
 import type { HotkeyEntry, ContextSchema, Disposable } from '../types';
@@ -21,7 +21,8 @@ export class ContextEngine {
     }
 
     /**
-     * Get context value
+     * Get context value.
+     * Also satisfies the ContextReader interface used by expression evaluation.
      */
     getContext(key: string): unknown {
         return this.state.get(key);
@@ -53,25 +54,13 @@ export class ContextEngine {
     }
 
     /**
-     * Filter hotkey entries by their "when" clauses
-     * Uses evaluate() to determine if entry matches current context
+     * Filter hotkey entries by their "when" clauses.
+     * Evaluates entry.whenExpr against current context state.
+     * Since whenExpr is always defined (TrueExpr when no "when" clause),
+     * we simply evaluate it directly.
      */
     filter(entries: HotkeyEntry[]): HotkeyEntry[] {
-        return entries.filter((entry) => {
-            if (!entry.when) {
-                return true; // No condition means always active
-            }
-            return this.evaluate(entry.when);
-        });
-    }
-
-    /**
-     * Evaluate "when" clause (STUB - always returns true)
-     * TODO: Implement real parsing in Phase 3.1
-     */
-    private evaluate(whenClause: string): boolean {
-        // Stub implementation - always returns true
-        return true;
+        return entries.filter((entry) => entry.whenExpr.evaluate(this));
     }
 }
 

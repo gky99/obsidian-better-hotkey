@@ -2,27 +2,34 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { ContextEngine } from '../ContextEngine';
 import { Priority } from '../../types';
 import type { HotkeyEntry, KeyPress, ContextSchema } from '../../types';
+import { deserialize, CONTEXT_KEY_TRUE } from '../context-key-expression';
 
 // Helper to create test key presses
 function key(
-    key: string,
+    k: string,
     modifiers: Array<'ctrl' | 'alt' | 'shift' | 'meta'> = [],
 ): KeyPress {
     return {
-        key,
-        code: key,
+        key: k,
+        code: k,
         modifiers: new Set(modifiers),
     };
 }
 
-// Helper to create test hotkey entries
+// Helper to create test hotkey entries with parsed whenExpr
 function entry(
     command: string,
     seq: KeyPress[],
     when?: string,
     priority: Priority = Priority.User,
 ): HotkeyEntry {
-    return { command, key: seq, priority, when };
+    return {
+        command,
+        key: seq,
+        priority,
+        when,
+        whenExpr: deserialize(when ?? ''),
+    };
 }
 
 describe('ContextEngine', () => {
@@ -59,7 +66,9 @@ describe('ContextEngine', () => {
             expect(engine.getContext('stringKey')).toBe('text');
             expect(engine.getContext('numberKey')).toBe(42);
             expect(engine.getContext('booleanKey')).toBe(true);
-            expect(engine.getContext('objectKey')).toEqual({ nested: 'value' });
+            expect(engine.getContext('objectKey')).toEqual({
+                nested: 'value',
+            });
             expect(engine.getContext('arrayKey')).toEqual([1, 2, 3]);
         });
     });
@@ -168,7 +177,7 @@ describe('ContextEngine', () => {
     });
 
     describe('filter', () => {
-        it('returns all entries when no "when" clause', () => {
+        it('returns all entries when no "when" clause (TrueExpr)', () => {
             const entries: HotkeyEntry[] = [
                 entry('cmd1', [key('a')]),
                 entry('cmd2', [key('b')]),
@@ -181,32 +190,147 @@ describe('ContextEngine', () => {
             expect(filtered).toEqual(entries);
         });
 
-        it('uses evaluate() for entries with "when" clause', () => {
+        it('keeps entries where when clause is satisfied by context', () => {
+            engine.setContext('editorFocused', true);
+
             const entries: HotkeyEntry[] = [
-                entry('cmd1', [key('a')], 'editorFocus'),
-                entry('cmd2', [key('b')], '!editorFocus'),
-                entry('cmd3', [key('c')]), // No when clause
+                entry('cmd1', [key('a')], 'editorFocused'),
             ];
 
             const filtered = engine.filter(entries);
-
-            // In stub implementation, evaluate() always returns true
-            // So all entries should be returned
-            expect(filtered).toHaveLength(3);
+            expect(filtered).toHaveLength(1);
+            expect(filtered[0]!.command).toBe('cmd1');
         });
 
-        it('stub implementation always returns all entries with "when" clauses', () => {
+        it('filters out entries where when clause is NOT satisfied', () => {
+            // editorFocused is not set (undefined → falsy)
             const entries: HotkeyEntry[] = [
-                entry('cmd1', [key('a')], 'editorFocus && !inputFocus'),
-                entry('cmd2', [key('b')], 'inputFocus'),
-                entry('cmd3', [key('c')], 'false'), // Even explicit false
+                entry('cmd1', [key('a')], 'editorFocused'),
             ];
 
             const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(0);
+        });
 
-            // Stub evaluate() always returns true
+        it('handles negation: !key filters when key is truthy', () => {
+            engine.setContext('modalOpen', true);
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], '!modalOpen'),
+            ];
+
+            const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(0);
+        });
+
+        it('handles negation: !key passes when key is falsy', () => {
+            engine.setContext('modalOpen', false);
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], '!modalOpen'),
+            ];
+
+            const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(1);
+        });
+
+        it('handles AND: both conditions must be true', () => {
+            engine.setContext('editorFocused', true);
+            engine.setContext('modalOpen', false);
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'editorFocused && !modalOpen'),
+            ];
+
+            const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(1);
+        });
+
+        it('handles AND: fails when any condition is false', () => {
+            engine.setContext('editorFocused', true);
+            engine.setContext('modalOpen', true);
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'editorFocused && !modalOpen'),
+            ];
+
+            const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(0);
+        });
+
+        it('handles OR: either condition can be true', () => {
+            engine.setContext('modalOpen', true);
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'modalOpen || popoverOpen'),
+            ];
+
+            const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(1);
+        });
+
+        it('handles equality: key == "value"', () => {
+            engine.setContext('activeViewType', 'editor');
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'activeViewType == "editor"'),
+            ];
+
+            const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(1);
+        });
+
+        it('handles equality: fails when value differs', () => {
+            engine.setContext('activeViewType', 'graph');
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'activeViewType == "editor"'),
+            ];
+
+            const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(0);
+        });
+
+        it('handles inequality: key != "value"', () => {
+            engine.setContext('activeViewType', 'editor');
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'activeViewType != "graph"'),
+            ];
+
+            const filtered = engine.filter(entries);
+            expect(filtered).toHaveLength(1);
+        });
+
+        it('preserves entries without when clause', () => {
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')]),
+                entry('cmd2', [key('b')], 'editorFocused'),
+            ];
+
+            const filtered = engine.filter(entries);
+            // cmd1 has TrueExpr (always passes), cmd2 fails (editorFocused not set)
+            expect(filtered).toHaveLength(1);
+            expect(filtered[0]!.command).toBe('cmd1');
+        });
+
+        it('handles mixed: some entries with when, some without', () => {
+            engine.setContext('editorFocused', true);
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')]),
+                entry('cmd2', [key('b')], 'editorFocused'),
+                entry('cmd3', [key('c')], 'modalOpen'),
+                entry('cmd4', [key('d')]),
+            ];
+
+            const filtered = engine.filter(entries);
             expect(filtered).toHaveLength(3);
-            expect(filtered).toEqual(entries);
+            expect(filtered.map((e) => e.command)).toEqual([
+                'cmd1',
+                'cmd2',
+                'cmd4',
+            ]);
         });
 
         it('handles empty entry list', () => {
@@ -217,6 +341,10 @@ describe('ContextEngine', () => {
         });
 
         it('preserves entry order', () => {
+            engine.setContext('context1', true);
+            engine.setContext('context2', true);
+            engine.setContext('context3', true);
+
             const entries: HotkeyEntry[] = [
                 entry('cmd3', [key('c')], 'context3', Priority.Plugin),
                 entry('cmd1', [key('a')], 'context1', Priority.User),
@@ -256,32 +384,72 @@ describe('ContextEngine', () => {
         });
     });
 
-    describe('stub behavior verification', () => {
-        it('evaluate is called for entries with when clause (implicit via filter)', () => {
-            // This test verifies stub behavior: evaluate() always returns true
-            const entriesWithWhen: HotkeyEntry[] = [
-                entry('cmd1', [key('a')], 'someCondition'),
+    describe('real evaluation integration', () => {
+        it('editorFocused && !suggestionModalRendered: true when editor focused, no modal', () => {
+            engine.setContext('editorFocused', true);
+            engine.setContext('suggestionModalRendered', false);
+
+            const entries: HotkeyEntry[] = [
+                entry(
+                    'cmd1',
+                    [key('a')],
+                    'editorFocused && !suggestionModalRendered',
+                ),
             ];
 
-            const filtered = engine.filter(entriesWithWhen);
-
-            // If evaluate() returned false, this would be filtered out
-            // But stub always returns true
-            expect(filtered).toHaveLength(1);
-            expect(filtered[0]!.command).toBe('cmd1');
+            expect(engine.filter(entries)).toHaveLength(1);
         });
 
-        it('stub allows all conditional entries through', () => {
+        it('editorFocused && !suggestionModalRendered: false when modal is rendered', () => {
+            engine.setContext('editorFocused', true);
+            engine.setContext('suggestionModalRendered', true);
+
             const entries: HotkeyEntry[] = [
-                entry('cmd1', [key('a')], 'condition1'),
-                entry('cmd2', [key('b')], 'condition2'),
-                entry('cmd3', [key('c')], 'condition3'),
+                entry(
+                    'cmd1',
+                    [key('a')],
+                    'editorFocused && !suggestionModalRendered',
+                ),
             ];
 
-            const filtered = engine.filter(entries);
+            expect(engine.filter(entries)).toHaveLength(0);
+        });
 
-            // All entries should pass through (stub behavior)
-            expect(filtered).toHaveLength(3);
+        it('activeViewType == "editor": true when view type matches', () => {
+            engine.setContext('activeViewType', 'editor');
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'activeViewType == "editor"'),
+            ];
+
+            expect(engine.filter(entries)).toHaveLength(1);
+        });
+
+        it('activeViewType == "editor": false when view type differs', () => {
+            engine.setContext('activeViewType', 'graph');
+
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'activeViewType == "editor"'),
+            ];
+
+            expect(engine.filter(entries)).toHaveLength(0);
+        });
+
+        it('context changes affect filter results dynamically', () => {
+            const entries: HotkeyEntry[] = [
+                entry('cmd1', [key('a')], 'editorFocused'),
+            ];
+
+            // Initially not focused
+            expect(engine.filter(entries)).toHaveLength(0);
+
+            // Focus editor
+            engine.setContext('editorFocused', true);
+            expect(engine.filter(entries)).toHaveLength(1);
+
+            // Unfocus editor
+            engine.setContext('editorFocused', false);
+            expect(engine.filter(entries)).toHaveLength(0);
         });
     });
 });

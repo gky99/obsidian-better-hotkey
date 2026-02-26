@@ -154,6 +154,7 @@ export class HotkeyManager {
                 ...kp,
                 code: this.translateCode(kp.key),
             })),
+            whenExpr: entry.whenExpr,
             priority,
             ...(entry.when !== undefined && { when: entry.when }),
             ...(entry.args !== undefined && { args: entry.args }),

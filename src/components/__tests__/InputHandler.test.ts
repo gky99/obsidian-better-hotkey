@@ -4,6 +4,7 @@ import { KILL_YANK_COMMANDS } from '../../constants';
 import type { KeyPress, MatchResult } from '../../types';
 import { Priority } from '../../types';
 import type { Plugin, App, KeymapContext } from 'obsidian';
+import { CONTEXT_KEY_TRUE } from '../context-key-expression';
 
 // Mock Scope instance shared across tests
 const mockScopeInstance = {
@@ -156,24 +157,20 @@ describe('InputHandler', () => {
 
         it('start() pushes scope onto keymap', () => {
             inputHandler.start();
-            expect(
-                (mockPlugin.app as any).keymap.pushScope,
-            ).toHaveBeenCalled();
+            expect((mockPlugin.app as any).keymap.pushScope).toHaveBeenCalled();
         });
 
         it('start() registers teardown callback via plugin.register', () => {
             inputHandler.start();
-            expect(
-                (mockPlugin as any).register,
-            ).toHaveBeenCalledWith(expect.any(Function));
+            expect((mockPlugin as any).register).toHaveBeenCalledWith(
+                expect.any(Function),
+            );
         });
 
         it('stop() pops scope from keymap', () => {
             inputHandler.start();
             inputHandler.stop();
-            expect(
-                (mockPlugin.app as any).keymap.popScope,
-            ).toHaveBeenCalled();
+            expect((mockPlugin.app as any).keymap.popScope).toHaveBeenCalled();
         });
 
         it('stop() is idempotent when not started', () => {
@@ -299,6 +296,7 @@ describe('InputHandler', () => {
                         command: 'test:command',
                         key: [key('s', 'KeyS', ['ctrl'])],
                         priority: Priority.User,
+                        whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
                 mockHotkeyContext.hotkeyMatcher.match.mockReturnValue(
@@ -347,6 +345,7 @@ describe('InputHandler', () => {
                         command: 'test:command',
                         key: [key('s', 'KeyS', ['ctrl'])],
                         priority: Priority.User,
+                        whenExpr: CONTEXT_KEY_TRUE,
                         args: { count: 5 },
                     },
                 };
@@ -594,6 +593,7 @@ describe('InputHandler', () => {
                         command: 'test:command',
                         key: [key('s', 'KeyS', ['ctrl'])],
                         priority: Priority.User,
+                        whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
                 mockHotkeyContext.hotkeyMatcher.match.mockReturnValue(
@@ -637,6 +637,7 @@ describe('InputHandler', () => {
                         command: 'cmd:test',
                         key: [key('t', 'KeyT', ['ctrl'])],
                         priority: Priority.User,
+                        whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
                 mockHotkeyContext.hotkeyMatcher.match.mockReturnValue(
@@ -665,6 +666,7 @@ describe('InputHandler', () => {
                         command: 'cmd:test',
                         key: [key('t', 'KeyT', ['ctrl'])],
                         priority: Priority.User,
+                        whenExpr: CONTEXT_KEY_TRUE,
                         args: { arg1: 'value' },
                     },
                 };
@@ -694,6 +696,7 @@ describe('InputHandler', () => {
                         command: 'cmd:test',
                         key: [key('t', 'KeyT', ['ctrl'])],
                         priority: Priority.User,
+                        whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
                 mockHotkeyContext.hotkeyMatcher.match.mockReturnValue(
@@ -726,6 +729,7 @@ describe('InputHandler', () => {
                         command: KILL_YANK_COMMANDS.YANK,
                         key: [key('y', 'KeyY', ['ctrl'])],
                         priority: Priority.User,
+                        whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
                 mockHotkeyContext.hotkeyMatcher.match.mockReturnValue(
@@ -868,6 +872,7 @@ describe('InputHandler', () => {
                             command: 'test:chord',
                             key: sequence2,
                             priority: Priority.User,
+                            whenExpr: CONTEXT_KEY_TRUE,
                         },
                     });
 
@@ -943,7 +948,8 @@ describe('InputHandler', () => {
             invokeHandler(event);
 
             // Verify the KeyPress passed to chordBuffer has correct key and code
-            const appendCall = mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
+            const appendCall =
+                mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
             expect(appendCall.code).toBe('KeyA');
             // key is from layout service (QWERTY fallback: KeyA → 'a')
             // or from event.key if layout service not initialized
@@ -963,7 +969,8 @@ describe('InputHandler', () => {
             });
             invokeHandler(event);
 
-            const appendCall = mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
+            const appendCall =
+                mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
             expect(appendCall.code).toBe('KeyK');
         });
 
@@ -979,14 +986,16 @@ describe('InputHandler', () => {
             invokeHandler(event);
 
             // isEscape is called with the KeyPress — verify it got 'Escape' as key
-            const escapeCall = mockHotkeyContext.hotkeyMatcher.isEscape.mock.calls[0]![0];
+            const escapeCall =
+                mockHotkeyContext.hotkeyMatcher.isEscape.mock.calls[0]![0];
             expect(escapeCall.key).toBe('Escape');
             expect(escapeCall.code).toBe('Escape');
         });
 
         it('handles macOS Option key scenario (event.key mangled, code correct)', async () => {
             // Initialize layout service so getBaseCharacter works (QWERTY fallback)
-            const { keyboardLayoutService } = await import('../KeyboardLayoutService');
+            const { keyboardLayoutService } =
+                await import('../KeyboardLayoutService');
             await keyboardLayoutService.initialize();
 
             // macOS: Option+E produces event.key='é', but code is still 'KeyE'
@@ -1004,7 +1013,8 @@ describe('InputHandler', () => {
             });
             invokeHandler(event);
 
-            const appendCall = mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
+            const appendCall =
+                mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
             expect(appendCall.key).toBe('e'); // Layout service corrects 'é' → 'e'
             expect(appendCall.code).toBe('KeyE');
 
@@ -1026,7 +1036,8 @@ describe('InputHandler', () => {
             });
             invokeHandler(event);
 
-            const appendCall = mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
+            const appendCall =
+                mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
             expect(appendCall.modifiers.has('ctrl')).toBe(true);
             expect(appendCall.modifiers.has('shift')).toBe(true);
             expect(appendCall.modifiers.has('alt')).toBe(false);

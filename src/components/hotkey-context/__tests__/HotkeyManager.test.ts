@@ -4,6 +4,7 @@ import { HotkeyMatcher } from '../HotkeyMatcher';
 import type { HotkeyEntry, KeyPress, ConfigHotkeyEntry } from '../../../types';
 import { Priority } from '../../../types';
 import { parseHotkeyString } from '../../../utils/hotkey';
+import { CONTEXT_KEY_TRUE } from '../../context-key-expression';
 
 function key(
     key: string,
@@ -22,7 +23,7 @@ function entry(
     seq: KeyPress[],
     priority: Priority = Priority.User,
 ): HotkeyEntry {
-    return { command, key: seq, priority };
+    return { command, key: seq, priority, whenExpr: CONTEXT_KEY_TRUE };
 }
 
 function configEntry(
@@ -38,6 +39,7 @@ function configEntry(
         priority,
         removal,
         hotkeyString: keyString,
+        whenExpr: CONTEXT_KEY_TRUE,
     };
 }
 
@@ -391,7 +393,8 @@ describe('HotkeyManager', () => {
 
     describe('code translation in insertEntry', () => {
         it('populates KeyPress.code via layout service for letter keys', async () => {
-            const { keyboardLayoutService } = await import('../../KeyboardLayoutService');
+            const { keyboardLayoutService } =
+                await import('../../KeyboardLayoutService');
             await keyboardLayoutService.initialize();
 
             const freshManager = new HotkeyManager();
@@ -412,7 +415,8 @@ describe('HotkeyManager', () => {
         });
 
         it('populates KeyPress.code for special keys via SPECIAL_KEY_CODE_MAP', async () => {
-            const { keyboardLayoutService } = await import('../../KeyboardLayoutService');
+            const { keyboardLayoutService } =
+                await import('../../KeyboardLayoutService');
             await keyboardLayoutService.initialize();
 
             const freshManager = new HotkeyManager();
@@ -432,7 +436,8 @@ describe('HotkeyManager', () => {
         });
 
         it('populates KeyPress.code for space key', async () => {
-            const { keyboardLayoutService } = await import('../../KeyboardLayoutService');
+            const { keyboardLayoutService } =
+                await import('../../KeyboardLayoutService');
             await keyboardLayoutService.initialize();
 
             const freshManager = new HotkeyManager();
@@ -452,7 +457,8 @@ describe('HotkeyManager', () => {
         });
 
         it('translates chord sequence codes', async () => {
-            const { keyboardLayoutService } = await import('../../KeyboardLayoutService');
+            const { keyboardLayoutService } =
+                await import('../../KeyboardLayoutService');
             await keyboardLayoutService.initialize();
 
             const freshManager = new HotkeyManager();

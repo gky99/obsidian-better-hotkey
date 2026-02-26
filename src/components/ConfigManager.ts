@@ -14,6 +14,7 @@ import { normalizePath } from 'obsidian';
 import type { ConfigHotkeyEntry, Disposable, KeyPress } from '../types';
 import { Priority } from '../types';
 import { parseHotkeyString } from '../utils/hotkey';
+import { deserialize } from './context-key-expression';
 
 /**
  * Shape of a raw hotkey binding in JSON files (preset and user)
@@ -239,10 +240,13 @@ export class ConfigManager {
             }
         }
 
+        const whenExpr = deserialize(when ?? '');
+
         return {
             command,
             key: keyPresses,
             when,
+            whenExpr,
             args,
             priority,
             removal,
