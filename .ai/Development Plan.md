@@ -169,14 +169,14 @@ Commands implemented as part of Phase 2. Each command is registered in the Comma
 
 | Task                                                                         | Effort | Dependencies | Done |
 | ---------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement `kill-line` (C-k): cursor-to-EOL text → Kill Ring push             | 0.5d   | 2.1, 2.2     |      |
-| Implement `kill-region` (C-w): selection → Kill Ring push → delete           | 0.25d  | 2.1, 2.2     |      |
-| Implement `kill-word` (M-d): forward word → Kill Ring push → delete          | 0.25d  | 2.1, 2.2     |      |
-| Implement `backward-kill-word` (M-Backspace): backward word → Kill Ring push | 0.25d  | 2.1, 2.2     |      |
-| Implement `copy-region` (M-w): selection → Kill Ring (no delete)             | 0.25d  | 2.1, 2.2     |      |
-| Implement `yank` (C-y): insert from Kill Ring, set yank range                | 0.5d   | 2.1, 2.2     |      |
-| Implement `yank-pop` (M-y): cycle Kill Ring, replace last yank range         | 0.5d   | 2.1, 2.2     |      |
-| Test kill/yank flows end-to-end (including yank tracking)                    | 0.5d   |              |      |
+| Implement `kill-line` (C-k): cursor-to-EOL text → Kill Ring push             | 0.5d   | 2.1, 2.2     | ✅   |
+| Implement `kill-region` (C-w): selection → Kill Ring push → delete           | 0.25d  | 2.1, 2.2     | ✅   |
+| Implement `kill-word` (M-d): forward word → Kill Ring push → delete          | 0.25d  | 2.1, 2.2     | ✅   |
+| Implement `backward-kill-word` (M-Backspace): backward word → Kill Ring push | 0.25d  | 2.1, 2.2     | ✅   |
+| Implement `copy-region` (M-w): selection → Kill Ring (no delete)             | 0.25d  | 2.1, 2.2     | ✅   |
+| Implement `yank` (C-y): insert from Kill Ring, set yank range                | 0.5d   | 2.1, 2.2     | ✅   |
+| Implement `yank-pop` (M-y): cycle Kill Ring, replace last yank range         | 0.5d   | 2.1, 2.2     | ✅   |
+| Test kill/yank flows end-to-end (including yank tracking)                    | 0.5d   |              | ✅   |
 
 #### 2.3.2 Cursor Movement Commands
 
@@ -201,7 +201,7 @@ Commands implemented as part of Phase 2. Each command is registered in the Comma
 | ---------------------------------------------------------------- | ------ | ------------ | ---- |
 | Register 12 cursor movement commands as CM6 direct-call wrappers | 0.5d   | 2.1          | ✅   |
 | Add cursor movement hotkeys to default preset                    | 0.25d  |              | ✅   |
-| Test cursor movement commands with active editor                 | 0.25d  |              |      |
+| Test cursor movement commands with active editor                 | 0.25d  |              | ✅   |
 
 #### 2.3.3 Basic Editing Commands
 
@@ -215,9 +215,9 @@ Commands implemented as part of Phase 2. Each command is registered in the Comma
 
 | Task                                                          | Effort | Dependencies | Done |
 | ------------------------------------------------------------- | ------ | ------------ | ---- |
-| Register 3 basic editing commands as CM6 direct-call wrappers | 0.25d  | 2.1          |      |
-| Add basic editing hotkeys to default preset                   | 0.25d  |              |      |
-| Test basic editing commands                                   | 0.25d  |              |      |
+| Register 3 basic editing commands as CM6 direct-call wrappers | 0.25d  | 2.1          | ✅   |
+| Add basic editing hotkeys to default preset                   | 0.25d  |              | ✅   |
+| Test basic editing commands                                   | 0.25d  |              | ✅   |
 
 #### 2.3.4 Case Transformation Commands
 
@@ -232,10 +232,10 @@ Commands implemented as part of Phase 2. Each command is registered in the Comma
 
 | Task                                                                         | Effort | Dependencies | Done |
 | ---------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement `upcase-word` and `downcase-word` via dispatch + changeByRange     | 0.5d   | 2.1          |      |
-| Implement `upcase-region` and `downcase-region` via dispatch + changeByRange | 0.25d  | 2.1          |      |
-| Add case transformation hotkeys to default preset                            | 0.25d  |              |      |
-| Test case transformation commands                                            | 0.25d  |              |      |
+| Implement `upcase-word` and `downcase-word` via dispatch + changeByRange     | 0.5d   | 2.1          | ✅   |
+| Implement `upcase-region` and `downcase-region` via dispatch + changeByRange | 0.25d  | 2.1          | ✅   |
+| Add case transformation hotkeys to default preset                            | 0.25d  |              | ✅   |
+| Test case transformation commands                                            | 0.25d  |              | ✅   |
 
 #### 2.3.5 Control Commands
 
@@ -249,11 +249,11 @@ Commands implemented as part of Phase 2. Each command is registered in the Comma
 
 | Task                                                                        | Effort | Dependencies | Done |
 | --------------------------------------------------------------------------- | ------ | ------------ | ---- |
-| Implement `keyboard-quit` (C-g): clear selection + chord buffer + state     | 0.5d   | 2.1          |      |
-| Implement `recenter-top-bottom` (C-l): scrollIntoView with position cycling | 0.5d   | 2.1          |      |
-| Implement `undo` (C-/): delegate to editor.undo()                           | 0.25d  | 2.1          |      |
-| Add control command hotkeys to default preset                               | 0.25d  |              |      |
-| Test control commands                                                       | 0.25d  |              |      |
+| Implement `keyboard-quit` (C-g): clear selection + chord buffer + state     | 0.5d   | 2.1          | ✅   |
+| Implement `recenter-top-bottom` (C-l): scrollIntoView with position cycling | 0.5d   | 2.1          | ✅   |
+| Implement `undo` (C-/): delegate to editor.undo()                           | 0.25d  | 2.1          | ✅   |
+| Add control command hotkeys to default preset                               | 0.25d  |              | ✅   |
+| Test control commands                                                       | 0.25d  |              | ✅   |
 
 #### Phase 2 Commands Summary
 
@@ -316,15 +316,15 @@ These are handled by Obsidian's built-in systems:
 
 ### 2.6 HotkeyManager Recalculate + Preset Migration
 
-| Task                                                                     | Effort | Dependencies | Done |
-| ------------------------------------------------------------------------ | ------ | ------------ | ---- |
-| Add `recalculate(preset, plugin, user)` to HotkeyManager                 | 0.5d   | 2.5          | ✅   |
-| Implement removal logic in recalculate (by `hotkeyString`)               | 0.25d  |              | ✅   |
-| Create `presets/emacs.json` with current bindings in string notation     | 0.5d   |              | ✅   |
-| Delete `src/presets/default.ts`                                          | —      |              | ✅   |
-| Update `main.ts`: create ConfigManager, wire onChange → recalculate      | 0.25d  |              | ✅   |
-| Update `HotkeyContext`: remove preset param + `loadPreset()`             | 0.25d  |              | ✅   |
-| End-to-end test: load preset → apply overrides → verify hotkeys          | 0.5d   |              | ✅   |
+| Task                                                                 | Effort | Dependencies | Done |
+| -------------------------------------------------------------------- | ------ | ------------ | ---- |
+| Add `recalculate(preset, plugin, user)` to HotkeyManager             | 0.5d   | 2.5          | ✅   |
+| Implement removal logic in recalculate (by `hotkeyString`)           | 0.25d  |              | ✅   |
+| Create `presets/emacs.json` with current bindings in string notation | 0.5d   |              | ✅   |
+| Delete `src/presets/default.ts`                                      | —      |              | ✅   |
+| Update `main.ts`: create ConfigManager, wire onChange → recalculate  | 0.25d  |              | ✅   |
+| Update `HotkeyContext`: remove preset param + `loadPreset()`         | 0.25d  |              | ✅   |
+| End-to-end test: load preset → apply overrides → verify hotkeys      | 0.5d   |              | ✅   |
 
 ### 2.7 Keyboard Layout Service
 
