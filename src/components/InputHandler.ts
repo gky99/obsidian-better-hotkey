@@ -146,8 +146,14 @@ export class InputHandler {
 
                 // TODO: Phase 3+ — consider optimizing this per-command check (e.g., command metadata flags)
                 // Reset recenter cycle if command is not recenter-top-bottom
-                if (result.entry.command !== CONTROL_COMMANDS.RECENTER_TOP_BOTTOM) {
-                    contextEngine.setContext(CONTEXT_KEYS.RECENTER_CYCLE_POSITION, 0);
+                if (
+                    result.entry.command !==
+                    CONTROL_COMMANDS.RECENTER_TOP_BOTTOM
+                ) {
+                    contextEngine.setContext(
+                        CONTEXT_KEYS.RECENTER_CYCLE_POSITION,
+                        0,
+                    );
                 }
 
                 return false; // Suppress — Obsidian auto-preventDefault

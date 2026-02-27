@@ -38,15 +38,15 @@ export const SPECIAL_KEY_MAP = {
  */
 export const SPECIAL_KEY_CODE_MAP: Record<string, string> = {
     ' ': 'Space',
-    'Backspace': 'Backspace',
-    'Tab': 'Tab',
-    'Enter': 'Enter',
-    'Escape': 'Escape',
-    'Delete': 'Delete',
-    'ArrowUp': 'ArrowUp',
-    'ArrowDown': 'ArrowDown',
-    'ArrowLeft': 'ArrowLeft',
-    'ArrowRight': 'ArrowRight',
+    Backspace: 'Backspace',
+    Tab: 'Tab',
+    Enter: 'Enter',
+    Escape: 'Escape',
+    Delete: 'Delete',
+    ArrowUp: 'ArrowUp',
+    ArrowDown: 'ArrowDown',
+    ArrowLeft: 'ArrowLeft',
+    ArrowRight: 'ArrowRight',
 };
 
 type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta';

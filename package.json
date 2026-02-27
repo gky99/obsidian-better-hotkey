@@ -12,7 +12,10 @@
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "test": "vitest run",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "prepare": "git config core.hooksPath .githooks"
     },
     "keywords": [],
     "license": "0-BSD",

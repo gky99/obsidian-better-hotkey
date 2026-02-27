@@ -8,22 +8,18 @@ import {
     deleteCharForward,
     transposeChars,
     splitLine,
-} from "@codemirror/commands";
-import { Command as CM6Command } from "@codemirror/view";
-import { EditorSelection } from "@codemirror/state";
-import type { Text } from "@codemirror/state";
-import type { Command } from "../types";
-import type { ExecutionContext } from "../components/execution-context/ExecutionContext";
-import { EDITING_COMMANDS } from "../constants";
+} from '@codemirror/commands';
+import { Command as CM6Command } from '@codemirror/view';
+import { EditorSelection } from '@codemirror/state';
+import type { Text } from '@codemirror/state';
+import type { Command } from '../types';
+import type { ExecutionContext } from '../components/execution-context/ExecutionContext';
+import { EDITING_COMMANDS } from '../constants';
 
 /**
  * Create a Command that delegates to a CM6 editing function.
  */
-function cm6EditCommand(
-    id: string,
-    name: string,
-    cm6Fn: CM6Command,
-): Command {
+function cm6EditCommand(id: string, name: string, cm6Fn: CM6Command): Command {
     return {
         id,
         name,
@@ -45,7 +41,10 @@ function cm6EditCommand(
  * If the cursor is on a word character, expand in both directions.
  * If at whitespace/non-word, skip forward to the next word.
  */
-function findWordAt(doc: Text, pos: number): { from: number; to: number } | null {
+function findWordAt(
+    doc: Text,
+    pos: number,
+): { from: number; to: number } | null {
     const len = doc.length;
 
     // Check if cursor is in a word character
@@ -70,7 +69,8 @@ function findWordAt(doc: Text, pos: number): { from: number; to: number } | null
 
     // Skip forward to next word
     let nextPos = pos;
-    while (nextPos < len && !/\w/.test(doc.sliceString(nextPos, nextPos + 1))) nextPos++;
+    while (nextPos < len && !/\w/.test(doc.sliceString(nextPos, nextPos + 1)))
+        nextPos++;
     if (nextPos >= len) return null;
 
     let from = nextPos;
@@ -109,8 +109,15 @@ function caseWordCommand(
                 if (word) {
                     const text = state.doc.sliceString(word.from, word.to);
                     const transformed = transform(text);
-                    changes.push({ from: word.from, to: word.to, insert: transformed });
-                    selections.push({ anchor: word.from + transformed.length, head: word.from + transformed.length });
+                    changes.push({
+                        from: word.from,
+                        to: word.to,
+                        insert: transformed,
+                    });
+                    selections.push({
+                        anchor: word.from + transformed.length,
+                        head: word.from + transformed.length,
+                    });
                 } else {
                     selections.push({ anchor: range.head, head: range.head });
                 }
@@ -161,8 +168,15 @@ function caseRegionCommand(
                 const text = state.doc.sliceString(range.from, range.to);
                 const transformed = transform(text);
                 return {
-                    changes: { from: range.from, to: range.to, insert: transformed },
-                    range: EditorSelection.range(range.from, range.from + transformed.length),
+                    changes: {
+                        from: range.from,
+                        to: range.to,
+                        insert: transformed,
+                    },
+                    range: EditorSelection.range(
+                        range.from,
+                        range.from + transformed.length,
+                    ),
                 };
             });
 
@@ -176,38 +190,30 @@ export function createEditingCommands(): Command[] {
         // Basic Editing (2.3.3) — CM6 Direct Call
         cm6EditCommand(
             EDITING_COMMANDS.DELETE_CHAR,
-            "Delete Char",
+            'Delete Char',
             deleteCharForward,
         ),
         cm6EditCommand(
             EDITING_COMMANDS.TRANSPOSE_CHARS,
-            "Transpose Chars",
+            'Transpose Chars',
             transposeChars,
         ),
-        cm6EditCommand(
-            EDITING_COMMANDS.OPEN_LINE,
-            "Open Line",
-            splitLine,
-        ),
+        cm6EditCommand(EDITING_COMMANDS.OPEN_LINE, 'Open Line', splitLine),
         // Case Transformation (2.3.4) — Custom
-        caseWordCommand(
-            EDITING_COMMANDS.UPCASE_WORD,
-            "Upcase Word",
-            (s) => s.toUpperCase(),
+        caseWordCommand(EDITING_COMMANDS.UPCASE_WORD, 'Upcase Word', (s) =>
+            s.toUpperCase(),
         ),
-        caseWordCommand(
-            EDITING_COMMANDS.DOWNCASE_WORD,
-            "Downcase Word",
-            (s) => s.toLowerCase(),
+        caseWordCommand(EDITING_COMMANDS.DOWNCASE_WORD, 'Downcase Word', (s) =>
+            s.toLowerCase(),
         ),
         caseRegionCommand(
             EDITING_COMMANDS.UPCASE_REGION,
-            "Upcase Region",
+            'Upcase Region',
             (s) => s.toUpperCase(),
         ),
         caseRegionCommand(
             EDITING_COMMANDS.DOWNCASE_REGION,
-            "Downcase Region",
+            'Downcase Region',
             (s) => s.toLowerCase(),
         ),
     ];

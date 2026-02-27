@@ -1,0 +1,21 @@
+# Build output
+main.js
+*.map
+
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Worktrees
+.worktrees/
+
+# AI / IDE config
+.ai/
+.claude/
+.idea/
+.qodo/
+agent-os/
+
+# Obsidian
+data.json
+*.md
