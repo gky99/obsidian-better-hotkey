@@ -335,7 +335,7 @@ function tokenize(input: string): Token[] {
         // Identifiers: [a-zA-Z_][a-zA-Z0-9_.-]*
         if (/[a-zA-Z_]/.test(input[i]!)) {
             const start = i;
-            while (i < input.length && /[a-zA-Z0-9_.\-]/.test(input[i]!)) {
+            while (i < input.length && /[a-zA-Z0-9_.-]/.test(input[i]!)) {
                 i++;
             }
             tokens.push({
@@ -406,8 +406,8 @@ class Parser {
         if (this.match(TokenType.Not)) {
             const atom = this.parseAtom();
             // Negation of a simple key produces ContextKeyNotExpr
-            if (atom.type === (ContextKeyExprType.Defined as number)) {
-                return createNotExpr((atom as ContextKeyDefinedExpr).key);
+            if (atom.type === ContextKeyExprType.Defined) {
+                return createNotExpr(atom.key);
             }
             // For compound negation like !(a && b), wrap in a NOT-like construct
             // We create a synthetic expression that negates the inner expression

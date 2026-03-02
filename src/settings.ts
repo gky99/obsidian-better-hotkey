@@ -1,7 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type MyPlugin from './main';
 import type { ConfigHotkeyEntry } from './types';
-import { Priority } from './types';
 
 export interface MyPluginSettings {
     selectedPreset: string;
@@ -56,8 +55,6 @@ export class BetterHotkeySettingTab extends PluginSettingTab {
     // --- General Section ---
 
     private addGeneralSection(containerEl: HTMLElement): void {
-        new Setting(containerEl).setName('General').setHeading();
-
         new Setting(containerEl)
             .setName('Chord timeout')
             .setDesc(
