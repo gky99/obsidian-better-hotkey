@@ -22,6 +22,8 @@ export const KILL_YANK_COMMANDS = {
 export const CONTEXT_KEYS = {
     LAST_ACTION_WAS_YANK: 'lastActionWasYank',
     RECENTER_CYCLE_POSITION: 'recenterCyclePosition',
+    SUGGEST_MODAL_OPEN: 'suggestModalOpen',
+    POPOVER_SUGGEST_OPEN: 'popoverSuggestOpen',
 } as const;
 
 /**

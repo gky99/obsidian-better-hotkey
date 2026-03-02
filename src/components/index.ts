@@ -22,3 +22,5 @@ export { ExecutionContext } from './execution-context/ExecutionContext';
 export { KillRing } from './execution-context/KillRing';
 export { MarkdownEditorProxy } from './execution-context/MarkdownEditorProxy';
 export { WorkspaceContext } from './execution-context/WorkspaceContext';
+export { SuggestModalProxy } from './execution-context/SuggestModalProxy';
+export { PopoverSuggestProxy } from './execution-context/PopoverSuggestProxy';

@@ -3,9 +3,9 @@
  * Responsibility: Aggregates workspace-related state tracking and editor operations.
  * Provides unified access to Obsidian UI state and the active editor for commands.
  *
- * Future expansion (deferred):
- * - Suggestion Modal Context: Detect modal open/close by patching SuggestModal
- * - Popover Suggestions Context: Detect popover open/close by patching PopoverSuggest
+ * Related components:
+ * - SuggestModalProxy: Detects modal open/close via prototype patching (see SuggestModalProxy.ts)
+ * - PopoverSuggestProxy: Detects popover open/close via prototype patching (see PopoverSuggestProxy.ts)
  */
 
 import type {

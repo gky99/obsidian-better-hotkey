@@ -136,4 +136,14 @@ export function normalizePath(path: string): string {
     return path;
 }
 
+export class SuggestModal {
+    open(): void {}
+    close(): void {}
+}
+
+export class PopoverSuggest {
+    open(): void {}
+    close(): void {}
+}
+
 // Add other obsidian exports as needed

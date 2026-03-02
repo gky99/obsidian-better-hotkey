@@ -16,6 +16,8 @@ import {
     HotkeyContext,
     ConfigManager,
 } from './components';
+import { SuggestModalProxy } from './components/execution-context/SuggestModalProxy';
+import { PopoverSuggestProxy } from './components/execution-context/PopoverSuggestProxy';
 import { keyboardLayoutService } from './components/KeyboardLayoutService';
 
 export default class MyPlugin extends Plugin {
@@ -25,6 +27,8 @@ export default class MyPlugin extends Plugin {
     hotkeyContext!: HotkeyContext;
     configManager!: ConfigManager;
     private statusBarItem: HTMLElement | null = null;
+    private suggestModalProxy: SuggestModalProxy;
+    private popoverSuggestProxy: PopoverSuggestProxy;
 
     async onload() {
         await this.loadSettings();
@@ -90,6 +94,12 @@ export default class MyPlugin extends Plugin {
             void this.configManager.loadAll(this.settings.selectedPreset);
         });
 
+        // Patch SuggestModal/PopoverSuggest prototypes to track open/close state
+        this.suggestModalProxy = new SuggestModalProxy();
+        this.suggestModalProxy.patch();
+        this.popoverSuggestProxy = new PopoverSuggestProxy();
+        this.popoverSuggestProxy.patch();
+
         // Create and start Input Handler (uses Obsidian Scope API per ADR-005)
         this.inputHandler = new InputHandler(
             this.commandRegistry,
@@ -100,6 +110,8 @@ export default class MyPlugin extends Plugin {
     }
 
     onunload() {
+        this.suggestModalProxy?.restore();
+        this.popoverSuggestProxy?.restore();
         this.hotkeyContext?.destroy();
         this.configManager?.dispose();
         keyboardLayoutService.dispose();
