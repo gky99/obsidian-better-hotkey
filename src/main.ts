@@ -58,6 +58,9 @@ export default class MyPlugin extends Plugin {
             this.commandRegistry.registerCommand(cmd);
         }
 
+        // Load native Obsidian commands (wrapped) — AFTER custom commands so ours take priority
+        this.commandRegistry.loadObsidianCommands();
+
         // Initialize Keyboard Layout Service (must be before config loading)
         await keyboardLayoutService.initialize();
 

@@ -129,7 +129,7 @@ export class InputHandler {
         switch (result.type) {
             case 'exact': {
                 // Execute command with execution context
-                this.commandRegistry.execute(
+                const executed = this.commandRegistry.execute(
                     result.entry.command,
                     result.entry.args,
                     this.executionContext,
@@ -139,6 +139,11 @@ export class InputHandler {
                 // Clear chord buffer and status
                 this.hotkeyContext.chordBuffer.clear();
                 this.hotkeyContext.statusIndicator.clear();
+
+                if (!executed) {
+                    // Command unavailable (canExecute returned false) — pass through
+                    return;
+                }
 
                 // Track lastActionWasYank flag using ExecutionContext's killRing
                 this.executionContext.killRing.updateLastActionWasYank(

@@ -7,6 +7,7 @@
 import type { Command, Disposable } from '../types';
 import type { ExecutionContext } from './execution-context/ExecutionContext';
 import type { App } from 'obsidian';
+import { loadObsidianCommands as loadFromObsidian } from './ObsidianCommandLoader';
 
 export class CommandRegistry {
     private commands: Map<string, Command> = new Map();
@@ -48,7 +49,8 @@ export class CommandRegistry {
 
     /**
      * Execute command with optional args and execution context
-     * Returns true if command was found and executed
+     * Returns true if command was found and executed.
+     * Returns false if command not found or canExecute() returns false.
      */
     execute(
         commandId: string,
@@ -58,6 +60,10 @@ export class CommandRegistry {
     ): boolean {
         const command = this.getCommand(commandId);
         if (!command) {
+            return false;
+        }
+
+        if (command.canExecute && !command.canExecute(context)) {
             return false;
         }
 
@@ -82,13 +88,15 @@ export class CommandRegistry {
     }
 
     /**
-     * Load commands from Obsidian's command registry
-     * TODO: Implement in integration phase when wiring with Obsidian app
+     * Load commands from Obsidian's internal command registry.
+     * Wraps native commands into our Command interface.
+     * Skips commands whose IDs are already registered (custom commands take priority).
      */
     loadObsidianCommands(): void {
-        // TODO: Iterate through app.commands.commands and register them
-        // This will be implemented during integration phase
-        // For now, this is a placeholder
+        const obsidianCommands = loadFromObsidian(this.app);
+        for (const cmd of obsidianCommands) {
+            this.registerCommand(cmd);
+        }
     }
 
     /**

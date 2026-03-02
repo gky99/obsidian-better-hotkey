@@ -366,10 +366,121 @@ describe('CommandRegistry', () => {
         });
     });
 
+    describe('execute with canExecute', () => {
+        it('returns false when canExecute returns false', () => {
+            const executeMock = vi.fn();
+            const cmd: Command = {
+                id: 'guarded-cmd',
+                name: 'Guarded',
+                execute: executeMock,
+                canExecute: () => false,
+            };
+
+            registry.registerCommand(cmd);
+            const result = registry.execute('guarded-cmd');
+
+            expect(result).toBe(false);
+            expect(executeMock).not.toHaveBeenCalled();
+        });
+
+        it('executes when canExecute returns true', () => {
+            const executeMock = vi.fn();
+            const cmd: Command = {
+                id: 'guarded-cmd',
+                name: 'Guarded',
+                execute: executeMock,
+                canExecute: () => true,
+            };
+
+            registry.registerCommand(cmd);
+            const result = registry.execute('guarded-cmd');
+
+            expect(result).toBe(true);
+            expect(executeMock).toHaveBeenCalledOnce();
+        });
+
+        it('executes when canExecute is not defined', () => {
+            const executeMock = vi.fn();
+            const cmd = createCommand('no-guard', executeMock);
+
+            registry.registerCommand(cmd);
+            const result = registry.execute('no-guard');
+
+            expect(result).toBe(true);
+            expect(executeMock).toHaveBeenCalledOnce();
+        });
+    });
+
     describe('loadObsidianCommands', () => {
-        it('does not throw when called', () => {
-            // App is always set via constructor now
-            expect(() => registry.loadObsidianCommands()).not.toThrow();
+        it('does not throw when called with valid app', () => {
+            const mockApp = {
+                commands: { commands: {} },
+                workspace: {
+                    getActiveViewOfType: vi.fn().mockReturnValue(null),
+                },
+            } as unknown as App;
+            const reg = new CommandRegistry(mockApp);
+            expect(() => reg.loadObsidianCommands()).not.toThrow();
+        });
+
+        it('registers commands from app.commands.commands', () => {
+            const mockApp = {
+                commands: {
+                    commands: {
+                        'native:cmd1': {
+                            id: 'native:cmd1',
+                            name: 'Native 1',
+                            callback: vi.fn(),
+                        },
+                        'native:cmd2': {
+                            id: 'native:cmd2',
+                            name: 'Native 2',
+                            callback: vi.fn(),
+                        },
+                    },
+                },
+                workspace: {
+                    getActiveViewOfType: vi.fn().mockReturnValue(null),
+                },
+            } as unknown as App;
+
+            const reg = new CommandRegistry(mockApp);
+            reg.loadObsidianCommands();
+
+            expect(reg.getCommand('native:cmd1')).not.toBeNull();
+            expect(reg.getCommand('native:cmd2')).not.toBeNull();
+        });
+
+        it('skips commands already registered (custom commands take priority)', () => {
+            const customExecute = vi.fn();
+            const customCmd = createCommand('editor:undo', customExecute);
+
+            const mockApp = {
+                commands: {
+                    commands: {
+                        'editor:undo': {
+                            id: 'editor:undo',
+                            name: 'Undo',
+                            callback: vi.fn(),
+                        },
+                    },
+                },
+                workspace: {
+                    getActiveViewOfType: vi.fn().mockReturnValue(null),
+                },
+            } as unknown as App;
+
+            const reg = new CommandRegistry(mockApp);
+            reg.registerCommand(customCmd);
+
+            vi.spyOn(console, 'warn').mockImplementation(() => {});
+            reg.loadObsidianCommands();
+
+            // Custom command should still be registered (not replaced)
+            const cmd = reg.getCommand('editor:undo');
+            expect(cmd).toBe(customCmd);
+
+            vi.restoreAllMocks();
         });
     });
 });

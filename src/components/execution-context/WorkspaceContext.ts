@@ -69,11 +69,19 @@ export class WorkspaceContext {
     }
 
     /**
-     * Get the active editor instance (live query — not from proxy)
+     * Get the active MarkdownView via the editor proxy.
+     * Returns null if no view is tracked or the view is no longer visible.
+     */
+    getActiveMarkdownView(): MarkdownView | null {
+        if (!this.editorProxy.isVisible()) return null;
+        return this.editorProxy.getMarkdownView();
+    }
+
+    /**
+     * Get the active editor instance via the editor proxy.
      */
     private getActiveEditor(): Editor | null {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-        return view?.editor ?? null;
+        return this.editorProxy.getEditor();
     }
 
     /**
