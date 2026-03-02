@@ -346,9 +346,9 @@ These are handled by Obsidian's built-in systems:
 
 | Task                                                     | Effort | Dependencies            | Done |
 | -------------------------------------------------------- | ------ | ----------------------- | ---- |
-| Update `normalize()` to use Keyboard Layout Service      | 0.5d   | Keyboard Layout Service |      |
-| Update KeyPress.key to store layout-normalized character | 0.25d  |                         |      |
-| Test input normalization on different layouts            | 0.5d   |                         |      |
+| Update `normalize()` to use Keyboard Layout Service      | 0.5d   | Keyboard Layout Service | ✅    |
+| Update KeyPress.key to store layout-normalized character | 0.25d  |                         | ✅    |
+| Test input normalization on different layouts            | 0.5d   |                         | ✅    |
 
 ### 2.9 ADR Updates
 
