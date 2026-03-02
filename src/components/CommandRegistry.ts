@@ -54,6 +54,7 @@ export class CommandRegistry {
         commandId: string,
         args?: Record<string, unknown>,
         context?: ExecutionContext,
+        event?: KeyboardEvent,
     ): boolean {
         const command = this.getCommand(commandId);
         if (!command) {
@@ -61,7 +62,7 @@ export class CommandRegistry {
         }
 
         try {
-            const result = command.execute(args, context);
+            const result = command.execute(args, context, event);
 
             // Handle async commands
             if (result instanceof Promise) {

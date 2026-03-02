@@ -65,6 +65,7 @@ export interface Command {
     execute(
         args?: Record<string, unknown>,
         context?: ExecutionContext,
+        event?: KeyboardEvent,
     ): void | Promise<void>;
 }
 

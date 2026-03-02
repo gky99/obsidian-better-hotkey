@@ -8,10 +8,14 @@
 import type { Plugin } from 'obsidian';
 import { KillRing } from './KillRing';
 import { WorkspaceContext } from './WorkspaceContext';
+import { SuggestModalProxy } from './SuggestModalProxy';
+import { PopoverSuggestProxy } from './PopoverSuggestProxy';
 
 export class ExecutionContext {
     public readonly killRing: KillRing;
     public readonly workspaceContext: WorkspaceContext;
+    public readonly suggestModalProxy: SuggestModalProxy;
+    public readonly popoverSuggestProxy: PopoverSuggestProxy;
 
     /**
      * Create execution context with plugin instance
@@ -20,5 +24,17 @@ export class ExecutionContext {
     constructor(plugin: Plugin) {
         this.killRing = new KillRing();
         this.workspaceContext = new WorkspaceContext(plugin);
+        this.suggestModalProxy = new SuggestModalProxy();
+        this.suggestModalProxy.patch();
+        this.popoverSuggestProxy = new PopoverSuggestProxy();
+        this.popoverSuggestProxy.patch();
+    }
+
+    /**
+     * Restore all prototype patches
+     */
+    destroy(): void {
+        this.suggestModalProxy.restore();
+        this.popoverSuggestProxy.restore();
     }
 }

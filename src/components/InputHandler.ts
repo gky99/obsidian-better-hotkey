@@ -71,10 +71,12 @@ export class InputHandler {
     }
 
     /**
-     * Stop intercepting keyboard events. Restores original Scope.prototype.handleKey.
+     * Stop intercepting keyboard events. Restores original Scope.prototype.handleKey
+     * and all prototype patches owned by the execution context.
      */
     stop(): void {
         this.scopeProxy.restore();
+        this.executionContext.destroy();
     }
 
     /**
@@ -106,7 +108,7 @@ export class InputHandler {
                 this.hotkeyContext.hotkeyMatcher.match(sequence);
 
             // Step 5: Handle match result
-            return this.handleMatchResult(matchResult, sequence);
+            return this.handleMatchResult(matchResult, sequence, event);
         } catch (error) {
             console.error('InputHandler error:', error);
             this.hotkeyContext.chordBuffer.clear();
@@ -122,6 +124,7 @@ export class InputHandler {
     private handleMatchResult(
         result: MatchResult,
         sequence: KeyPress[],
+        event: KeyboardEvent,
     ): false | undefined {
         switch (result.type) {
             case 'exact': {
@@ -130,6 +133,7 @@ export class InputHandler {
                     result.entry.command,
                     result.entry.args,
                     this.executionContext,
+                    event,
                 );
 
                 // Clear chord buffer and status
