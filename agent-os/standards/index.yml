@@ -3,14 +3,26 @@
 architecture:
   component-folders:
     description: Organize components by domain context (hotkey-context/, execution-context/)
+  proxy-lifecycle:
+    description: Proxy pattern lifecycle — store originals, guard with patched flag, patch/restore
 
 development:
+  eslint-disable-policy:
+    description: eslint-disable is last resort — exhaust alternatives, ask user, always document why
   git-worktree-workflow:
     description: MANDATORY worktree isolation before implementation; Task 1 in all plans via /using-git-worktrees
+  monkey-patch-type-safety:
+    description: Define extending interfaces before casting prototypes; never raw as any
+  pre-commit-formatting:
+    description: Prettier auto-formats staged files via .githooks/pre-commit; CI checks build + lint
+  private-api-types:
+    description: Private API helper types — centralize in types.ts if shared, keep local if single-use
   string-constants:
     description: Command IDs and context keys as constants with 'as const', never hard-code
   stub-implementations:
     description: Explicit inline documentation for stub method implementations
+  test-lint-exclusion:
+    description: Test files and mocks excluded from ESLint; separate quality expectations
   todo-comments:
     description: Phase-aware TODO comments that reference development plan
 
