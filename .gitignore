@@ -28,3 +28,7 @@ nul
 
 # eslint cache
 .eslintcache
+
+# wdio E2E test
+.obsidian-cache
+tsconfig.e2e.tsbuildinfo
