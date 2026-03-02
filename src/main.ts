@@ -100,7 +100,7 @@ export default class MyPlugin extends Plugin {
         this.popoverSuggestProxy = new PopoverSuggestProxy();
         this.popoverSuggestProxy.patch();
 
-        // Create and start Input Handler (uses Obsidian Scope API per ADR-005)
+        // Create and start Input Handler (patches Scope.prototype.handleKey per ADR-005)
         this.inputHandler = new InputHandler(
             this.commandRegistry,
             this.hotkeyContext,

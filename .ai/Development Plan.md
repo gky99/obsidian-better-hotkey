@@ -106,6 +106,7 @@ The main orchestrator. Registers a global `keydown` listener and drives the full
 | Implement timeout → clear flow                                                               | 0.25d  |               | ✅   |
 | Implement escape → clear flow                                                                | 0.25d  |               | ✅   |
 | End-to-end testing with hardcoded hotkeys                                                    | 0.5d   |               | ✅   |
+| Replace pushScope with Scope.prototype.handleKey patch via ScopeProxy                        | 0.5d   |               | ✅   |
 
 **Phase 1 Total:** ~5-6 days
 

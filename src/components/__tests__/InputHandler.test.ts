@@ -3,38 +3,35 @@ import { InputHandler } from '../InputHandler';
 import { KILL_YANK_COMMANDS } from '../../constants';
 import type { KeyPress, MatchResult } from '../../types';
 import { Priority } from '../../types';
-import type { Plugin, App, KeymapContext } from 'obsidian';
+import type { Plugin, App } from 'obsidian';
+import { Scope } from 'obsidian';
 import { CONTEXT_KEY_TRUE } from '../context-key-expression';
 
-// Mock Scope instance shared across tests
-const mockScopeInstance = {
-    register: vi.fn().mockReturnValue({}),
-    unregister: vi.fn(),
-};
-
-// Track Scope constructor calls
-const ScopeConstructorSpy = vi.fn();
-
-// Mock obsidian module — Scope must work as a constructor with `new`
-vi.mock('obsidian', () => ({
-    Scope: class MockScope {
-        constructor(parent?: any) {
-            ScopeConstructorSpy(parent);
-            Object.assign(this, mockScopeInstance);
+// Mock obsidian module — Scope needs handleKey on its prototype
+vi.mock('obsidian', () => {
+    const MockScope = class MockScope {
+        constructor(parent?: any) {}
+        register() {
+            return {};
         }
-    },
-    MarkdownView: vi.fn(),
-    App: vi.fn(),
-    Plugin: vi.fn(),
-}));
+        unregister() {}
+    };
+    (MockScope.prototype as any).handleKey = vi.fn();
+    return {
+        Scope: MockScope,
+        MarkdownView: vi.fn(),
+        App: vi.fn(),
+        Plugin: vi.fn(),
+    };
+});
 
-// Mock factory for Plugin with Scope API support
+// Mock factory for Plugin with keymap.scope for top-scope routing
 function createMockPlugin() {
+    const mockTopScope = {};
     const mockApp = {
-        scope: {}, // root scope — parent for our scope
+        scope: {},
         keymap: {
-            pushScope: vi.fn(),
-            popScope: vi.fn(),
+            scope: mockTopScope,
         },
         workspace: {
             getActiveViewOfType: vi.fn().mockReturnValue(null),
@@ -60,11 +57,6 @@ function key(
         code: code ?? key,
         modifiers: new Set(modifiers),
     };
-}
-
-// Helper to create a minimal KeymapContext for handler invocation
-function ctx(vkey: string): KeymapContext {
-    return { vkey, modifiers: null, key: null } as unknown as KeymapContext;
 }
 
 // Mock factory for HotkeyContext
@@ -98,37 +90,32 @@ describe('InputHandler', () => {
     let mockHotkeyContext: ReturnType<typeof createMockHotkeyContext>;
     let mockCommandRegistry: ReturnType<typeof createMockCommandRegistry>;
     let mockPlugin: Plugin;
-    let capturedScopeHandler:
-        | ((evt: KeyboardEvent, ctx: KeymapContext) => false | undefined)
-        | null = null;
+    let mockOriginalHandleKey: ReturnType<typeof vi.fn>;
 
-    /** Invoke the captured scope handler with a KeyboardEvent */
-    function invokeHandler(event: KeyboardEvent): false | undefined {
-        return capturedScopeHandler!(event, ctx(event.key));
+    /** Invoke the patched handleKey as the top scope */
+    function invokeHandler(event: KeyboardEvent): any {
+        const patchedHandleKey = (Scope.prototype as any).handleKey;
+        const topScope = (mockPlugin.app as any).keymap.scope;
+        return patchedHandleKey.call(topScope, event, {});
+    }
+
+    /** Invoke the patched handleKey as a non-top scope */
+    function invokeHandlerOnNonTopScope(event: KeyboardEvent): any {
+        const patchedHandleKey = (Scope.prototype as any).handleKey;
+        return patchedHandleKey.call({}, event, {});
     }
 
     beforeEach(() => {
         vi.clearAllMocks();
 
+        // Reset Scope.prototype.handleKey to a fresh mock
+        mockOriginalHandleKey = vi.fn();
+        (Scope.prototype as any).handleKey = mockOriginalHandleKey;
+
         // Create fresh mocks
         mockHotkeyContext = createMockHotkeyContext();
         mockCommandRegistry = createMockCommandRegistry();
         mockPlugin = createMockPlugin();
-
-        // Capture handler when scope.register is called
-        mockScopeInstance.register.mockImplementation(
-            (
-                _modifiers: any,
-                _key: any,
-                handler: (
-                    evt: KeyboardEvent,
-                    ctx: KeymapContext,
-                ) => false | undefined,
-            ) => {
-                capturedScopeHandler = handler;
-                return {};
-            },
-        );
 
         // Create InputHandler with mocked dependencies
         inputHandler = new InputHandler(
@@ -138,26 +125,12 @@ describe('InputHandler', () => {
         );
     });
 
-    describe('Scope Lifecycle', () => {
-        it('start() creates Scope with app.scope as parent', () => {
+    describe('handleKey Patch Lifecycle', () => {
+        it('start() patches Scope.prototype.handleKey', () => {
             inputHandler.start();
-            expect(ScopeConstructorSpy).toHaveBeenCalledWith(
-                (mockPlugin.app as any).scope,
+            expect((Scope.prototype as any).handleKey).not.toBe(
+                mockOriginalHandleKey,
             );
-        });
-
-        it('start() registers catch-all handler (null, null)', () => {
-            inputHandler.start();
-            expect(mockScopeInstance.register).toHaveBeenCalledWith(
-                null,
-                null,
-                expect.any(Function),
-            );
-        });
-
-        it('start() pushes scope onto keymap', () => {
-            inputHandler.start();
-            expect((mockPlugin.app as any).keymap.pushScope).toHaveBeenCalled();
         });
 
         it('start() registers teardown callback via plugin.register', () => {
@@ -167,25 +140,103 @@ describe('InputHandler', () => {
             );
         });
 
-        it('stop() pops scope from keymap', () => {
+        it('stop() restores original Scope.prototype.handleKey', () => {
             inputHandler.start();
             inputHandler.stop();
-            expect((mockPlugin.app as any).keymap.popScope).toHaveBeenCalled();
+            expect((Scope.prototype as any).handleKey).toBe(
+                mockOriginalHandleKey,
+            );
         });
 
         it('stop() is idempotent when not started', () => {
             expect(() => inputHandler.stop()).not.toThrow();
         });
 
-        it('stop() clears scope references', () => {
+        it('stop() is idempotent after already stopped', () => {
             inputHandler.start();
             inputHandler.stop();
-            // Calling stop again should not call popScope again
-            (mockPlugin.app as any).keymap.popScope.mockClear();
+            const fn = (Scope.prototype as any).handleKey;
             inputHandler.stop();
+            expect((Scope.prototype as any).handleKey).toBe(fn);
+        });
+    });
+
+    describe('Top Scope Routing', () => {
+        it('runs pipeline when called on top scope', () => {
+            mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
+                type: 'none',
+                isChord: false,
+            });
+
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'a',
+                code: 'KeyA',
+            });
+            invokeHandler(event);
+
+            expect(mockHotkeyContext.chordBuffer.append).toHaveBeenCalled();
+        });
+
+        it('skips pipeline when called on non-top scope', () => {
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'a',
+                code: 'KeyA',
+            });
+            invokeHandlerOnNonTopScope(event);
+
             expect(
-                (mockPlugin.app as any).keymap.popScope,
+                mockHotkeyContext.chordBuffer.append,
             ).not.toHaveBeenCalled();
+        });
+
+        it('calls original handleKey when called on non-top scope', () => {
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'a',
+                code: 'KeyA',
+            });
+            invokeHandlerOnNonTopScope(event);
+
+            expect(mockOriginalHandleKey).toHaveBeenCalled();
+        });
+
+        it('calls original handleKey on top scope when no match (pass through)', () => {
+            mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
+                type: 'none',
+                isChord: false,
+            });
+
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'a',
+                code: 'KeyA',
+            });
+            invokeHandler(event);
+
+            expect(mockOriginalHandleKey).toHaveBeenCalled();
+        });
+
+        it('does NOT call original handleKey on top scope when match found (suppress)', () => {
+            mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
+                type: 'exact',
+                entry: {
+                    command: 'test:cmd',
+                    key: [key('a', 'KeyA')],
+                    priority: Priority.User,
+                    whenExpr: CONTEXT_KEY_TRUE,
+                },
+            });
+
+            inputHandler.start();
+            const event = new KeyboardEvent('keydown', {
+                key: 'a',
+                code: 'KeyA',
+            });
+            invokeHandler(event);
+
+            expect(mockOriginalHandleKey).not.toHaveBeenCalled();
         });
     });
 
@@ -219,13 +270,14 @@ describe('InputHandler', () => {
                 key: 'Control',
                 code: 'ControlLeft',
             });
-            const result = invokeHandler(event);
+            invokeHandler(event);
 
-            expect(result).toBeUndefined();
             expect(mockHotkeyContext.chordBuffer.append).not.toHaveBeenCalled();
             expect(
                 mockHotkeyContext.hotkeyMatcher.match,
             ).not.toHaveBeenCalled();
+            // Should pass through to original handleKey
+            expect(mockOriginalHandleKey).toHaveBeenCalled();
         });
 
         it('modifier-only keys are skipped (Alt, Shift, Meta)', () => {
@@ -237,8 +289,7 @@ describe('InputHandler', () => {
                     key: mod,
                     code: `${mod}Left`,
                 });
-                const result = invokeHandler(event);
-                expect(result).toBeUndefined();
+                invokeHandler(event);
             });
 
             expect(mockHotkeyContext.chordBuffer.append).not.toHaveBeenCalled();
@@ -255,14 +306,15 @@ describe('InputHandler', () => {
                 key: 'Escape',
                 code: 'Escape',
             });
-            const result = invokeHandler(event);
+            invokeHandler(event);
 
-            expect(result).toBeUndefined();
             expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
             expect(mockHotkeyContext.statusIndicator.clear).toHaveBeenCalled();
             expect(
                 mockHotkeyContext.hotkeyMatcher.match,
             ).not.toHaveBeenCalled();
+            // Should pass through to original handleKey
+            expect(mockOriginalHandleKey).toHaveBeenCalled();
         });
 
         it('escape key clears buffer even with pending sequence', () => {
@@ -276,9 +328,8 @@ describe('InputHandler', () => {
                 key: 'Escape',
                 code: 'Escape',
             });
-            const result = invokeHandler(event);
+            invokeHandler(event);
 
-            expect(result).toBeUndefined();
             expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
             expect(mockHotkeyContext.statusIndicator.clear).toHaveBeenCalled();
         });
@@ -474,11 +525,11 @@ describe('InputHandler', () => {
                 expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
             });
 
-            it('returns undefined to pass through (normal typing)', () => {
+            it('passes through to original handleKey (normal typing)', () => {
                 inputHandler.start();
-                const result = invokeHandler(testEvent);
+                invokeHandler(testEvent);
 
-                expect(result).toBeUndefined();
+                expect(mockOriginalHandleKey).toHaveBeenCalled();
             });
 
             it('clears status', () => {
@@ -766,14 +817,15 @@ describe('InputHandler', () => {
                     code: 'KeyA',
                 });
 
-                const result = invokeHandler(event);
+                invokeHandler(event);
 
-                expect(result).toBeUndefined();
                 expect(mockHotkeyContext.chordBuffer.clear).toHaveBeenCalled();
                 expect(
                     mockHotkeyContext.statusIndicator.clear,
                 ).toHaveBeenCalled();
                 expect(consoleSpy).toHaveBeenCalled();
+                // On error, should pass through to original handleKey
+                expect(mockOriginalHandleKey).toHaveBeenCalled();
 
                 consoleSpy.mockRestore();
             });
@@ -799,15 +851,12 @@ describe('InputHandler', () => {
                 invokeHandler(event1);
 
                 // Clear the mocks to check second key
-                vi.clearAllMocks();
-
-                // Recapture handler since mocks were cleared
-                mockScopeInstance.register.mockImplementation(
-                    (_m: any, _k: any, handler: any) => {
-                        capturedScopeHandler = handler;
-                        return {};
-                    },
-                );
+                mockHotkeyContext.chordBuffer.append.mockClear();
+                mockHotkeyContext.hotkeyMatcher.match.mockClear();
+                mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
+                    type: 'none',
+                    isChord: false,
+                });
 
                 // Second key should process normally
                 const event2 = new KeyboardEvent('keydown', {
@@ -933,8 +982,6 @@ describe('InputHandler', () => {
 
     describe('Layout-aware normalization', () => {
         it('derives key from layout service getBaseCharacter for letter keys', () => {
-            // Layout service is initialized with QWERTY fallback in test env
-            // KeyA → 'a' from QWERTY layout
             mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
                 type: 'none',
                 isChord: false,
@@ -947,12 +994,9 @@ describe('InputHandler', () => {
             });
             invokeHandler(event);
 
-            // Verify the KeyPress passed to chordBuffer has correct key and code
             const appendCall =
                 mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
             expect(appendCall.code).toBe('KeyA');
-            // key is from layout service (QWERTY fallback: KeyA → 'a')
-            // or from event.key if layout service not initialized
         });
 
         it('preserves event.code as-is for all keys', () => {
@@ -975,7 +1019,6 @@ describe('InputHandler', () => {
         });
 
         it('falls back to event.key for special keys (Escape)', () => {
-            // Escape is not in layout map; getBaseCharacter returns null
             mockHotkeyContext.hotkeyMatcher.isEscape.mockReturnValue(true);
 
             inputHandler.start();
@@ -985,7 +1028,6 @@ describe('InputHandler', () => {
             });
             invokeHandler(event);
 
-            // isEscape is called with the KeyPress — verify it got 'Escape' as key
             const escapeCall =
                 mockHotkeyContext.hotkeyMatcher.isEscape.mock.calls[0]![0];
             expect(escapeCall.key).toBe('Escape');
@@ -993,13 +1035,10 @@ describe('InputHandler', () => {
         });
 
         it('handles macOS Option key scenario (event.key mangled, code correct)', async () => {
-            // Initialize layout service so getBaseCharacter works (QWERTY fallback)
             const { keyboardLayoutService } =
                 await import('../KeyboardLayoutService');
             await keyboardLayoutService.initialize();
 
-            // macOS: Option+E produces event.key='é', but code is still 'KeyE'
-            // Layout service returns 'e' for 'KeyE', bypassing the mangled event.key
             mockHotkeyContext.hotkeyMatcher.match.mockReturnValue({
                 type: 'none',
                 isChord: false,
@@ -1007,7 +1046,7 @@ describe('InputHandler', () => {
 
             inputHandler.start();
             const event = new KeyboardEvent('keydown', {
-                key: 'é', // macOS Option+E produces this
+                key: 'é',
                 code: 'KeyE',
                 altKey: true,
             });
@@ -1015,7 +1054,7 @@ describe('InputHandler', () => {
 
             const appendCall =
                 mockHotkeyContext.chordBuffer.append.mock.calls[0]![0];
-            expect(appendCall.key).toBe('e'); // Layout service corrects 'é' → 'e'
+            expect(appendCall.key).toBe('e');
             expect(appendCall.code).toBe('KeyE');
 
             keyboardLayoutService.dispose();

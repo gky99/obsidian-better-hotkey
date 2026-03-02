@@ -1,6 +1,6 @@
 # ADR-005: Event Interception Strategy
 
-**Status:** Implemented
+**Status:** Implemented (revised 2026-03-01)
 
 ## Context
 
@@ -59,3 +59,37 @@ The handler returns:
 - Modal scopes (command palette, settings, etc.) push on top of our scope and take priority when open — correct behavior.
 - Scope lifecycle is clean: `pushScope` on plugin load, `popScope` on unload.
 - No monkey-patching, no internal API access, no listener reordering hacks.
+
+---
+
+## Revision: Scope.prototype.handleKey Patch (2026-03-01)
+
+### Problem with pushScope
+
+The pushScope approach works for normal use, but newly pushed scopes (modals, command palette, etc.) run **before** our handler. When Obsidian opens a modal and pushes a new scope onto the keymap stack, that modal scope becomes the top scope and processes events first. Our scope only runs if the modal scope passes through — meaning the plugin loses interception priority while modals are active.
+
+### Revised Decision
+
+Replace pushScope-based registration with a `Scope.prototype.handleKey` monkey-patch, encapsulated in a `ScopeProxy` class (`src/components/ScopeProxy.ts`).
+
+The `ScopeProxy.patch(callback)` method replaces `Scope.prototype.handleKey` with a version that calls the provided callback before the original handler. The callback receives the Scope instance and the KeyboardEvent, allowing the caller (InputHandler) to check whether the scope is the top scope (`scope === keymap.scope`) and decide whether to run the pipeline.
+
+### Revised Implementation
+
+```
+start():  scopeProxy.patch(callback) → plugin.register(() => stop())
+stop():   scopeProxy.restore()
+```
+
+The callback inside InputHandler:
+- If `scope === keymap.scope` (top scope): run hotkey pipeline
+  - If match: return `false` (suppress — original handleKey is NOT called)
+  - If no match: return `undefined` (pass through — original handleKey IS called)
+- If not top scope (parent chain propagation): return `undefined` (pass through)
+
+### Trade-offs
+
+- **Pro:** Guaranteed first-handler execution regardless of what scope is active
+- **Pro:** Works correctly with modals — our handler intercepts first, passes through if no match
+- **Con:** Uses monkey-patching on `Scope.prototype.handleKey` (internal API)
+- **Mitigation:** ScopeProxy encapsulates the patch; `restore()` cleanly reverts on plugin unload

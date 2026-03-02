@@ -1,17 +1,18 @@
 /**
  * Input Handler Component
  * Responsibility: Main orchestrator of the hotkey pipeline - captures global keyboard events
- * via Obsidian's Scope API, normalizes to internal representation, feeds to ChordSequenceBuffer,
- * calls Matcher, executes commands, and decides event propagation.
- * Based on ADR-005: Event Interception Strategy
+ * by patching Scope.prototype.handleKey via ScopeProxy, normalizes to internal representation,
+ * feeds to ChordSequenceBuffer, calls Matcher, executes commands, and decides event propagation.
+ * Based on ADR-005: Event Interception Strategy (revised)
  */
 
 import type { KeyPress, MatchResult } from '../types';
 import type { HotkeyContext } from './hotkey-context/HotkeyContext';
-import type { Plugin, App, KeymapEventHandler, KeymapContext } from 'obsidian';
-import { Scope } from 'obsidian';
+import type { Plugin, App } from 'obsidian';
 import { CommandRegistry } from './CommandRegistry';
 import { ExecutionContext } from './execution-context/ExecutionContext';
+import { ScopeProxy } from './ScopeProxy';
+import type { ObsidianKeymap } from './ScopeProxy';
 import { contextEngine } from './ContextEngine';
 import { keyboardLayoutService } from './KeyboardLayoutService';
 import { CONTROL_COMMANDS, CONTEXT_KEYS } from '../constants';
@@ -32,9 +33,8 @@ export class InputHandler {
     // App instance for Scope API access
     private app: App;
 
-    // Scope API state
-    private scope: Scope | null = null;
-    private scopeHandler: KeymapEventHandler | null = null;
+    // ScopeProxy for handleKey interception
+    private scopeProxy = new ScopeProxy();
 
     constructor(
         commandRegistry: CommandRegistry,
@@ -51,41 +51,38 @@ export class InputHandler {
     }
 
     /**
-     * Begin intercepting keyboard events via Obsidian's Scope API.
-     * Creates a Scope with app.scope as parent (for fallthrough),
-     * registers a catch-all handler, and pushes onto the keymap stack.
+     * Begin intercepting keyboard events by patching Scope.prototype.handleKey.
+     * Our callback runs before any scope's default handler. Only processes
+     * events on the top scope to avoid double-processing during parent chain propagation.
      */
     start(): void {
-        this.scope = new Scope(this.app.scope);
-        this.scopeHandler = this.scope.register(
-            null,
-            null,
-            this.handleScopeEvent.bind(this),
-        );
-        this.app.keymap.pushScope(this.scope);
+        const keymap = this.app.keymap;
+
+        this.scopeProxy.patch((scope, evt) => {
+            // Only run pipeline on the top scope to avoid double-processing
+            if (scope === (keymap as ObsidianKeymap).scope) {
+                return this.handleKeyEvent(evt);
+            }
+            // Non-top scope — pass through to original handleKey
+            return;
+        });
+
         this.plugin.register(() => this.stop());
     }
 
     /**
-     * Stop intercepting keyboard events. Pops our scope from the keymap stack.
+     * Stop intercepting keyboard events. Restores original Scope.prototype.handleKey.
      */
     stop(): void {
-        if (this.scope) {
-            this.app.keymap.popScope(this.scope);
-            this.scope = null;
-            this.scopeHandler = null;
-        }
+        this.scopeProxy.restore();
     }
 
     /**
-     * Scope event handler — called by Obsidian's keymap dispatch.
-     * Returns false to suppress (Obsidian auto-calls preventDefault),
-     * returns undefined to pass through to Obsidian's normal processing.
+     * Key event handler — called by the patched handleKey on the top scope.
+     * Returns false to suppress (prevents original handleKey from running),
+     * returns undefined to pass through to original handleKey.
      */
-    private handleScopeEvent(
-        event: KeyboardEvent,
-        ctx: KeymapContext,
-    ): false | undefined {
+    private handleKeyEvent(event: KeyboardEvent): false | undefined {
         try {
             const keyPress = this.normalize(event);
 
