@@ -4,10 +4,7 @@ import { env } from 'process';
 const cacheDir = path.resolve('.obsidian-cache');
 
 // Default vault: the obsidian-test-playground that contains this plugin
-const defaultVault = path.resolve(
-    import.meta.dirname,
-    'path/to/test/vault',
-);
+const defaultVault = path.resolve(import.meta.dirname, 'test/test-vault');
 
 export const config: WebdriverIO.Config = {
     runner: 'local',
