@@ -19,11 +19,11 @@ import {
 import { keyboardLayoutService } from './components/KeyboardLayoutService';
 
 export default class MyPlugin extends Plugin {
-    settings: MyPluginSettings;
-    private inputHandler: InputHandler;
-    commandRegistry: CommandRegistry;
-    hotkeyContext: HotkeyContext;
-    configManager: ConfigManager;
+    settings!: MyPluginSettings;
+    private inputHandler!: InputHandler;
+    commandRegistry!: CommandRegistry;
+    hotkeyContext!: HotkeyContext;
+    configManager!: ConfigManager;
     private statusBarItem: HTMLElement | null = null;
 
     async onload() {
