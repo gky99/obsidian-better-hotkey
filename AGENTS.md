@@ -244,6 +244,16 @@ this.registerInterval(
 - Naming convention: `ComponentName.test.ts`
 - Example: `src/components/hotkey-context/__tests__/HotkeyManager.test.ts`
 
+#### Test-First Implementation Workflow
+
+Before starting any implementation work:
+
+1. **Run all tests first** (`pnpm test`). Confirm they pass before making changes.
+2. **After your changes**, run all tests again. All previously passing tests must still pass.
+3. **Fix trivial breakages** caused by interface updates (e.g., updated method signatures, renamed properties) — adapt test setup code to match the new interface while keeping the same test scenarios.
+4. **Do NOT modify test assertions or scenarios arbitrarily.** Tests should continue to cover the same behavior unless the dev plan explicitly calls for a related feature change.
+5. **When in doubt, ask the user.** If you're unsure whether a test case should change, or how to adapt it to a new interface, always escalate to the user rather than modifying the test yourself.
+
 #### Update This File
 
 Add the following to this file when provided by the user:

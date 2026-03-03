@@ -15,6 +15,8 @@ development:
     description: Define extending interfaces before casting prototypes; never raw as any
   pre-commit-formatting:
     description: Prettier auto-formats staged files via .githooks/pre-commit; CI checks build + lint
+  reuse-hierarchy:
+    description: Check project internals, then library types, before creating new abstractions
   private-api-types:
     description: Private API helper types — centralize in types.ts if shared, keep local if single-use
   string-constants:
