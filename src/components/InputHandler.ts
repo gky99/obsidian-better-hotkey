@@ -56,11 +56,13 @@ export class InputHandler {
      * events on the top scope to avoid double-processing during parent chain propagation.
      */
     start(): void {
-        const keymap = this.app.keymap;
-
         this.scopeProxy.patch((scope, evt) => {
             // Only run pipeline on the top scope to avoid double-processing
-            if (scope === (keymap as ObsidianKeymap).scope) {
+            const isTopLevel =
+                // eslint-disable-next-line @typescript-eslint/no-deprecated
+                this.app.workspace.activeLeaf?.view.scope === scope ||
+                (this.app.keymap as ObsidianKeymap).scope === scope;
+            if (isTopLevel) {
                 return this.handleKeyEvent(evt);
             }
             // Non-top scope — pass through to original handleKey
