@@ -9,6 +9,7 @@ export default defineConfig([
         ignores: [
             'node_modules/',
             'dist/',
+            '.ai/',
             '.worktrees/',
             'esbuild.config.mjs',
             'eslint.config.js',
