@@ -226,4 +226,153 @@ describe('SuggestModalProxy', () => {
             expect(SuggestModal.prototype.close).toBe(origClose);
         });
     });
+
+    describe('SuggestionSelector', () => {
+        beforeEach(() => {
+            proxy.patch();
+            vi.clearAllMocks();
+        });
+
+        it('moveUp calls chooser.moveUp with event', () => {
+            const mockChooser = { moveUp: vi.fn(), moveDown: vi.fn() };
+            const fakeModal = Object.create(SuggestModal.prototype);
+            (fakeModal as any).chooser = mockChooser;
+            fakeModal.open();
+
+            const event = new KeyboardEvent('keydown');
+            proxy.moveUp(event);
+
+            expect(mockChooser.moveUp).toHaveBeenCalledWith(event);
+        });
+
+        it('moveDown calls chooser.moveDown with event', () => {
+            const mockChooser = { moveUp: vi.fn(), moveDown: vi.fn() };
+            const fakeModal = Object.create(SuggestModal.prototype);
+            (fakeModal as any).chooser = mockChooser;
+            fakeModal.open();
+
+            const event = new KeyboardEvent('keydown');
+            proxy.moveDown(event);
+
+            expect(mockChooser.moveDown).toHaveBeenCalledWith(event);
+        });
+
+        it('moveUp does nothing when no active instance', () => {
+            const event = new KeyboardEvent('keydown');
+            expect(() => proxy.moveUp(event)).not.toThrow();
+        });
+
+        it('moveDown does nothing when no active instance', () => {
+            const event = new KeyboardEvent('keydown');
+            expect(() => proxy.moveDown(event)).not.toThrow();
+        });
+    });
+
+    describe('InputFieldEditor', () => {
+        beforeEach(() => {
+            proxy.patch();
+            vi.clearAllMocks();
+        });
+
+        it('getSelection returns { from: selectionStart, to: selectionEnd }', () => {
+            const inputEl = document.createElement('input');
+            inputEl.value = 'hello world';
+            inputEl.selectionStart = 5;
+            inputEl.selectionEnd = 5;
+            const fakeModal = Object.create(SuggestModal.prototype);
+            (fakeModal as any).inputEl = inputEl;
+            fakeModal.open();
+
+            expect(proxy.getSelection()).toEqual({ from: 5, to: 5 });
+        });
+
+        it('getSelection returns { from: 0, to: 0 } when no active instance', () => {
+            expect(proxy.getSelection()).toEqual({ from: 0, to: 0 });
+        });
+
+        it('setSelection sets selectionStart and selectionEnd', () => {
+            const inputEl = document.createElement('input');
+            inputEl.value = 'hello world';
+            const fakeModal = Object.create(SuggestModal.prototype);
+            (fakeModal as any).inputEl = inputEl;
+            fakeModal.open();
+
+            proxy.setSelection({ from: 2, to: 7 });
+
+            expect(inputEl.selectionStart).toBe(2);
+            expect(inputEl.selectionEnd).toBe(7);
+        });
+
+        it('getText returns inputEl.value', () => {
+            const inputEl = document.createElement('input');
+            inputEl.value = 'hello world';
+            const fakeModal = Object.create(SuggestModal.prototype);
+            (fakeModal as any).inputEl = inputEl;
+            fakeModal.open();
+
+            expect(proxy.getText()).toBe('hello world');
+        });
+
+        it('getText returns empty string when no active instance', () => {
+            expect(proxy.getText()).toBe('');
+        });
+
+        it('getTextLength returns inputEl.value.length', () => {
+            const inputEl = document.createElement('input');
+            inputEl.value = 'hello world';
+            const fakeModal = Object.create(SuggestModal.prototype);
+            (fakeModal as any).inputEl = inputEl;
+            fakeModal.open();
+
+            expect(proxy.getTextLength()).toBe(11);
+        });
+
+        it('getTextLength returns 0 when no active instance', () => {
+            expect(proxy.getTextLength()).toBe(0);
+        });
+
+        it('insertText calls setRangeText and dispatches input event', () => {
+            const inputEl = document.createElement('input');
+            inputEl.value = 'hello world';
+            const fakeModal = Object.create(SuggestModal.prototype);
+            (fakeModal as any).inputEl = inputEl;
+            fakeModal.open();
+
+            const dispatchSpy = vi.spyOn(inputEl, 'dispatchEvent');
+
+            proxy.insertText('beautiful ', 6, 6);
+
+            expect(inputEl.value).toBe('hello beautiful world');
+            expect(dispatchSpy).toHaveBeenCalledTimes(1);
+            const insertEvent = dispatchSpy.mock.calls[0]?.[0];
+            expect(insertEvent).toBeInstanceOf(Event);
+            expect((insertEvent as Event).type).toBe('input');
+        });
+
+        it('insertText does nothing when no active instance', () => {
+            expect(() => proxy.insertText('text', 0)).not.toThrow();
+        });
+
+        it('deleteText calls setRangeText with empty string and dispatches input event', () => {
+            const inputEl = document.createElement('input');
+            inputEl.value = 'hello world';
+            const fakeModal = Object.create(SuggestModal.prototype);
+            (fakeModal as any).inputEl = inputEl;
+            fakeModal.open();
+
+            const dispatchSpy = vi.spyOn(inputEl, 'dispatchEvent');
+
+            proxy.deleteText(5, 11);
+
+            expect(inputEl.value).toBe('hello');
+            expect(dispatchSpy).toHaveBeenCalledTimes(1);
+            const deleteEvent = dispatchSpy.mock.calls[0]?.[0];
+            expect(deleteEvent).toBeInstanceOf(Event);
+            expect((deleteEvent as Event).type).toBe('input');
+        });
+
+        it('deleteText does nothing when no active instance', () => {
+            expect(() => proxy.deleteText(0, 5)).not.toThrow();
+        });
+    });
 });

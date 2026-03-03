@@ -9,6 +9,7 @@ import {
     createKillYankCommands,
     createEditingCommands,
     createControlCommands,
+    createSuggestCommands,
 } from './commands';
 import {
     InputHandler,
@@ -55,6 +56,12 @@ export default class MyPlugin extends Plugin {
         // Register control commands (2.3.5)
         const controlCommands = createControlCommands();
         for (const cmd of controlCommands) {
+            this.commandRegistry.registerCommand(cmd);
+        }
+
+        // Register suggest modal commands
+        const suggestCommands = createSuggestCommands();
+        for (const cmd of suggestCommands) {
             this.commandRegistry.registerCommand(cmd);
         }
 

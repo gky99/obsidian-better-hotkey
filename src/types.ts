@@ -3,6 +3,7 @@
  * Based on Design Documents/Data Types.md
  */
 
+import type { SuggestModal } from 'obsidian';
 import type { ExecutionContext } from './components/execution-context/ExecutionContext';
 import type { ContextKeyExpression } from './components/context-key-expression';
 
@@ -101,3 +102,58 @@ export interface ContextSchema {
  * Structure: { from: EditorPosition, to: EditorPosition }
  * where EditorPosition is { line: number, ch: number }
  */
+
+// ─── Suggest Modal Private API Types ───
+
+/**
+ * Private chooser API on SuggestModal instances.
+ * Obsidian's undocumented chooser object with navigation methods.
+ */
+export interface SuggestChooser {
+    moveUp(event?: KeyboardEvent): void;
+    moveDown(event?: KeyboardEvent): void;
+}
+
+/**
+ * Extended SuggestModal shape exposing the private chooser property.
+ * Use: `(instance as unknown as SuggestModalWithChooser).chooser`
+ */
+export interface SuggestModalWithChooser extends SuggestModal<unknown> {
+    chooser: SuggestChooser;
+    inputEl: HTMLInputElement;
+}
+
+// ─── Suggest Modal Operation Interfaces ───
+
+/**
+ * Selection range for single-line input fields.
+ * from/to are character offsets (0-indexed).
+ */
+export interface InputSelection {
+    from: number;
+    to: number;
+}
+
+/**
+ * Wraps suggestion list navigation (chooser.moveUp/moveDown).
+ * Implemented by SuggestModalProxy; consumed by helper functions in suggest-commands.ts.
+ */
+export interface SuggestionSelector {
+    moveUp(event?: KeyboardEvent): void;
+    moveDown(event?: KeyboardEvent): void;
+}
+
+/**
+ * Primitive text input operations on a modal's inputEl (HTMLInputElement).
+ * Exposes basic elements — high-level operations (kill, yank, word movement)
+ * are implemented as helper functions in suggest-commands.ts.
+ * Implemented by SuggestModalProxy; consumed by helper functions.
+ */
+export interface InputFieldEditor {
+    getSelection(): InputSelection;
+    setSelection(selection: InputSelection): void;
+    getText(): string;
+    getTextLength(): number;
+    insertText(text: string, from: number, to?: number): void;
+    deleteText(from: number, to: number): void;
+}

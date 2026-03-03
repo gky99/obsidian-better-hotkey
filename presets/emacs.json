@@ -35,6 +35,20 @@
         { "command": "editor:keyboard-quit", "key": "ctrl+g" },
         { "command": "editor:recenter-top-bottom", "key": "ctrl+l" },
         { "command": "editor:undo", "key": "ctrl+/" },
-        { "command": "editor:undo", "key": "ctrl+x u" }
+        { "command": "editor:undo", "key": "ctrl+x u" },
+
+        { "command": "suggest:next-option", "key": "ctrl+n", "when": "suggestModalOpen" },
+        { "command": "suggest:prev-option", "key": "ctrl+p", "when": "suggestModalOpen" },
+        { "command": "suggest:forward-char", "key": "ctrl+f", "when": "suggestModalOpen" },
+        { "command": "suggest:backward-char", "key": "ctrl+b", "when": "suggestModalOpen" },
+        { "command": "suggest:forward-word", "key": "alt+f", "when": "suggestModalOpen" },
+        { "command": "suggest:backward-word", "key": "alt+b", "when": "suggestModalOpen" },
+        { "command": "suggest:move-beginning-of-line", "key": "ctrl+a", "when": "suggestModalOpen" },
+        { "command": "suggest:move-end-of-line", "key": "ctrl+e", "when": "suggestModalOpen" },
+        { "command": "suggest:delete-char", "key": "ctrl+d", "when": "suggestModalOpen" },
+        { "command": "suggest:kill-line", "key": "ctrl+k", "when": "suggestModalOpen" },
+        { "command": "suggest:kill-word", "key": "alt+d", "when": "suggestModalOpen" },
+        { "command": "suggest:backward-kill-word", "key": "alt+backspace", "when": "suggestModalOpen" },
+        { "command": "suggest:yank", "key": "ctrl+y", "when": "suggestModalOpen" }
     ]
 }

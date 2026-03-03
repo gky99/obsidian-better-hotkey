@@ -71,3 +71,27 @@ export const CURSOR_MOVEMENT_COMMANDS = {
     BEGINNING_OF_BUFFER: 'editor:beginning-of-buffer',
     END_OF_BUFFER: 'editor:end-of-buffer',
 } as const;
+
+/**
+ * Suggest modal command IDs
+ * Selection navigation + input field editing for SuggestModal context
+ */
+export const SUGGEST_COMMANDS = {
+    // Selection navigation
+    NEXT_OPTION: 'suggest:next-option',
+    PREV_OPTION: 'suggest:prev-option',
+    // Cursor movement
+    FORWARD_CHAR: 'suggest:forward-char',
+    BACKWARD_CHAR: 'suggest:backward-char',
+    FORWARD_WORD: 'suggest:forward-word',
+    BACKWARD_WORD: 'suggest:backward-word',
+    MOVE_BEGINNING_OF_LINE: 'suggest:move-beginning-of-line',
+    MOVE_END_OF_LINE: 'suggest:move-end-of-line',
+    // Text modification
+    DELETE_CHAR: 'suggest:delete-char',
+    DELETE_BACKWARD_CHAR: 'suggest:delete-backward-char',
+    KILL_LINE: 'suggest:kill-line',
+    KILL_WORD: 'suggest:kill-word',
+    BACKWARD_KILL_WORD: 'suggest:backward-kill-word',
+    YANK: 'suggest:yank',
+} as const;
