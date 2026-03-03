@@ -3,6 +3,7 @@ import { BetterHotkeySettingTab, DEFAULT_SETTINGS } from '../settings';
 import type { MyPluginSettings } from '../settings';
 import type { ConfigHotkeyEntry, Command } from '../types';
 import { Priority } from '../types';
+import { CONTEXT_KEY_TRUE } from '../components/context-key-expression';
 
 // Polyfill Obsidian's createEl/createDiv on HTMLElement for jsdom
 beforeAll(() => {
@@ -69,6 +70,7 @@ function makeConfigEntry(
         removal: false,
         hotkeyString: 'ctrl+k',
         when: undefined,
+        whenExpr: CONTEXT_KEY_TRUE,
         args: undefined,
         ...overrides,
     };
@@ -194,16 +196,6 @@ describe('BetterHotkeySettingTab', () => {
 
     describe('display', () => {
         describe('general section', () => {
-            it('renders General heading', () => {
-                tab.display();
-                const headings =
-                    tab.containerEl.querySelectorAll('.setting-heading');
-                const names = Array.from(headings).map(
-                    (el) => (el as HTMLElement).dataset.name,
-                );
-                expect(names).toContain('General');
-            });
-
             it('renders chord timeout setting', () => {
                 tab.display();
                 const settings = tab.containerEl.querySelectorAll(

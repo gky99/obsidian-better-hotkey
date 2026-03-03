@@ -17,11 +17,21 @@ vi.mock('obsidian', () => {
         unregister() {}
     };
     (MockScope.prototype as any).handleKey = vi.fn();
+    const MockSuggestModal = class MockSuggestModal {
+        open() {}
+        close() {}
+    };
+    const MockPopoverSuggest = class MockPopoverSuggest {
+        open() {}
+        close() {}
+    };
     return {
         Scope: MockScope,
         MarkdownView: vi.fn(),
         App: vi.fn(),
         Plugin: vi.fn(),
+        SuggestModal: MockSuggestModal,
+        PopoverSuggest: MockPopoverSuggest,
     };
 });
 
@@ -369,6 +379,7 @@ describe('InputHandler', () => {
                     'test:command',
                     undefined,
                     expect.anything(),
+                    expect.any(KeyboardEvent),
                 );
             });
 
@@ -411,6 +422,7 @@ describe('InputHandler', () => {
                     'test:command',
                     { count: 5 },
                     expect.anything(),
+                    expect.any(KeyboardEvent),
                 );
             });
         });
@@ -707,6 +719,7 @@ describe('InputHandler', () => {
                     'cmd:test',
                     undefined,
                     expect.anything(),
+                    expect.any(KeyboardEvent),
                 );
             });
 
@@ -737,6 +750,7 @@ describe('InputHandler', () => {
                     'cmd:test',
                     { arg1: 'value' },
                     expect.anything(),
+                    expect.any(KeyboardEvent),
                 );
             });
 
@@ -768,6 +782,7 @@ describe('InputHandler', () => {
                     expect.objectContaining({
                         killRing: expect.anything(),
                     }),
+                    expect.any(KeyboardEvent),
                 );
             });
         });
@@ -948,6 +963,7 @@ describe('InputHandler', () => {
                     'test:chord',
                     undefined,
                     expect.anything(),
+                    expect.any(KeyboardEvent),
                 );
             });
         });
