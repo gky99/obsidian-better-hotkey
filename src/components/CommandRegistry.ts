@@ -7,7 +7,7 @@
 import type { Command, Disposable } from '../types';
 import type { ExecutionContext } from './execution-context/ExecutionContext';
 import type { App } from 'obsidian';
-import { loadObsidianCommands as loadFromObsidian } from './ObsidianCommandLoader';
+import { loadObsidianCommands as loadFromObsidian } from '../commands/ObsidianCommandLoader';
 
 export class CommandRegistry {
     private commands: Map<string, Command> = new Map();

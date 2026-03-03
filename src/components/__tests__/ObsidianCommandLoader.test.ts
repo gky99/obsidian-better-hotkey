@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { loadObsidianCommands } from '../ObsidianCommandLoader';
+import { loadObsidianCommands } from '../../commands/ObsidianCommandLoader';
 import type { App, Command as ObsidianCommand } from 'obsidian';
 import type { Command } from '../../types';
 import type { ExecutionContext } from '../execution-context/ExecutionContext';

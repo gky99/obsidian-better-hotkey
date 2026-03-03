@@ -178,7 +178,11 @@ describe('CommandRegistry', () => {
             registry.registerCommand(cmd);
             registry.execute('test-command', args);
 
-            expect(executeMock).toHaveBeenCalledWith(args, undefined);
+            expect(executeMock).toHaveBeenCalledWith(
+                args,
+                undefined,
+                undefined,
+            );
         });
 
         it('passes execution context to command.execute()', () => {
@@ -189,7 +193,11 @@ describe('CommandRegistry', () => {
             registry.registerCommand(cmd);
             registry.execute('test-command', undefined, context);
 
-            expect(executeMock).toHaveBeenCalledWith(undefined, context);
+            expect(executeMock).toHaveBeenCalledWith(
+                undefined,
+                context,
+                undefined,
+            );
         });
 
         it('passes both arguments and context to command.execute()', () => {
@@ -201,7 +209,7 @@ describe('CommandRegistry', () => {
             registry.registerCommand(cmd);
             registry.execute('test-command', args, context);
 
-            expect(executeMock).toHaveBeenCalledWith(args, context);
+            expect(executeMock).toHaveBeenCalledWith(args, context, undefined);
         });
 
         it('returns true on successful execution', () => {
