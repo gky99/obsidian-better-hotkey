@@ -18,7 +18,7 @@
         { "command": "editor:kill-line", "key": "ctrl+k" },
         { "command": "editor:kill-region", "key": "ctrl+w" },
         { "command": "editor:kill-word", "key": "alt+d" },
-        { "command": "editor:backward-kill-word", "key": "alt+backspace" },
+        { "command": "editor:backward-kill-word", "key": "alt+Backspace" },
         { "command": "editor:copy-region", "key": "alt+w" },
         { "command": "editor:yank", "key": "ctrl+y" },
         { "command": "editor:yank-pop", "key": "alt+y" },
@@ -94,7 +94,7 @@
         },
         {
             "command": "suggest:backward-kill-word",
-            "key": "alt+backspace",
+            "key": "alt+Backspace",
             "when": "suggestModalOpen"
         },
         {

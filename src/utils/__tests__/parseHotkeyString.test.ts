@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseHotkeyString, VALID_MODIFIERS, SPECIAL_KEY_MAP } from '../hotkey';
+import {
+    parseHotkeyString,
+    VALID_MODIFIERS,
+    SPECIAL_KEYS,
+    SPECIAL_KEY_TRANSLATIONS,
+} from '../hotkey';
 
 describe('parseHotkeyString', () => {
     describe('single key', () => {
@@ -27,8 +32,8 @@ describe('parseHotkeyString', () => {
             expect(result[0]!.key).toBe('x');
         });
 
-        it('parses bare special key without modifier: "escape"', () => {
-            const result = parseHotkeyString('escape');
+        it('parses bare special key without modifier: "Escape"', () => {
+            const result = parseHotkeyString('Escape');
             expect(result).toHaveLength(1);
             expect(result[0]!.modifiers).toEqual(new Set());
             expect(result[0]!.key).toBe('Escape');
@@ -72,42 +77,60 @@ describe('parseHotkeyString', () => {
     });
 
     describe('special keys', () => {
-        it('maps "space" to " " (literal space)', () => {
-            const result = parseHotkeyString('space');
+        it('maps "Space" to " " (literal space)', () => {
+            const result = parseHotkeyString('Space');
             expect(result[0]!.key).toBe(' ');
         });
 
-        it('maps "backspace" to "Backspace"', () => {
-            const result = parseHotkeyString('backspace');
+        it('maps "Backspace" to "Backspace"', () => {
+            const result = parseHotkeyString('Backspace');
             expect(result[0]!.key).toBe('Backspace');
         });
 
-        it('maps "tab" to "Tab"', () => {
-            const result = parseHotkeyString('tab');
+        it('maps "Tab" to "Tab"', () => {
+            const result = parseHotkeyString('Tab');
             expect(result[0]!.key).toBe('Tab');
         });
 
-        it('maps "enter" to "Enter"', () => {
-            const result = parseHotkeyString('enter');
+        it('maps "Enter" to "Enter"', () => {
+            const result = parseHotkeyString('Enter');
             expect(result[0]!.key).toBe('Enter');
         });
 
-        it('maps "delete" to "Delete"', () => {
-            const result = parseHotkeyString('delete');
+        it('maps "Delete" to "Delete"', () => {
+            const result = parseHotkeyString('Delete');
             expect(result[0]!.key).toBe('Delete');
         });
 
         it('maps arrow keys correctly', () => {
-            expect(parseHotkeyString('up')[0]!.key).toBe('ArrowUp');
-            expect(parseHotkeyString('down')[0]!.key).toBe('ArrowDown');
-            expect(parseHotkeyString('left')[0]!.key).toBe('ArrowLeft');
-            expect(parseHotkeyString('right')[0]!.key).toBe('ArrowRight');
+            expect(parseHotkeyString('ArrowUp')[0]!.key).toBe('ArrowUp');
+            expect(parseHotkeyString('ArrowDown')[0]!.key).toBe('ArrowDown');
+            expect(parseHotkeyString('ArrowLeft')[0]!.key).toBe('ArrowLeft');
+            expect(parseHotkeyString('ArrowRight')[0]!.key).toBe('ArrowRight');
         });
 
-        it('maps special keys with modifiers: "ctrl+space"', () => {
-            const result = parseHotkeyString('ctrl+space');
+        it('maps page navigation keys correctly', () => {
+            expect(parseHotkeyString('PageUp')[0]!.key).toBe('PageUp');
+            expect(parseHotkeyString('PageDown')[0]!.key).toBe('PageDown');
+            expect(parseHotkeyString('Home')[0]!.key).toBe('Home');
+            expect(parseHotkeyString('End')[0]!.key).toBe('End');
+        });
+
+        it('maps function keys correctly', () => {
+            expect(parseHotkeyString('F1')[0]!.key).toBe('F1');
+            expect(parseHotkeyString('F12')[0]!.key).toBe('F12');
+        });
+
+        it('maps special keys with modifiers: "ctrl+Space"', () => {
+            const result = parseHotkeyString('ctrl+Space');
             expect(result[0]!.modifiers).toEqual(new Set(['ctrl']));
             expect(result[0]!.key).toBe(' ');
+        });
+
+        it('maps special keys with modifiers: "alt+Backspace"', () => {
+            const result = parseHotkeyString('alt+Backspace');
+            expect(result[0]!.modifiers).toEqual(new Set(['alt']));
+            expect(result[0]!.key).toBe('Backspace');
         });
     });
 
@@ -117,7 +140,7 @@ describe('parseHotkeyString', () => {
             expect(result[0]!.key).toBe('k');
         });
 
-        it('special key keeps mapped casing: "Backspace" → "Backspace"', () => {
+        it('special key keeps its UpperCamelCase: "Backspace" → "Backspace"', () => {
             const result = parseHotkeyString('Backspace');
             expect(result[0]!.key).toBe('Backspace');
         });
@@ -191,17 +214,26 @@ describe('parseHotkeyString', () => {
             expect(VALID_MODIFIERS.has('meta')).toBe(true);
         });
 
-        it('SPECIAL_KEY_MAP maps all documented keys', () => {
-            expect(SPECIAL_KEY_MAP.space).toBe(' ');
-            expect(SPECIAL_KEY_MAP.backspace).toBe('Backspace');
-            expect(SPECIAL_KEY_MAP.tab).toBe('Tab');
-            expect(SPECIAL_KEY_MAP.enter).toBe('Enter');
-            expect(SPECIAL_KEY_MAP.escape).toBe('Escape');
-            expect(SPECIAL_KEY_MAP.delete).toBe('Delete');
-            expect(SPECIAL_KEY_MAP.up).toBe('ArrowUp');
-            expect(SPECIAL_KEY_MAP.down).toBe('ArrowDown');
-            expect(SPECIAL_KEY_MAP.left).toBe('ArrowLeft');
-            expect(SPECIAL_KEY_MAP.right).toBe('ArrowRight');
+        it('SPECIAL_KEYS contains all identity-passthrough special keys', () => {
+            expect(SPECIAL_KEYS.has('Backspace')).toBe(true);
+            expect(SPECIAL_KEYS.has('Tab')).toBe(true);
+            expect(SPECIAL_KEYS.has('Enter')).toBe(true);
+            expect(SPECIAL_KEYS.has('Escape')).toBe(true);
+            expect(SPECIAL_KEYS.has('Delete')).toBe(true);
+            expect(SPECIAL_KEYS.has('ArrowUp')).toBe(true);
+            expect(SPECIAL_KEYS.has('ArrowDown')).toBe(true);
+            expect(SPECIAL_KEYS.has('ArrowLeft')).toBe(true);
+            expect(SPECIAL_KEYS.has('ArrowRight')).toBe(true);
+            expect(SPECIAL_KEYS.has('PageUp')).toBe(true);
+            expect(SPECIAL_KEYS.has('PageDown')).toBe(true);
+            expect(SPECIAL_KEYS.has('Home')).toBe(true);
+            expect(SPECIAL_KEYS.has('End')).toBe(true);
+            expect(SPECIAL_KEYS.has('F1')).toBe(true);
+            expect(SPECIAL_KEYS.has('F12')).toBe(true);
+        });
+
+        it('SPECIAL_KEY_TRANSLATIONS maps Space to literal space', () => {
+            expect(SPECIAL_KEY_TRANSLATIONS.Space).toBe(' ');
         });
     });
 });

@@ -424,7 +424,7 @@ describe('HotkeyManager', () => {
             freshManager.setOnChange(mockCb);
 
             freshManager.recalculate(
-                [configEntry('keyboard-quit', 'escape', Priority.Preset)],
+                [configEntry('keyboard-quit', 'Escape', Priority.Preset)],
                 [],
                 [],
             );
@@ -445,7 +445,7 @@ describe('HotkeyManager', () => {
             freshManager.setOnChange(mockCb);
 
             freshManager.recalculate(
-                [configEntry('set-mark', 'ctrl+space', Priority.Preset)],
+                [configEntry('set-mark', 'ctrl+Space', Priority.Preset)],
                 [],
                 [],
             );

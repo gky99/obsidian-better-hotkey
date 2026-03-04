@@ -15,24 +15,48 @@ export const VALID_MODIFIERS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Maps special key names in string notation to their KeyPress.key values.
- * Keys not in this map are lowercased as-is.
+ * Special key tokens that pass through as-is (token = KeyboardEvent.key value).
+ * Used in config notation and hotkey settings display.
+ * All tokens use UpperCamelCase matching KeyboardEvent.key.
  */
-export const SPECIAL_KEY_MAP = {
-    space: ' ',
-    backspace: 'Backspace',
-    tab: 'Tab',
-    enter: 'Enter',
-    escape: 'Escape',
-    delete: 'Delete',
-    up: 'ArrowUp',
-    down: 'ArrowDown',
-    left: 'ArrowLeft',
-    right: 'ArrowRight',
+export const SPECIAL_KEYS: ReadonlySet<string> = new Set([
+    'Backspace',
+    'Tab',
+    'Enter',
+    'Escape',
+    'Delete',
+    'ArrowUp',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowRight',
+    'PageUp',
+    'PageDown',
+    'Home',
+    'End',
+    'F1',
+    'F2',
+    'F3',
+    'F4',
+    'F5',
+    'F6',
+    'F7',
+    'F8',
+    'F9',
+    'F10',
+    'F11',
+    'F12',
+]);
+
+/**
+ * Special key tokens that require translation to their KeyboardEvent.key value.
+ * 'Space' is the only exception: config token is 'Space', KeyPress.key is ' '.
+ */
+export const SPECIAL_KEY_TRANSLATIONS = {
+    Space: ' ',
 } as const;
 
 /**
- * Maps parsed special key values to their physical key codes.
+ * Maps KeyPress.key values (KeyboardEvent.key) to their physical key codes.
  * Used by HotkeyManager to translate keys not in the Keyboard Layout Service
  * (which only covers letter/symbol/digit keys from the layout map).
  */
@@ -47,6 +71,22 @@ export const SPECIAL_KEY_CODE_MAP: Record<string, string> = {
     ArrowDown: 'ArrowDown',
     ArrowLeft: 'ArrowLeft',
     ArrowRight: 'ArrowRight',
+    PageUp: 'PageUp',
+    PageDown: 'PageDown',
+    Home: 'Home',
+    End: 'End',
+    F1: 'F1',
+    F2: 'F2',
+    F3: 'F3',
+    F4: 'F4',
+    F5: 'F5',
+    F6: 'F6',
+    F7: 'F7',
+    F8: 'F8',
+    F9: 'F9',
+    F10: 'F10',
+    F11: 'F11',
+    F12: 'F12',
 };
 
 type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta';
@@ -59,7 +99,7 @@ type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta';
  *   - "ctrl+k" → single key with Ctrl modifier
  *   - "ctrl+x ctrl+s" → two-step chord
  *   - "ctrl+x b" → chord with bare second step (no modifier)
- *   - "escape" → bare special key
+ *   - "Escape" → bare special key
  *
  * @param notation - Human-readable hotkey string
  * @returns Array of KeyPress objects (1 or 2 for chords)
@@ -107,11 +147,14 @@ function parseStep(step: string): KeyPress {
         modifiers.add(mod as Modifier);
     }
 
-    const lowerKey = keyPart.toLowerCase();
     const key =
-        lowerKey in SPECIAL_KEY_MAP
-            ? SPECIAL_KEY_MAP[lowerKey as keyof typeof SPECIAL_KEY_MAP]
-            : lowerKey;
+        keyPart in SPECIAL_KEY_TRANSLATIONS
+            ? SPECIAL_KEY_TRANSLATIONS[
+                  keyPart as keyof typeof SPECIAL_KEY_TRANSLATIONS
+              ]
+            : SPECIAL_KEYS.has(keyPart)
+              ? keyPart
+              : keyPart.toLowerCase();
 
     return {
         modifiers,
