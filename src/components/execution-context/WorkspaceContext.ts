@@ -224,7 +224,9 @@ export class WorkspaceContext {
     }
 
     /**
-     * Check if editor has focus
+     * Check if editor has focus.
+     * @deprecated Use FocusTracker.checkFocus() for granular focus detection.
+     * This method cannot distinguish between editor content and search bar focus.
      */
     isFocused(): boolean {
         const editor = this.getActiveEditor();

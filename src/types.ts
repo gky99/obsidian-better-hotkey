@@ -157,3 +157,34 @@ export interface InputFieldEditor {
     insertText(text: string, from: number, to?: number): void;
     deleteText(from: number, to: number): void;
 }
+
+// --- Private API types (Obsidian internals) ---
+// See .ai/Obsidian-private-api/focus-elements.md for investigation details
+
+import type { MarkdownView, MarkdownSubView } from 'obsidian';
+
+/** Private: MarkdownView.currentMode (MarkdownSubView in source/live preview mode) */
+export interface MarkdownEditMode extends MarkdownSubView {
+    editor: MarkdownEditModeEditor;
+    search: MarkdownEditModeSearch;
+    containerEl: HTMLElement;
+    editorEl: HTMLElement;
+}
+
+/** Private: currentMode.editor — wraps CM6 EditorView */
+export interface MarkdownEditModeEditor {
+    containerEl: HTMLElement; // div.cm-editor
+}
+
+/** Private: currentMode.search — find/replace component */
+export interface MarkdownEditModeSearch {
+    searchInputEl: HTMLInputElement;
+    replaceInputEl: HTMLInputElement;
+    searchContainerEl: HTMLElement;
+    isActive: boolean;
+}
+
+/** Private: extends MarkdownView with currentMode access */
+export interface MarkdownViewWithMode extends MarkdownView {
+    currentMode: MarkdownEditMode;
+}

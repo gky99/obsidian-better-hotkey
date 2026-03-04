@@ -10,12 +10,15 @@ import { KillRing } from './KillRing';
 import { WorkspaceContext } from './WorkspaceContext';
 import { SuggestModalProxy } from './SuggestModalProxy';
 import { PopoverSuggestProxy } from './PopoverSuggestProxy';
+import { FocusTracker } from './FocusTracker';
+import { FOCUS_STATES } from '../../constants';
 
 export class ExecutionContext {
     public readonly killRing: KillRing;
     public readonly workspaceContext: WorkspaceContext;
     public readonly suggestModalProxy: SuggestModalProxy;
     public readonly popoverSuggestProxy: PopoverSuggestProxy;
+    public readonly focusTracker: FocusTracker;
 
     /**
      * Create execution context with plugin instance
@@ -28,12 +31,17 @@ export class ExecutionContext {
         this.suggestModalProxy.patch();
         this.popoverSuggestProxy = new PopoverSuggestProxy();
         this.popoverSuggestProxy.patch();
+        this.focusTracker = new FocusTracker(
+            this.workspaceContext,
+            this.suggestModalProxy,
+        );
     }
 
     /**
      * Restore all prototype patches
      */
     destroy(): void {
+        this.focusTracker.setActiveFocus(FOCUS_STATES.OTHER);
         this.suggestModalProxy.restore();
         this.popoverSuggestProxy.restore();
     }

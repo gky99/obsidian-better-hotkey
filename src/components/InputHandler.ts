@@ -88,6 +88,7 @@ export class InputHandler {
      */
     private handleKeyEvent(event: KeyboardEvent): false | undefined {
         try {
+            this.executionContext.focusTracker.checkFocus();
             const keyPress = this.normalize(event);
 
             // Step 1: Skip if only modifier key pressed

@@ -24,7 +24,25 @@ export const CONTEXT_KEYS = {
     RECENTER_CYCLE_POSITION: 'recenterCyclePosition',
     SUGGEST_MODAL_OPEN: 'suggestModalOpen',
     POPOVER_SUGGEST_OPEN: 'popoverSuggestOpen',
+    EDITOR_FOCUSED: 'editorFocused',
+    EDITOR_SEARCH_FOCUSED: 'editorSearchFocused',
+    SUGGEST_MODAL_FOCUSED: 'suggestModalFocused',
+    OTHER_FOCUSED: 'otherFocused',
+    TEXT_INPUT_FOCUSED: 'textInputFocused',
 } as const;
+
+export const FOCUS_STATES = {
+    EDITOR: 'editorFocused',
+    EDITOR_SEARCH: 'editorSearchFocused',
+    SUGGEST_MODAL: 'suggestModalFocused',
+    OTHER: 'otherFocused',
+} as const;
+
+export type FocusState =
+    | 'editorFocused'
+    | 'editorSearchFocused'
+    | 'suggestModalFocused'
+    | 'otherFocused';
 
 /**
  * Editing command IDs (Dev Plan 2.3.3 + 2.3.4)
