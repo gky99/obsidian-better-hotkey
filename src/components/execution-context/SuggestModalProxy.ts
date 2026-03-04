@@ -17,9 +17,7 @@ import type {
     SuggestModalWithChooser,
 } from '../../types';
 
-export class SuggestModalProxy
-    implements SuggestionSelector, InputFieldEditor
-{
+export class SuggestModalProxy implements SuggestionSelector, InputFieldEditor {
     private origOpen: () => void;
     private origClose: () => void;
     private activeInstance: SuggestModal<unknown> | null = null;
@@ -46,10 +44,7 @@ export class SuggestModalProxy
                 self.origOpen.call(this);
             } finally {
                 self.activeInstance = this;
-                contextEngine.setContext(
-                    CONTEXT_KEYS.SUGGEST_MODAL_OPEN,
-                    true,
-                );
+                contextEngine.setContext(CONTEXT_KEYS.SUGGEST_MODAL_OPEN, true);
             }
         };
 
