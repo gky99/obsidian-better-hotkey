@@ -16,11 +16,7 @@ export function createControlCommands(): Command[] {
         {
             id: CONTROL_COMMANDS.KEYBOARD_QUIT,
             name: 'Keyboard Quit',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
-                if (!context) return;
+            execute: (context: ExecutionContext) => {
                 contextEngine.setContext(
                     CONTEXT_KEYS.LAST_ACTION_WAS_YANK,
                     false,
@@ -42,11 +38,7 @@ export function createControlCommands(): Command[] {
         {
             id: CONTROL_COMMANDS.RECENTER_TOP_BOTTOM,
             name: 'Recenter Top Bottom',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
-                if (!context) return;
+            execute: (context: ExecutionContext) => {
                 const view = context.workspaceContext
                     .getEditorProxy()
                     .getEditorView();
@@ -71,11 +63,7 @@ export function createControlCommands(): Command[] {
         {
             id: CONTROL_COMMANDS.UNDO,
             name: 'Undo',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
-                if (!context) return;
+            execute: (context: ExecutionContext) => {
                 const editor = context.workspaceContext
                     .getEditorProxy()
                     .getEditor();

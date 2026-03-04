@@ -15,8 +15,8 @@ async function executePluginCommand(commandId: string): Promise<boolean> {
             const ctx = plugin.inputHandler.executionContext;
             return plugin.commandRegistry.execute(
                 cmd,
-                undefined,
                 ctx,
+                new KeyboardEvent('keydown'),
             ) as boolean;
         },
         [commandId],

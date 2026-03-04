@@ -134,9 +134,9 @@ export class InputHandler {
                 // Execute command with execution context
                 const executed = this.commandRegistry.execute(
                     result.entry.command,
-                    result.entry.args,
                     this.executionContext,
                     event,
+                    result.entry.args,
                 );
 
                 // Clear chord buffer and status

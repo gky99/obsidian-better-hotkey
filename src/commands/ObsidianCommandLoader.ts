@@ -68,10 +68,7 @@ function wrapObsidianCommand(nativeCmd: ObsidianCommand): Command | null {
                 if (!view) return false;
                 return ecCb(true, view.editor, view) !== false;
             },
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
+            execute: (context: ExecutionContext) => {
                 const view = getActiveView(context);
                 if (!view) return;
                 ecCb(false, view.editor, view);
@@ -87,10 +84,7 @@ function wrapObsidianCommand(nativeCmd: ObsidianCommand): Command | null {
             canExecute: (context?: ExecutionContext) => {
                 return getActiveView(context) !== null;
             },
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
+            execute: (context: ExecutionContext) => {
                 const view = getActiveView(context);
                 if (!view) return;
                 eCb(view.editor, view);

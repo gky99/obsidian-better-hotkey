@@ -4,6 +4,8 @@ import type { Command } from '../../types';
 import type { ExecutionContext } from '../../components/execution-context/ExecutionContext';
 import { EDITING_COMMANDS } from '../../constants';
 
+const keydown = new KeyboardEvent('keydown');
+
 // Hoist mock functions so vi.mock factory can reference them
 const { mockDeleteCharForward, mockTransposeChars, mockSplitLine } = vi.hoisted(
     () => ({
@@ -190,18 +192,13 @@ describe('createEditingCommands', () => {
 
         it('calls CM6 function with EditorView when context is available', () => {
             const context = createMockContext();
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(mockFn).toHaveBeenCalledWith(mockEditorView);
-        });
-
-        it('does nothing when no context is provided', () => {
-            command.execute();
-            expect(mockFn).not.toHaveBeenCalled();
         });
 
         it('does nothing when EditorView is null', () => {
             const context = createMockContext(null);
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(mockFn).not.toHaveBeenCalled();
         });
     });
@@ -215,7 +212,7 @@ describe('createEditingCommands', () => {
                     (c) => c.id === EDITING_COMMANDS.UPCASE_WORD,
                 )!;
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(mockView.dispatch).toHaveBeenCalledTimes(1);
                 const call = mockView.dispatch.mock.calls[0]![0];
@@ -231,7 +228,7 @@ describe('createEditingCommands', () => {
                     (c) => c.id === EDITING_COMMANDS.DOWNCASE_WORD,
                 )!;
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(mockView.dispatch).toHaveBeenCalledTimes(1);
                 const call = mockView.dispatch.mock.calls[0]![0];
@@ -249,7 +246,7 @@ describe('createEditingCommands', () => {
                     (c) => c.id === EDITING_COMMANDS.UPCASE_WORD,
                 )!;
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(mockView.dispatch).toHaveBeenCalledTimes(1);
                 const call = mockView.dispatch.mock.calls[0]![0];
@@ -258,20 +255,12 @@ describe('createEditingCommands', () => {
                 ]);
             });
 
-            it('word command does nothing without context', () => {
-                const command = commands.find(
-                    (c) => c.id === EDITING_COMMANDS.UPCASE_WORD,
-                )!;
-                command.execute();
-                // No error thrown
-            });
-
             it('word command does nothing with null EditorView', () => {
                 const context = createMockContext(null);
                 const command = commands.find(
                     (c) => c.id === EDITING_COMMANDS.UPCASE_WORD,
                 )!;
-                command.execute(undefined, context);
+                command.execute(context, keydown);
                 // No error thrown
             });
         });
@@ -288,7 +277,7 @@ describe('createEditingCommands', () => {
                     (c) => c.id === EDITING_COMMANDS.UPCASE_REGION,
                 )!;
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(mockView.dispatch).toHaveBeenCalledTimes(1);
             });
@@ -304,7 +293,7 @@ describe('createEditingCommands', () => {
                     (c) => c.id === EDITING_COMMANDS.DOWNCASE_REGION,
                 )!;
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(mockView.dispatch).toHaveBeenCalledTimes(1);
             });
@@ -319,18 +308,10 @@ describe('createEditingCommands', () => {
                     (c) => c.id === EDITING_COMMANDS.UPCASE_REGION,
                 )!;
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(mockView.dispatch).not.toHaveBeenCalled();
                 expect(mockView.state.changeByRange).not.toHaveBeenCalled();
-            });
-
-            it('region command does nothing without context', () => {
-                const command = commands.find(
-                    (c) => c.id === EDITING_COMMANDS.UPCASE_REGION,
-                )!;
-                command.execute();
-                // No error thrown
             });
 
             it('region command does nothing with null EditorView', () => {
@@ -338,7 +319,7 @@ describe('createEditingCommands', () => {
                 const command = commands.find(
                     (c) => c.id === EDITING_COMMANDS.UPCASE_REGION,
                 )!;
-                command.execute(undefined, context);
+                command.execute(context, keydown);
                 // No error thrown
             });
         });

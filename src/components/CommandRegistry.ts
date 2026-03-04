@@ -48,15 +48,15 @@ export class CommandRegistry {
     }
 
     /**
-     * Execute command with optional args and execution context
+     * Execute command with execution context and optional args.
      * Returns true if command was found and executed.
      * Returns false if command not found or canExecute() returns false.
      */
     execute(
         commandId: string,
+        context: ExecutionContext,
+        event: KeyboardEvent,
         args?: Record<string, unknown>,
-        context?: ExecutionContext,
-        event?: KeyboardEvent,
     ): boolean {
         const command = this.getCommand(commandId);
         if (!command) {
@@ -68,7 +68,7 @@ export class CommandRegistry {
         }
 
         try {
-            const result = command.execute(args, context, event);
+            const result = command.execute(context, event, args);
 
             // Handle async commands
             if (result instanceof Promise) {

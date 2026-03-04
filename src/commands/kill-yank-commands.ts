@@ -16,8 +16,7 @@ import { KILL_YANK_COMMANDS } from '../constants';
 /**
  * Get EditorView from ExecutionContext, or null if unavailable.
  */
-function getEditorView(context?: ExecutionContext): EditorView | null {
-    if (!context) return null;
+function getEditorView(context: ExecutionContext): EditorView | null {
     return context.workspaceContext.getEditorProxy().getEditorView();
 }
 
@@ -78,12 +77,9 @@ export function createKillYankCommands(): Command[] {
         {
             id: KILL_YANK_COMMANDS.KILL_LINE,
             name: 'Kill Line',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
+            execute: (context: ExecutionContext) => {
                 const view = getEditorView(context);
-                if (!view || !context) return;
+                if (!view) return;
 
                 const { state } = view;
                 const head = state.selection.main.head;
@@ -115,12 +111,9 @@ export function createKillYankCommands(): Command[] {
         {
             id: KILL_YANK_COMMANDS.KILL_REGION,
             name: 'Kill Region',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
+            execute: (context: ExecutionContext) => {
                 const view = getEditorView(context);
-                if (!view || !context) return;
+                if (!view) return;
 
                 const { state } = view;
                 const range = state.selection.main;
@@ -140,12 +133,9 @@ export function createKillYankCommands(): Command[] {
         {
             id: KILL_YANK_COMMANDS.KILL_WORD,
             name: 'Kill Word',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
+            execute: (context: ExecutionContext) => {
                 const view = getEditorView(context);
-                if (!view || !context) return;
+                if (!view) return;
 
                 const { state } = view;
                 const head = state.selection.main.head;
@@ -165,12 +155,9 @@ export function createKillYankCommands(): Command[] {
         {
             id: KILL_YANK_COMMANDS.BACKWARD_KILL_WORD,
             name: 'Backward Kill Word',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
+            execute: (context: ExecutionContext) => {
                 const view = getEditorView(context);
-                if (!view || !context) return;
+                if (!view) return;
 
                 const { state } = view;
                 const head = state.selection.main.head;
@@ -190,12 +177,9 @@ export function createKillYankCommands(): Command[] {
         {
             id: KILL_YANK_COMMANDS.COPY_REGION,
             name: 'Copy Region',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
+            execute: (context: ExecutionContext) => {
                 const view = getEditorView(context);
-                if (!view || !context) return;
+                if (!view) return;
 
                 const { state } = view;
                 const range = state.selection.main;
@@ -216,12 +200,7 @@ export function createKillYankCommands(): Command[] {
         {
             id: KILL_YANK_COMMANDS.YANK,
             name: 'Yank',
-            execute: async (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
-                if (!context) return;
-
+            execute: async (context: ExecutionContext) => {
                 const text = await context.killRing.yank();
                 if (!text) return;
 
@@ -236,12 +215,7 @@ export function createKillYankCommands(): Command[] {
         {
             id: KILL_YANK_COMMANDS.YANK_POP,
             name: 'Yank Pop',
-            execute: (
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) => {
-                if (!context) return;
-
+            execute: (context: ExecutionContext) => {
                 const text = context.killRing.yankPop();
                 if (!text) return;
 

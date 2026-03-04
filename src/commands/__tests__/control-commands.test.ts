@@ -4,6 +4,8 @@ import type { Command } from '../../types';
 import type { ExecutionContext } from '../../components/execution-context/ExecutionContext';
 import { CONTROL_COMMANDS, CONTEXT_KEYS } from '../../constants';
 
+const keydown = new KeyboardEvent('keydown');
+
 // Hoist mock functions so vi.mock factory can reference them
 const { mockSetContext, mockGetContext } = vi.hoisted(() => ({
     mockSetContext: vi.fn(),
@@ -126,7 +128,7 @@ describe('createControlCommands', () => {
 
         it('calls contextEngine.setContext to reset LAST_ACTION_WAS_YANK', () => {
             const context = createMockContext();
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(mockSetContext).toHaveBeenCalledWith(
                 CONTEXT_KEYS.LAST_ACTION_WAS_YANK,
                 false,
@@ -138,7 +140,7 @@ describe('createControlCommands', () => {
                 { head: 5, from: 0, to: 5 },
             ]);
             const context = createMockContext({ editorView: mockView });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(mockView.dispatch).toHaveBeenCalled();
         });
 
@@ -148,21 +150,16 @@ describe('createControlCommands', () => {
                 { head: 15, from: 10, to: 15 },
             ]);
             const context = createMockContext({ editorView: mockView });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(MockEditorSelection.cursor).toHaveBeenCalledWith(5);
             expect(MockEditorSelection.cursor).toHaveBeenCalledWith(15);
             expect(MockEditorSelection.create).toHaveBeenCalled();
             expect(mockView.dispatch).toHaveBeenCalled();
         });
 
-        it('does nothing when no context is provided', () => {
-            command.execute();
-            expect(mockSetContext).not.toHaveBeenCalled();
-        });
-
         it('still resets context when EditorView is null', () => {
             const context = createMockContext({ editorView: null });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(mockSetContext).toHaveBeenCalledWith(
                 CONTEXT_KEYS.LAST_ACTION_WAS_YANK,
                 false,
@@ -185,7 +182,7 @@ describe('createControlCommands', () => {
                 { head: 10, from: 10, to: 10 },
             ]);
             const context = createMockContext({ editorView: mockView });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(MockEditorView.scrollIntoView).toHaveBeenCalledWith(10, {
                 y: 'center',
             });
@@ -202,7 +199,7 @@ describe('createControlCommands', () => {
                 { head: 10, from: 10, to: 10 },
             ]);
             const context = createMockContext({ editorView: mockView });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(MockEditorView.scrollIntoView).toHaveBeenCalledWith(10, {
                 y: 'start',
             });
@@ -218,7 +215,7 @@ describe('createControlCommands', () => {
                 { head: 10, from: 10, to: 10 },
             ]);
             const context = createMockContext({ editorView: mockView });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(MockEditorView.scrollIntoView).toHaveBeenCalledWith(10, {
                 y: 'end',
             });
@@ -228,14 +225,9 @@ describe('createControlCommands', () => {
             );
         });
 
-        it('does nothing when no context is provided', () => {
-            command.execute();
-            expect(MockEditorView.scrollIntoView).not.toHaveBeenCalled();
-        });
-
         it('does nothing when EditorView is null', () => {
             const context = createMockContext({ editorView: null });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(MockEditorView.scrollIntoView).not.toHaveBeenCalled();
         });
     });
@@ -250,18 +242,13 @@ describe('createControlCommands', () => {
         it('calls editor.undo()', () => {
             const mockEditor = { undo: vi.fn() };
             const context = createMockContext({ editor: mockEditor });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(mockEditor.undo).toHaveBeenCalled();
-        });
-
-        it('does nothing when no context is provided', () => {
-            command.execute();
-            // No error thrown
         });
 
         it('does nothing when editor is null', () => {
             const context = createMockContext({ editor: null });
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             // No error thrown
         });
     });

@@ -129,10 +129,7 @@ function killWord(editor: InputFieldEditor, killRing: KillRing): void {
     }
 }
 
-function backwardKillWord(
-    editor: InputFieldEditor,
-    killRing: KillRing,
-): void {
+function backwardKillWord(editor: InputFieldEditor, killRing: KillRing): void {
     const sel = editor.getSelection();
     const target = backwardWordStart(editor.getText(), sel.from);
     if (target < sel.from) {
@@ -158,24 +155,14 @@ export function createSuggestCommands(): Command[] {
         {
             id: SUGGEST_COMMANDS.NEXT_OPTION,
             name: 'Next Suggestion',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-                event?: KeyboardEvent,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext, event: KeyboardEvent) {
                 moveSelectionDown(context.suggestModalProxy, event);
             },
         },
         {
             id: SUGGEST_COMMANDS.PREV_OPTION,
             name: 'Previous Suggestion',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-                event?: KeyboardEvent,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext, event: KeyboardEvent) {
                 moveSelectionUp(context.suggestModalProxy, event);
             },
         },
@@ -183,66 +170,42 @@ export function createSuggestCommands(): Command[] {
         {
             id: SUGGEST_COMMANDS.FORWARD_CHAR,
             name: 'Suggest Forward Char',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 forwardChar(context.suggestModalProxy);
             },
         },
         {
             id: SUGGEST_COMMANDS.BACKWARD_CHAR,
             name: 'Suggest Backward Char',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 backwardChar(context.suggestModalProxy);
             },
         },
         {
             id: SUGGEST_COMMANDS.FORWARD_WORD,
             name: 'Suggest Forward Word',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 forwardWord(context.suggestModalProxy);
             },
         },
         {
             id: SUGGEST_COMMANDS.BACKWARD_WORD,
             name: 'Suggest Backward Word',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 backwardWord(context.suggestModalProxy);
             },
         },
         {
             id: SUGGEST_COMMANDS.MOVE_BEGINNING_OF_LINE,
             name: 'Suggest Move Beginning of Line',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 moveBeginningOfLine(context.suggestModalProxy);
             },
         },
         {
             id: SUGGEST_COMMANDS.MOVE_END_OF_LINE,
             name: 'Suggest Move End of Line',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 moveEndOfLine(context.suggestModalProxy);
             },
         },
@@ -250,69 +213,42 @@ export function createSuggestCommands(): Command[] {
         {
             id: SUGGEST_COMMANDS.DELETE_CHAR,
             name: 'Suggest Delete Char',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 deleteCharForward(context.suggestModalProxy);
             },
         },
         {
             id: SUGGEST_COMMANDS.DELETE_BACKWARD_CHAR,
             name: 'Suggest Delete Backward Char',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 deleteCharBackward(context.suggestModalProxy);
             },
         },
         {
             id: SUGGEST_COMMANDS.KILL_LINE,
             name: 'Suggest Kill Line',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 killLine(context.suggestModalProxy, context.killRing);
             },
         },
         {
             id: SUGGEST_COMMANDS.KILL_WORD,
             name: 'Suggest Kill Word',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 killWord(context.suggestModalProxy, context.killRing);
             },
         },
         {
             id: SUGGEST_COMMANDS.BACKWARD_KILL_WORD,
             name: 'Suggest Backward Kill Word',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
-                backwardKillWord(
-                    context.suggestModalProxy,
-                    context.killRing,
-                );
+            execute(context: ExecutionContext) {
+                backwardKillWord(context.suggestModalProxy, context.killRing);
             },
         },
         {
             id: SUGGEST_COMMANDS.YANK,
             name: 'Suggest Yank',
-            execute(
-                _args?: Record<string, unknown>,
-                context?: ExecutionContext,
-            ) {
-                if (!context) return;
+            execute(context: ExecutionContext) {
                 yankText(context.suggestModalProxy, context.killRing);
             },
         },

@@ -8,6 +8,8 @@ import type { Command } from '../../types';
 import type { ExecutionContext } from '../../components/execution-context/ExecutionContext';
 import { KILL_YANK_COMMANDS } from '../../constants';
 
+const keydown = new KeyboardEvent('keydown');
+
 vi.mock('obsidian', () => ({
     MarkdownView: vi.fn(),
 }));
@@ -189,7 +191,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 5); // hello| world
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith(' world');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -201,7 +203,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello\nworld', 5); // hello|\nworld
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith('\n');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -213,19 +215,15 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello', 5); // hello|
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).not.toHaveBeenCalled();
             expect(view.dispatch).not.toHaveBeenCalled();
         });
 
-        it('does nothing when no context', () => {
-            expect(() => command.execute()).not.toThrow();
-        });
-
         it('does nothing when EditorView is null', () => {
             const context = createMockContext(null);
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(context.killRing.push).not.toHaveBeenCalled();
         });
     });
@@ -243,7 +241,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 8, 5, 8); // hello [wor]ld
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith(' wo');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -256,14 +254,10 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 5); // hello| world
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).not.toHaveBeenCalled();
             expect(view.dispatch).not.toHaveBeenCalled();
-        });
-
-        it('does nothing when no context', () => {
-            expect(() => command.execute()).not.toThrow();
         });
     });
 
@@ -280,7 +274,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 2); // he|llo world
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith('llo');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -292,7 +286,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 5); // hello| world
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith(' world');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -304,7 +298,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello\nworld', 5); // hello|\nworld
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith('\nworld');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -316,14 +310,10 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello', 5);
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).not.toHaveBeenCalled();
             expect(view.dispatch).not.toHaveBeenCalled();
-        });
-
-        it('does nothing when no context', () => {
-            expect(() => command.execute()).not.toThrow();
         });
     });
 
@@ -340,7 +330,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 8); // hello wo|rld
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith('wo');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -352,7 +342,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 6); // hello |world
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith('hello ');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -364,7 +354,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello\nworld', 6); // hello\n|world
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith('hello\n');
             expect(view.dispatch).toHaveBeenCalledWith({
@@ -376,14 +366,10 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello', 0);
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).not.toHaveBeenCalled();
             expect(view.dispatch).not.toHaveBeenCalled();
-        });
-
-        it('does nothing when no context', () => {
-            expect(() => command.execute()).not.toThrow();
         });
     });
 
@@ -400,7 +386,7 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 8, 5, 8); // hello [wor]ld
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).toHaveBeenCalledWith(' wo');
             // Should only deselect, not delete
@@ -413,14 +399,10 @@ describe('createKillYankCommands', () => {
             const view = createMockEditorView('hello world', 5);
             const context = createMockContext(view);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.push).not.toHaveBeenCalled();
             expect(view.dispatch).not.toHaveBeenCalled();
-        });
-
-        it('does nothing when no context', () => {
-            expect(() => command.execute()).not.toThrow();
         });
     });
 
@@ -444,7 +426,7 @@ describe('createKillYankCommands', () => {
                 mockRange,
             );
 
-            await command.execute(undefined, context);
+            await command.execute(context, keydown);
 
             expect(context.killRing.yank).toHaveBeenCalled();
             expect(
@@ -461,16 +443,12 @@ describe('createKillYankCommands', () => {
 
             vi.mocked(context.killRing.yank).mockResolvedValue(null);
 
-            await command.execute(undefined, context);
+            await command.execute(context, keydown);
 
             expect(
                 context.workspaceContext.insertAtCursor,
             ).not.toHaveBeenCalled();
             expect(context.killRing.setYankRange).not.toHaveBeenCalled();
-        });
-
-        it('does nothing when no context', async () => {
-            await expect(command.execute()).resolves.not.toThrow();
         });
     });
 
@@ -501,7 +479,7 @@ describe('createKillYankCommands', () => {
                 newRange,
             );
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(context.killRing.yankPop).toHaveBeenCalled();
             expect(context.workspaceContext.replaceRange).toHaveBeenCalledWith(
@@ -519,7 +497,7 @@ describe('createKillYankCommands', () => {
 
             vi.mocked(context.killRing.yankPop).mockReturnValue(null);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(
                 context.workspaceContext.replaceRange,
@@ -534,15 +512,11 @@ describe('createKillYankCommands', () => {
             vi.mocked(context.killRing.yankPop).mockReturnValue('text');
             vi.mocked(context.killRing.getYankRange).mockReturnValue(null);
 
-            command.execute(undefined, context);
+            command.execute(context, keydown);
 
             expect(
                 context.workspaceContext.replaceRange,
             ).not.toHaveBeenCalled();
-        });
-
-        it('does nothing when no context', () => {
-            expect(() => command.execute()).not.toThrow();
         });
     });
 });

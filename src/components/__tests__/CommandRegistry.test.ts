@@ -4,12 +4,15 @@ import type { Command, Disposable } from '../../types';
 import type { ExecutionContext } from '../execution-context/ExecutionContext';
 import type { App } from 'obsidian';
 
+const keydown = new KeyboardEvent('keydown');
+
 // Helper to create test commands
 function createCommand(
     id: string,
     execute: (
-        args?: Record<string, unknown>,
         context?: ExecutionContext,
+        event?: KeyboardEvent,
+        args?: Record<string, unknown>,
     ) => void | Promise<void> = () => {},
 ): Command {
     return {
@@ -148,12 +151,18 @@ describe('CommandRegistry', () => {
     });
 
     describe('execute', () => {
+        const mockContext = {} as ExecutionContext;
+
         it('executes synchronous command successfully', () => {
             const executeMock = vi.fn();
             const cmd = createCommand('test-command', executeMock);
 
             registry.registerCommand(cmd);
-            const result = registry.execute('test-command');
+            const result = registry.execute(
+                'test-command',
+                mockContext,
+                keydown,
+            );
 
             expect(result).toBe(true);
             expect(executeMock).toHaveBeenCalledOnce();
@@ -164,7 +173,11 @@ describe('CommandRegistry', () => {
             const cmd = createCommand('async-command', executeMock);
 
             registry.registerCommand(cmd);
-            const result = registry.execute('async-command');
+            const result = registry.execute(
+                'async-command',
+                mockContext,
+                keydown,
+            );
 
             expect(result).toBe(true);
             expect(executeMock).toHaveBeenCalledOnce();
@@ -176,12 +189,12 @@ describe('CommandRegistry', () => {
             const args = { key: 'value', count: 42 };
 
             registry.registerCommand(cmd);
-            registry.execute('test-command', args);
+            registry.execute('test-command', mockContext, keydown, args);
 
             expect(executeMock).toHaveBeenCalledWith(
+                mockContext,
+                keydown,
                 args,
-                undefined,
-                undefined,
             );
         });
 
@@ -191,11 +204,11 @@ describe('CommandRegistry', () => {
             const context = {} as ExecutionContext;
 
             registry.registerCommand(cmd);
-            registry.execute('test-command', undefined, context);
+            registry.execute('test-command', context, keydown);
 
             expect(executeMock).toHaveBeenCalledWith(
-                undefined,
                 context,
+                keydown,
                 undefined,
             );
         });
@@ -207,21 +220,29 @@ describe('CommandRegistry', () => {
             const context = {} as ExecutionContext;
 
             registry.registerCommand(cmd);
-            registry.execute('test-command', args, context);
+            registry.execute('test-command', context, keydown, args);
 
-            expect(executeMock).toHaveBeenCalledWith(args, context, undefined);
+            expect(executeMock).toHaveBeenCalledWith(context, keydown, args);
         });
 
         it('returns true on successful execution', () => {
             const cmd = createCommand('test-command');
             registry.registerCommand(cmd);
 
-            const result = registry.execute('test-command');
+            const result = registry.execute(
+                'test-command',
+                mockContext,
+                keydown,
+            );
             expect(result).toBe(true);
         });
 
         it('returns false when command not found', () => {
-            const result = registry.execute('nonexistent');
+            const result = registry.execute(
+                'nonexistent',
+                mockContext,
+                keydown,
+            );
             expect(result).toBe(false);
         });
 
@@ -232,7 +253,11 @@ describe('CommandRegistry', () => {
             const cmd = createCommand('failing-command', executeMock);
 
             registry.registerCommand(cmd);
-            const result = registry.execute('failing-command');
+            const result = registry.execute(
+                'failing-command',
+                mockContext,
+                keydown,
+            );
 
             expect(result).toBe(false);
         });
@@ -247,7 +272,11 @@ describe('CommandRegistry', () => {
             const cmd = createCommand('async-failing-command', executeMock);
 
             registry.registerCommand(cmd);
-            const result = registry.execute('async-failing-command');
+            const result = registry.execute(
+                'async-failing-command',
+                mockContext,
+                keydown,
+            );
 
             expect(result).toBe(true); // Returns true immediately for async commands
 
@@ -273,7 +302,7 @@ describe('CommandRegistry', () => {
             const cmd = createCommand('failing-command', executeMock);
 
             registry.registerCommand(cmd);
-            registry.execute('failing-command');
+            registry.execute('failing-command', mockContext, keydown);
 
             expect(consoleErrorSpy).toHaveBeenCalledWith(
                 expect.stringContaining('Error executing command'),
@@ -288,9 +317,9 @@ describe('CommandRegistry', () => {
             const cmd = createCommand('test-command', executeMock);
 
             registry.registerCommand(cmd);
-            registry.execute('test-command');
-            registry.execute('test-command');
-            registry.execute('test-command');
+            registry.execute('test-command', mockContext, keydown);
+            registry.execute('test-command', mockContext, keydown);
+            registry.execute('test-command', mockContext, keydown);
 
             expect(executeMock).toHaveBeenCalledTimes(3);
         });
@@ -375,6 +404,8 @@ describe('CommandRegistry', () => {
     });
 
     describe('execute with canExecute', () => {
+        const mockContext = {} as ExecutionContext;
+
         it('returns false when canExecute returns false', () => {
             const executeMock = vi.fn();
             const cmd: Command = {
@@ -385,7 +416,11 @@ describe('CommandRegistry', () => {
             };
 
             registry.registerCommand(cmd);
-            const result = registry.execute('guarded-cmd');
+            const result = registry.execute(
+                'guarded-cmd',
+                mockContext,
+                keydown,
+            );
 
             expect(result).toBe(false);
             expect(executeMock).not.toHaveBeenCalled();
@@ -401,7 +436,11 @@ describe('CommandRegistry', () => {
             };
 
             registry.registerCommand(cmd);
-            const result = registry.execute('guarded-cmd');
+            const result = registry.execute(
+                'guarded-cmd',
+                mockContext,
+                keydown,
+            );
 
             expect(result).toBe(true);
             expect(executeMock).toHaveBeenCalledOnce();
@@ -412,7 +451,7 @@ describe('CommandRegistry', () => {
             const cmd = createCommand('no-guard', executeMock);
 
             registry.registerCommand(cmd);
-            const result = registry.execute('no-guard');
+            const result = registry.execute('no-guard', mockContext, keydown);
 
             expect(result).toBe(true);
             expect(executeMock).toHaveBeenCalledOnce();

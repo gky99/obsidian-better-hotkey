@@ -34,11 +34,7 @@ function cm6CursorCommand(
     return {
         id,
         name,
-        execute: (
-            _args?: Record<string, unknown>,
-            context?: ExecutionContext,
-        ) => {
-            if (!context) return;
+        execute: (context: ExecutionContext) => {
             const editorView = context.workspaceContext
                 .getEditorProxy()
                 .getEditorView();

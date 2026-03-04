@@ -4,6 +4,8 @@ import { SUGGEST_COMMANDS } from '../../constants';
 import type { Command } from '../../types';
 import type { ExecutionContext } from '../../components/execution-context/ExecutionContext';
 
+const keydown = new KeyboardEvent('keydown');
+
 vi.mock('obsidian', () => ({
     SuggestModal: class {
         open() {}
@@ -67,7 +69,7 @@ describe('createSuggestCommands', () => {
             it('calls moveDown on suggestModalProxy', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.moveDown,
@@ -76,17 +78,12 @@ describe('createSuggestCommands', () => {
 
             it('passes the event to moveDown', () => {
                 const context = createMockContext();
-                const event = new KeyboardEvent('keydown');
 
-                command.execute(undefined, context, event);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.moveDown,
-                ).toHaveBeenCalledWith(event);
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
+                ).toHaveBeenCalledWith(keydown);
             });
         });
 
@@ -102,7 +99,7 @@ describe('createSuggestCommands', () => {
             it('calls moveUp on suggestModalProxy', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.moveUp,
@@ -111,17 +108,12 @@ describe('createSuggestCommands', () => {
 
             it('passes the event to moveUp', () => {
                 const context = createMockContext();
-                const event = new KeyboardEvent('keydown');
 
-                command.execute(undefined, context, event);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.moveUp,
-                ).toHaveBeenCalledWith(event);
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
+                ).toHaveBeenCalledWith(keydown);
             });
         });
     });
@@ -139,7 +131,7 @@ describe('createSuggestCommands', () => {
             it('moves cursor forward by one character', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
@@ -148,20 +140,18 @@ describe('createSuggestCommands', () => {
 
             it('does not move cursor past end of text', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 11,
-                    to: 11,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 11,
+                        to: 11,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
                 ).not.toHaveBeenCalled();
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -177,7 +167,7 @@ describe('createSuggestCommands', () => {
             it('moves cursor backward by one character', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
@@ -186,20 +176,18 @@ describe('createSuggestCommands', () => {
 
             it('does not move cursor before start of text', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 0,
-                    to: 0,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 0,
+                        to: 0,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
                 ).not.toHaveBeenCalled();
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -215,7 +203,7 @@ describe('createSuggestCommands', () => {
             it('moves cursor to end of next word', () => {
                 const context = createMockContext();
                 // cursor at position 5 in "hello world" -> skips space, then "world" ends at 11
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
@@ -224,20 +212,18 @@ describe('createSuggestCommands', () => {
 
             it('moves from mid-word to end of word', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 2,
-                    to: 2,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 2,
+                        to: 2,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
                 ).toHaveBeenCalledWith({ from: 5, to: 5 });
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -253,7 +239,7 @@ describe('createSuggestCommands', () => {
             it('moves cursor to start of previous word', () => {
                 const context = createMockContext();
                 // cursor at position 5 in "hello world" -> backward skips to start of "hello" at 0
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
@@ -262,20 +248,18 @@ describe('createSuggestCommands', () => {
 
             it('moves from mid-word to start of word', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 8,
-                    to: 8,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 8,
+                        to: 8,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
                 ).toHaveBeenCalledWith({ from: 6, to: 6 });
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -291,15 +275,11 @@ describe('createSuggestCommands', () => {
             it('moves cursor to position 0', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
                 ).toHaveBeenCalledWith({ from: 0, to: 0 });
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -315,15 +295,11 @@ describe('createSuggestCommands', () => {
             it('moves cursor to end of text', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.setSelection,
                 ).toHaveBeenCalledWith({ from: 11, to: 11 });
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
     });
@@ -341,7 +317,7 @@ describe('createSuggestCommands', () => {
             it('deletes character after cursor', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.deleteText,
@@ -350,20 +326,18 @@ describe('createSuggestCommands', () => {
 
             it('does not delete past end of text', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 11,
-                    to: 11,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 11,
+                        to: 11,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).not.toHaveBeenCalled();
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -379,7 +353,7 @@ describe('createSuggestCommands', () => {
             it('deletes character before cursor', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.deleteText,
@@ -388,20 +362,18 @@ describe('createSuggestCommands', () => {
 
             it('does not delete before start of text', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 0,
-                    to: 0,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 0,
+                        to: 0,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).not.toHaveBeenCalled();
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -417,11 +389,11 @@ describe('createSuggestCommands', () => {
             it('kills text from cursor to end of line', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.push,
-                ).toHaveBeenCalledWith(' world');
+                expect((context as any).killRing.push).toHaveBeenCalledWith(
+                    ' world',
+                );
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).toHaveBeenCalledWith(5, 11);
@@ -429,23 +401,19 @@ describe('createSuggestCommands', () => {
 
             it('does not kill when cursor is at end of text', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 11,
-                    to: 11,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 11,
+                        to: 11,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.push,
-                ).not.toHaveBeenCalled();
+                expect((context as any).killRing.push).not.toHaveBeenCalled();
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).not.toHaveBeenCalled();
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -461,11 +429,11 @@ describe('createSuggestCommands', () => {
             it('kills from cursor to end of next word', () => {
                 const context = createMockContext();
                 // cursor at 5 in "hello world" -> kills " world" (pos 5 to 11)
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.push,
-                ).toHaveBeenCalledWith(' world');
+                expect((context as any).killRing.push).toHaveBeenCalledWith(
+                    ' world',
+                );
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).toHaveBeenCalledWith(5, 11);
@@ -473,16 +441,18 @@ describe('createSuggestCommands', () => {
 
             it('kills from mid-word to end of word', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 2,
-                    to: 2,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 2,
+                        to: 2,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.push,
-                ).toHaveBeenCalledWith('llo');
+                expect((context as any).killRing.push).toHaveBeenCalledWith(
+                    'llo',
+                );
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).toHaveBeenCalledWith(2, 5);
@@ -490,23 +460,19 @@ describe('createSuggestCommands', () => {
 
             it('does nothing at end of text', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 11,
-                    to: 11,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 11,
+                        to: 11,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.push,
-                ).not.toHaveBeenCalled();
+                expect((context as any).killRing.push).not.toHaveBeenCalled();
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).not.toHaveBeenCalled();
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -522,11 +488,11 @@ describe('createSuggestCommands', () => {
             it('kills from cursor backward to start of word', () => {
                 const context = createMockContext();
                 // cursor at 5 in "hello world" -> backward kills "hello" (pos 0 to 5)
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.push,
-                ).toHaveBeenCalledWith('hello');
+                expect((context as any).killRing.push).toHaveBeenCalledWith(
+                    'hello',
+                );
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).toHaveBeenCalledWith(0, 5);
@@ -534,16 +500,18 @@ describe('createSuggestCommands', () => {
 
             it('kills from mid-word to start of word', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 8,
-                    to: 8,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 8,
+                        to: 8,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.push,
-                ).toHaveBeenCalledWith('wo');
+                expect((context as any).killRing.push).toHaveBeenCalledWith(
+                    'wo',
+                );
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).toHaveBeenCalledWith(6, 8);
@@ -551,23 +519,19 @@ describe('createSuggestCommands', () => {
 
             it('does nothing at start of text', () => {
                 const context = createMockContext();
-                (context as any).suggestModalProxy.getSelection.mockReturnValue({
-                    from: 0,
-                    to: 0,
-                });
+                (context as any).suggestModalProxy.getSelection.mockReturnValue(
+                    {
+                        from: 0,
+                        to: 0,
+                    },
+                );
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.push,
-                ).not.toHaveBeenCalled();
+                expect((context as any).killRing.push).not.toHaveBeenCalled();
                 expect(
                     (context as any).suggestModalProxy.deleteText,
                 ).not.toHaveBeenCalled();
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
 
@@ -575,19 +539,15 @@ describe('createSuggestCommands', () => {
             let command: Command;
 
             beforeEach(() => {
-                command = commands.find(
-                    (c) => c.id === SUGGEST_COMMANDS.YANK,
-                )!;
+                command = commands.find((c) => c.id === SUGGEST_COMMANDS.YANK)!;
             });
 
             it('inserts text from kill ring at cursor position', () => {
                 const context = createMockContext();
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
-                expect(
-                    (context as any).killRing.getEntries,
-                ).toHaveBeenCalled();
+                expect((context as any).killRing.getEntries).toHaveBeenCalled();
                 expect(
                     (context as any).suggestModalProxy.insertText,
                 ).toHaveBeenCalledWith('yanked text', 5);
@@ -597,15 +557,11 @@ describe('createSuggestCommands', () => {
                 const context = createMockContext();
                 (context as any).killRing.getEntries.mockReturnValue([]);
 
-                command.execute(undefined, context);
+                command.execute(context, keydown);
 
                 expect(
                     (context as any).suggestModalProxy.insertText,
                 ).not.toHaveBeenCalled();
-            });
-
-            it('does nothing when no context', () => {
-                expect(() => command.execute()).not.toThrow();
             });
         });
     });

@@ -4,6 +4,8 @@ import type { Command } from '../../types';
 import type { ExecutionContext } from '../../components/execution-context/ExecutionContext';
 import { CURSOR_MOVEMENT_COMMANDS } from '../../constants';
 
+const keydown = new KeyboardEvent('keydown');
+
 // Hoist mock functions so vi.mock factory can reference them
 const {
     mockCursorCharForward,
@@ -153,18 +155,13 @@ describe('createCursorCommands', () => {
 
         it('calls CM6 function with EditorView when context is available', () => {
             const context = createMockContext();
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(mockFn).toHaveBeenCalledWith(mockEditorView);
-        });
-
-        it('does nothing when no context is provided', () => {
-            command.execute();
-            expect(mockFn).not.toHaveBeenCalled();
         });
 
         it('does nothing when EditorView is null', () => {
             const context = createMockContext(null);
-            command.execute(undefined, context);
+            command.execute(context, keydown);
             expect(mockFn).not.toHaveBeenCalled();
         });
     });

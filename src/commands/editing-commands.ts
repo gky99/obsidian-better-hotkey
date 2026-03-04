@@ -23,11 +23,7 @@ function cm6EditCommand(id: string, name: string, cm6Fn: CM6Command): Command {
     return {
         id,
         name,
-        execute: (
-            _args?: Record<string, unknown>,
-            context?: ExecutionContext,
-        ) => {
-            if (!context) return;
+        execute: (context: ExecutionContext) => {
             const editorView = context.workspaceContext
                 .getEditorProxy()
                 .getEditorView();
@@ -90,11 +86,7 @@ function caseWordCommand(
     return {
         id,
         name,
-        execute: (
-            _args?: Record<string, unknown>,
-            context?: ExecutionContext,
-        ) => {
-            if (!context) return;
+        execute: (context: ExecutionContext) => {
             const editorView = context.workspaceContext
                 .getEditorProxy()
                 .getEditorView();
@@ -146,11 +138,7 @@ function caseRegionCommand(
     return {
         id,
         name,
-        execute: (
-            _args?: Record<string, unknown>,
-            context?: ExecutionContext,
-        ) => {
-            if (!context) return;
+        execute: (context: ExecutionContext) => {
             const editorView = context.workspaceContext
                 .getEditorProxy()
                 .getEditorView();

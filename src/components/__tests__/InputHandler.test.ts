@@ -196,9 +196,7 @@ describe('InputHandler', () => {
             });
             invokeHandlerOnNonTopScope(event);
 
-            expect(
-                mockHotkeyContext.chordBuffer.append,
-            ).not.toHaveBeenCalled();
+            expect(mockHotkeyContext.chordBuffer.append).not.toHaveBeenCalled();
         });
 
         it('calls original handleKey when called on non-top scope', () => {
@@ -377,9 +375,9 @@ describe('InputHandler', () => {
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'test:command',
-                    undefined,
                     expect.anything(),
                     expect.any(KeyboardEvent),
+                    undefined,
                 );
             });
 
@@ -420,9 +418,9 @@ describe('InputHandler', () => {
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'test:command',
-                    { count: 5 },
                     expect.anything(),
                     expect.any(KeyboardEvent),
+                    { count: 5 },
                 );
             });
         });
@@ -717,9 +715,9 @@ describe('InputHandler', () => {
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'cmd:test',
-                    undefined,
                     expect.anything(),
                     expect.any(KeyboardEvent),
+                    undefined,
                 );
             });
 
@@ -748,9 +746,9 @@ describe('InputHandler', () => {
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'cmd:test',
-                    { arg1: 'value' },
                     expect.anything(),
                     expect.any(KeyboardEvent),
+                    { arg1: 'value' },
                 );
             });
 
@@ -778,11 +776,11 @@ describe('InputHandler', () => {
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'cmd:test',
-                    undefined,
                     expect.objectContaining({
                         killRing: expect.anything(),
                     }),
                     expect.any(KeyboardEvent),
+                    undefined,
                 );
             });
         });
@@ -961,9 +959,9 @@ describe('InputHandler', () => {
 
                 expect(mockCommandRegistry.execute).toHaveBeenCalledWith(
                     'test:chord',
-                    undefined,
                     expect.anything(),
                     expect.any(KeyboardEvent),
+                    undefined,
                 );
             });
         });

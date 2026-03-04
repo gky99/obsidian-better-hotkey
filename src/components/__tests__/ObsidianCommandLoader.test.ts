@@ -4,6 +4,8 @@ import type { App, Command as ObsidianCommand } from 'obsidian';
 import type { Command } from '../../types';
 import type { ExecutionContext } from '../execution-context/ExecutionContext';
 
+const keydown = new KeyboardEvent('keydown');
+
 /**
  * Helper to get a single command from result array after asserting length.
  */
@@ -158,7 +160,7 @@ describe('ObsidianCommandLoader', () => {
                 });
 
                 const cmd = firstCommand(loadObsidianCommands(app));
-                cmd.execute(undefined, context);
+                cmd.execute(context, keydown);
 
                 expect(editorCheckCb).toHaveBeenCalledWith(
                     false,
@@ -188,7 +190,7 @@ describe('ObsidianCommandLoader', () => {
                 });
 
                 const cmd = firstCommand(loadObsidianCommands(app));
-                cmd.execute(undefined, context);
+                cmd.execute(context, keydown);
 
                 expect(editorCb).toHaveBeenCalledWith(
                     mockView.editor,
@@ -212,7 +214,7 @@ describe('ObsidianCommandLoader', () => {
                 });
 
                 const cmd = firstCommand(loadObsidianCommands(app));
-                cmd.execute();
+                cmd.execute({} as unknown as ExecutionContext, keydown);
 
                 expect(checkCb).toHaveBeenCalledWith(false);
                 expect(cb).not.toHaveBeenCalled();
@@ -230,7 +232,7 @@ describe('ObsidianCommandLoader', () => {
                 });
 
                 const cmd = firstCommand(loadObsidianCommands(app));
-                cmd.execute();
+                cmd.execute({} as unknown as ExecutionContext, keydown);
 
                 expect(cb).toHaveBeenCalledOnce();
             });
@@ -253,32 +255,16 @@ describe('ObsidianCommandLoader', () => {
 
                 // First call: no view available
                 const noViewCtx = createMockContext(null);
-                cmd.execute(undefined, noViewCtx);
+                cmd.execute(noViewCtx, keydown);
                 expect(editorCb).not.toHaveBeenCalled();
 
                 // Second call: view becomes available
                 const withViewCtx = createMockContext(mockView);
-                cmd.execute(undefined, withViewCtx);
+                cmd.execute(withViewCtx, keydown);
                 expect(editorCb).toHaveBeenCalledWith(
                     mockView.editor,
                     mockView,
                 );
-            });
-
-            it('is a no-op when no context provided', () => {
-                const editorCb = vi.fn();
-                const app = createMockApp({
-                    'test:cmd': {
-                        id: 'test:cmd',
-                        name: 'Test',
-                        editorCallback: editorCb,
-                    },
-                });
-
-                const cmd = firstCommand(loadObsidianCommands(app));
-                cmd.execute();
-
-                expect(editorCb).not.toHaveBeenCalled();
             });
 
             it('calls editorCheckCallback with checking=false', () => {
@@ -295,7 +281,7 @@ describe('ObsidianCommandLoader', () => {
                 });
 
                 const cmd = firstCommand(loadObsidianCommands(app));
-                cmd.execute(undefined, context);
+                cmd.execute(context, keydown);
 
                 expect(ecCb).toHaveBeenCalledWith(
                     false,
@@ -442,7 +428,7 @@ describe('ObsidianCommandLoader', () => {
                 });
 
                 const cmd = firstCommand(loadObsidianCommands(app));
-                cmd.execute();
+                cmd.execute({} as unknown as ExecutionContext, keydown);
 
                 expect(cb).toHaveBeenCalledOnce();
                 expect(cb).toHaveBeenCalledWith();
@@ -459,7 +445,7 @@ describe('ObsidianCommandLoader', () => {
                 });
 
                 const cmd = firstCommand(loadObsidianCommands(app));
-                cmd.execute();
+                cmd.execute({} as unknown as ExecutionContext, keydown);
 
                 expect(cCb).toHaveBeenCalledWith(false);
             });

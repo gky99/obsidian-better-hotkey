@@ -87,7 +87,7 @@ External APIs: System Clipboard, Obsidian Editor API, Obsidian Workspace API
 
 **Hotkey Context Engine** — Tracks context state as a global key-value map and evaluates "when" clauses against it. Supports boolean, negation, AND, OR, and equality operators. Filters candidate hotkey entries by their `when` clause. Initialized once on plugin load and accessible to all components — the Matcher uses it to filter candidates, the Status Indicator may query it, and command actions read/write context during execution. Also stores cross-action state such as the `lastActionWasYank` flag used by the kill ring's yank-pop logic. See [ADR-007](ADR/ADR-007%20Context%20Engine%20Design.md).
 
-**Command Registry** — Stores and executes registered commands. On startup, loads Obsidian's built-in commands. Commands receive the Hotkey Context Engine and optional args at execution time.
+**Command Registry** — Stores and executes registered commands. On startup, loads Obsidian's built-in commands. Commands receive the Hotkey Context Engine and keyboard event at execution time, plus optional args if configured for the hotkey binding.
 
 **Keyboard Layout Service** — Detects the user's keyboard layout and provides translation between physical key codes and base characters. Uses `navigator.keyboard.getLayoutMap()` to build a code-to-character mapping, falling back to predefined QWERTY layout data if the API is unavailable. Exposes:
 
