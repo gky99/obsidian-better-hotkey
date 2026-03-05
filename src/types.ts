@@ -19,7 +19,9 @@ export interface KeyPress {
 
 /**
  * Represents a single hotkey entry in the configuration
- * Note: priority should not be serialized in config files - it's applied during registration
+ * In ConfigHotkeyEntry (before recalculate), priority holds the basePriority from config.
+ * In the hotkey table (after recalculate), priority holds the final computed value:
+ * basePriority + indexInAggregatedList
  */
 export interface HotkeyEntry {
     command: string; // "editor:save" or "-editor:save" for removal
@@ -27,7 +29,7 @@ export interface HotkeyEntry {
     when?: string; // Context condition (raw string): "editorFocused && !suggestionModalRendered"
     whenExpr: ContextKeyExpression; // Pre-parsed AST — always defined (TrueExpr when no "when" clause)
     args?: Record<string, unknown>;
-    priority: Priority; // Priority level for conflict resolution
+    priority: number; // Priority number; higher = wins. See HotkeyEntry JSDoc for lifecycle.
 }
 
 /**
@@ -39,15 +41,6 @@ export interface ConfigHotkeyEntry extends HotkeyEntry {
     hotkeyString: string; // original string notation, e.g. "ctrl+k"
 }
 
-/**
- * Priority levels for hotkey resolution
- * Lower number = higher priority
- */
-export enum Priority {
-    User = 0, // Highest
-    Preset = 1,
-    Plugin = 2, // Lowest
-}
 
 /**
  * Result of matching a key sequence against registered hotkeys

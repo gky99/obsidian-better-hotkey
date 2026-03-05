@@ -82,7 +82,7 @@ export class HotkeyMatcher {
 
     /**
      * Select highest priority entry from candidates
-     * Lower priority number = higher priority (User=0, Preset=1, Plugin=2)
+     * Higher priority number = wins (finalPriority = basePriority + indexInAggregatedList)
      */
     private selectHighestPriority(entries: HotkeyEntry[]): HotkeyEntry {
         if (entries.length === 0) {
@@ -90,7 +90,7 @@ export class HotkeyMatcher {
         }
 
         return entries.reduce((highest, current) => {
-            return current.priority < highest.priority ? current : highest;
+            return current.priority > highest.priority ? current : highest;
         });
     }
 

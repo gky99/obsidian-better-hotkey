@@ -5,7 +5,6 @@
  */
 
 import type { ConfigHotkeyEntry, HotkeyEntry } from '../../types';
-import { Priority } from '../../types';
 import { canonicalizeSequence, SPECIAL_KEY_CODE_MAP } from '../../utils/hotkey';
 import { keyboardLayoutService } from '../KeyboardLayoutService';
 
@@ -34,15 +33,15 @@ export class HotkeyManager {
     }
 
     /**
-     * Add hotkey to table with specified priority and trigger onChange callback
+     * Add hotkey to table with specified final priority and trigger onChange callback
      */
-    insert(entry: HotkeyEntry, priority: Priority): void {
+    insert(entry: HotkeyEntry, finalPriority: number): void {
         const key = makeCompositeKey(entry);
 
         // Create a new entry with the specified priority
         const entryWithPriority: HotkeyEntry = {
             ...entry,
-            priority,
+            priority: finalPriority,
         };
 
         this.hotkeyTable.set(key, entryWithPriority);
@@ -60,20 +59,10 @@ export class HotkeyManager {
     }
 
     /**
-     * Clear all hotkeys (or specific priority level)
+     * Clear all hotkeys
      */
-    clear(priority?: Priority): void {
-        if (priority !== undefined) {
-            // Clear only entries with the specified priority
-            for (const [key, entry] of this.hotkeyTable.entries()) {
-                if (entry.priority === priority) {
-                    this.hotkeyTable.delete(key);
-                }
-            }
-        } else {
-            // Clear all entries
-            this.hotkeyTable.clear();
-        }
+    clear(): void {
+        this.hotkeyTable.clear();
         this.triggerOnChange();
     }
 
@@ -81,6 +70,14 @@ export class HotkeyManager {
      * Batch replace the entire hotkey table from ConfigManager sources.
      * Processes preset → plugin → user entries, applies user removal directives,
      * then fires onChange exactly once.
+     *
+     * Two-phase approach:
+     * 1. Insert/remove all entries using basePriority as the initial priority value.
+     * 2. Reindex: assign finalPriority = basePriority + index for each surviving entry,
+     *    in insertion order (Map preserves insertion order: preset → plugin → user).
+     *
+     * Higher index = higher final priority, so user entries always beat same-category
+     * preset/plugin entries.
      */
     recalculate(
         preset: ConfigHotkeyEntry[],
@@ -89,15 +86,16 @@ export class HotkeyManager {
     ): void {
         this.hotkeyTable.clear();
 
+        // Phase 1: insert/remove (priority assigned in Phase 2)
         for (const entry of preset) {
             if (!entry.removal) {
-                this.insertEntry(entry, Priority.Preset);
+                this.insertEntry(entry);
             }
         }
 
         for (const entry of plugin) {
             if (!entry.removal) {
-                this.insertEntry(entry, Priority.Plugin);
+                this.insertEntry(entry);
             }
         }
 
@@ -106,8 +104,15 @@ export class HotkeyManager {
             if (entry.removal) {
                 this.applyRemoval(entry);
             } else {
-                this.insertEntry(entry, Priority.User);
+                this.insertEntry(entry);
             }
+        }
+
+        // Phase 2: reindex — finalPriority = basePriority + index (Map iteration order = insertion order)
+        let index = 0;
+        for (const [key, entry] of this.hotkeyTable) {
+            this.hotkeyTable.set(key, { ...entry, priority: entry.priority + index });
+            index++;
         }
 
         this.triggerOnChange();
@@ -146,8 +151,9 @@ export class HotkeyManager {
      * Insert entry into table without triggering onChange.
      * Strips ConfigHotkeyEntry metadata (removal, hotkeyString) to store plain HotkeyEntry.
      * Translates each KeyPress.key to its physical code via the Keyboard Layout Service.
+     * Priority is set to entry.basePriority; recalculate() reindexes after all insertions.
      */
-    private insertEntry(entry: ConfigHotkeyEntry, priority: Priority): void {
+    private insertEntry(entry: ConfigHotkeyEntry): void {
         const hotkeyEntry: HotkeyEntry = {
             command: entry.command,
             key: entry.key.map((kp) => ({
@@ -155,7 +161,7 @@ export class HotkeyManager {
                 code: this.translateCode(kp.key),
             })),
             whenExpr: entry.whenExpr,
-            priority,
+            priority: entry.priority,
             ...(entry.when !== undefined && { when: entry.when }),
             ...(entry.args !== undefined && { args: entry.args }),
         };

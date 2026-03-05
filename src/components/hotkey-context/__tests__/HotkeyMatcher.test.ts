@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { HotkeyMatcher } from '../HotkeyMatcher';
 import type { HotkeyEntry, KeyPress } from '../../../types';
-import { Priority } from '../../../types';
 import { CONTEXT_KEY_TRUE } from '../../context-key-expression';
 
 function key(
@@ -19,7 +18,7 @@ function key(
 function entry(
     command: string,
     seq: KeyPress[],
-    priority: Priority = Priority.User,
+    priority = 0,
 ): HotkeyEntry {
     return { command, key: seq, priority, whenExpr: CONTEXT_KEY_TRUE };
 }
@@ -32,11 +31,11 @@ describe('HotkeyMatcher', () => {
     });
 
     describe('rebuild and exact matching', () => {
-        it('returns exact match with highest priority among candidates', () => {
+        it('returns exact match with highest priority number among candidates', () => {
             const seq = [key('x', 'KeyX', ['ctrl'])];
-            const eLow = entry('cmd.low', seq, Priority.Plugin); // priority 2
-            const eMid = entry('cmd.mid', seq, Priority.Preset); // priority 1
-            const eHigh = entry('cmd.high', seq, Priority.User); // priority 0
+            const eLow = entry('cmd.low', seq, 0);    // lowest priority
+            const eMid = entry('cmd.mid', seq, 500);  // middle priority
+            const eHigh = entry('cmd.high', seq, 1000); // highest priority
 
             matcher.rebuild([eLow, eMid, eHigh]);
 
@@ -49,8 +48,8 @@ describe('HotkeyMatcher', () => {
             const seq2 = [key('x', 'KeyX', ['shift', 'ctrl'])];
 
             // Register entries with same logical sequence but different modifier order
-            const e1 = entry('cmd.first', seq1, Priority.Preset);
-            const e2 = entry('cmd.second', seq2, Priority.User); // higher priority (0)
+            const e1 = entry('cmd.first', seq1, 0);
+            const e2 = entry('cmd.second', seq2, 1000); // higher priority number wins
 
             matcher.rebuild([e1, e2]);
 
@@ -59,7 +58,7 @@ describe('HotkeyMatcher', () => {
             const r2 = matcher.match(seq2);
             expect(r1.type).toBe('exact');
             expect(r2.type).toBe('exact');
-            // Both should resolve to e2 due to higher priority
+            // Both should resolve to e2 due to higher priority number
             expect((r1 as any).entry).toBe(e2);
             expect((r2 as any).entry).toBe(e2);
         });
@@ -70,7 +69,7 @@ describe('HotkeyMatcher', () => {
             const first = key('x', 'KeyX', ['ctrl']);
             const second = key('s', 'KeyS');
             const longSeq = [first, second];
-            const e = entry('cmd.save', longSeq, Priority.User);
+            const e = entry('cmd.save', longSeq, 0);
 
             matcher.rebuild([e]);
 
@@ -113,14 +112,13 @@ describe('HotkeyMatcher', () => {
     });
 
     describe('rebuild behavior', () => {
-        it('groups multiple entries under the same canonical key and matches afterwards', () => {
+        it('groups multiple entries under the same canonical key and picks highest priority number', () => {
             const seq = [key('a', 'KeyA')];
-            const e1 = entry('cmd.alpha', seq, Priority.Plugin);
-            const e2 = entry('cmd.beta', seq, Priority.User);
+            const e1 = entry('cmd.alpha', seq, 0);
+            const e2 = entry('cmd.beta', seq, 1000); // higher number wins
 
             matcher.rebuild([e1, e2]);
 
-            // Should match and pick highest priority (User)
             const result = matcher.match(seq);
             expect(result.type).toBe('exact');
             expect((result as any).entry).toBe(e2);

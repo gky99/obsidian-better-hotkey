@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ConfigManager } from '../ConfigManager';
 import type { ConfigHotkeyEntry } from '../../types';
-import { Priority } from '../../types';
 import type { DataAdapter } from 'obsidian';
 
 /**
@@ -80,7 +79,7 @@ describe('ConfigManager', () => {
 
     describe('loadAll', () => {
         describe('preset loading', () => {
-            it('loads valid preset and assigns Priority.Preset', async () => {
+            it('loads valid preset and assigns 0', async () => {
                 files[PRESET_PATH] = makePresetJson([
                     { command: 'kill-line', key: 'ctrl+k' },
                 ]);
@@ -89,7 +88,7 @@ describe('ConfigManager', () => {
                 const entries = manager.getPresetEntries();
                 expect(entries).toHaveLength(1);
                 expect(entries[0]!.command).toBe('kill-line');
-                expect(entries[0]!.priority).toBe(Priority.Preset);
+                expect(entries[0]!.priority).toBe(0);
                 expect(entries[0]!.hotkeyString).toBe('ctrl+k');
                 expect(entries[0]!.removal).toBe(false);
                 expect(entries[0]!.key).toHaveLength(1);
@@ -169,7 +168,7 @@ describe('ConfigManager', () => {
         });
 
         describe('user hotkey loading', () => {
-            it('loads user hotkeys and assigns Priority.User', async () => {
+            it('loads user hotkeys and assigns 0', async () => {
                 files[USER_PATH] = JSON.stringify([
                     { command: 'kill-line', key: 'ctrl+shift+k' },
                 ]);
@@ -178,7 +177,7 @@ describe('ConfigManager', () => {
                 const entries = manager.getUserEntries();
                 expect(entries).toHaveLength(1);
                 expect(entries[0]!.command).toBe('kill-line');
-                expect(entries[0]!.priority).toBe(Priority.User);
+                expect(entries[0]!.priority).toBe(0);
                 expect(entries[0]!.removal).toBe(false);
             });
 
@@ -238,7 +237,7 @@ describe('ConfigManager', () => {
     });
 
     describe('registerPluginHotkeys', () => {
-        it('registers entries with Priority.Plugin and fires onChange', () => {
+        it('registers entries with 3000 and fires onChange', () => {
             manager.registerPluginHotkeys('my-plugin', [
                 { command: 'plugin:cmd', key: 'ctrl+p' },
             ]);
@@ -246,7 +245,7 @@ describe('ConfigManager', () => {
             const entries = manager.getPluginEntries();
             expect(entries).toHaveLength(1);
             expect(entries[0]!.command).toBe('plugin:cmd');
-            expect(entries[0]!.priority).toBe(Priority.Plugin);
+            expect(entries[0]!.priority).toBe(3000);
             expect(mockOnChange).toHaveBeenCalledTimes(1);
         });
 
@@ -314,7 +313,7 @@ describe('ConfigManager', () => {
             expect(entries).toHaveLength(1);
             expect(entries[0]!.command).toBe('my-command');
             expect(entries[0]!.hotkeyString).toBe('ctrl+m');
-            expect(entries[0]!.priority).toBe(Priority.User);
+            expect(entries[0]!.priority).toBe(0);
 
             // Check file was written
             expect(files[USER_PATH]).toBeDefined();

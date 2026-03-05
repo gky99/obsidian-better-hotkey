@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ContextEngine } from '../ContextEngine';
-import { Priority } from '../../types';
 import type { HotkeyEntry, KeyPress, ContextSchema } from '../../types';
 import { deserialize, CONTEXT_KEY_TRUE } from '../context-key-expression';
 
@@ -21,7 +20,7 @@ function entry(
     command: string,
     seq: KeyPress[],
     when?: string,
-    priority: Priority = Priority.User,
+    priority = 0,
 ): HotkeyEntry {
     return {
         command,
@@ -346,9 +345,9 @@ describe('ContextEngine', () => {
             engine.setContext('context3', true);
 
             const entries: HotkeyEntry[] = [
-                entry('cmd3', [key('c')], 'context3', Priority.Plugin),
-                entry('cmd1', [key('a')], 'context1', Priority.User),
-                entry('cmd2', [key('b')], 'context2', Priority.Preset),
+                entry('cmd3', [key('c')], 'context3', 3000),
+                entry('cmd1', [key('a')], 'context1', 0),
+                entry('cmd2', [key('b')], 'context2', 0),
             ];
 
             const filtered = engine.filter(entries);

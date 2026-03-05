@@ -3,6 +3,18 @@
  */
 
 /**
+ * Base priority levels for hotkey resolution by operation category.
+ * Higher number = higher priority.
+ * Final priority = basePriority + indexInAggregatedList (computed in HotkeyManager.recalculate)
+ */
+export const BASE_PRIORITY = {
+    EDITOR: 0, // Editor / input element operations
+    WIDGET: 1000, // Widget operations (popover suggest, suggestion modal)
+    GLOBAL: 2000, // Global actions (open file, command palette)
+    EXTENSION: 3000, // Extension/plugin operations (default; overrideable at registration)
+} as const;
+
+/**
  * Kill & Yank command IDs (Dev Plan 2.3.1)
  * Custom implementation — Kill Ring integration, word boundary computation
  */

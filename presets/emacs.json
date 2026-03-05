@@ -3,104 +3,117 @@
     "description": "Standard Emacs keybindings",
     "version": "1.0.0",
     "hotkeys": [
-        { "command": "editor:forward-char", "key": "ctrl+f" },
-        { "command": "editor:backward-char", "key": "ctrl+b" },
-        { "command": "editor:next-line", "key": "ctrl+n" },
-        { "command": "editor:previous-line", "key": "ctrl+p" },
-        { "command": "editor:move-beginning-of-line", "key": "ctrl+a" },
-        { "command": "editor:move-end-of-line", "key": "ctrl+e" },
-        { "command": "editor:forward-word", "key": "alt+f" },
-        { "command": "editor:backward-word", "key": "alt+b" },
-        { "command": "editor:scroll-up", "key": "ctrl+v" },
-        { "command": "editor:scroll-down", "key": "alt+v" },
-        { "command": "editor:beginning-of-buffer", "key": "shift+alt+," },
-        { "command": "editor:end-of-buffer", "key": "shift+alt+." },
-        { "command": "editor:kill-line", "key": "ctrl+k" },
-        { "command": "editor:kill-region", "key": "ctrl+w" },
-        { "command": "editor:kill-word", "key": "alt+d" },
-        { "command": "editor:backward-kill-word", "key": "alt+Backspace" },
-        { "command": "editor:copy-region", "key": "alt+w" },
-        { "command": "editor:yank", "key": "ctrl+y" },
-        { "command": "editor:yank-pop", "key": "alt+y" },
+        { "command": "editor:forward-char", "key": "ctrl+f", "priority": 0 },
+        { "command": "editor:backward-char", "key": "ctrl+b", "priority": 0 },
+        { "command": "editor:next-line", "key": "ctrl+n", "priority": 0 },
+        { "command": "editor:previous-line", "key": "ctrl+p", "priority": 0 },
+        { "command": "editor:move-beginning-of-line", "key": "ctrl+a", "priority": 0 },
+        { "command": "editor:move-end-of-line", "key": "ctrl+e", "priority": 0 },
+        { "command": "editor:forward-word", "key": "alt+f", "priority": 0 },
+        { "command": "editor:backward-word", "key": "alt+b", "priority": 0 },
+        { "command": "editor:scroll-up", "key": "ctrl+v", "priority": 0 },
+        { "command": "editor:scroll-down", "key": "alt+v", "priority": 0 },
+        { "command": "editor:beginning-of-buffer", "key": "shift+alt+,", "priority": 0 },
+        { "command": "editor:end-of-buffer", "key": "shift+alt+.", "priority": 0 },
+        { "command": "editor:kill-line", "key": "ctrl+k", "priority": 0 },
+        { "command": "editor:kill-region", "key": "ctrl+w", "priority": 0 },
+        { "command": "editor:kill-word", "key": "alt+d", "priority": 0 },
+        { "command": "editor:backward-kill-word", "key": "alt+Backspace", "priority": 0 },
+        { "command": "editor:copy-region", "key": "alt+w", "priority": 0 },
+        { "command": "editor:yank", "key": "ctrl+y", "priority": 0 },
+        { "command": "editor:yank-pop", "key": "alt+y", "priority": 0 },
 
-        { "command": "editor:delete-char", "key": "ctrl+d" },
-        { "command": "editor:transpose-chars", "key": "ctrl+t" },
-        { "command": "editor:open-line", "key": "ctrl+o" },
+        { "command": "editor:delete-char", "key": "ctrl+d", "priority": 0 },
+        { "command": "editor:transpose-chars", "key": "ctrl+t", "priority": 0 },
+        { "command": "editor:open-line", "key": "ctrl+o", "priority": 0 },
 
-        { "command": "editor:upcase-word", "key": "alt+u" },
-        { "command": "editor:downcase-word", "key": "alt+l" },
-        { "command": "editor:upcase-region", "key": "ctrl+x ctrl+u" },
-        { "command": "editor:downcase-region", "key": "ctrl+x ctrl+l" },
+        { "command": "editor:upcase-word", "key": "alt+u", "priority": 0 },
+        { "command": "editor:downcase-word", "key": "alt+l", "priority": 0 },
+        { "command": "editor:upcase-region", "key": "ctrl+x ctrl+u", "priority": 0 },
+        { "command": "editor:downcase-region", "key": "ctrl+x ctrl+l", "priority": 0 },
 
-        { "command": "editor:keyboard-quit", "key": "ctrl+g" },
-        { "command": "editor:recenter-top-bottom", "key": "ctrl+l" },
-        { "command": "editor:undo", "key": "ctrl+/" },
-        { "command": "editor:undo", "key": "ctrl+x u" },
+        { "command": "editor:keyboard-quit", "key": "ctrl+g", "priority": 0 },
+        { "command": "editor:recenter-top-bottom", "key": "ctrl+l", "priority": 0 },
+        { "command": "editor:undo", "key": "ctrl+/", "priority": 0 },
+        { "command": "editor:undo", "key": "ctrl+x u", "priority": 0 },
 
         {
             "command": "suggest:next-option",
             "key": "ctrl+n",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:prev-option",
             "key": "ctrl+p",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:forward-char",
             "key": "ctrl+f",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:backward-char",
             "key": "ctrl+b",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:forward-word",
             "key": "alt+f",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:backward-word",
             "key": "alt+b",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:move-beginning-of-line",
             "key": "ctrl+a",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:move-end-of-line",
             "key": "ctrl+e",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:delete-char",
             "key": "ctrl+d",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:kill-line",
             "key": "ctrl+k",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:kill-word",
             "key": "alt+d",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:backward-kill-word",
             "key": "alt+Backspace",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         },
         {
             "command": "suggest:yank",
             "key": "ctrl+y",
-            "when": "suggestModalOpen"
+            "when": "suggestModalOpen",
+            "priority": 1000
         }
     ]
 }

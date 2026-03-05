@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HotkeyManager } from '../HotkeyManager';
 import { HotkeyMatcher } from '../HotkeyMatcher';
 import type { HotkeyEntry, KeyPress, ConfigHotkeyEntry } from '../../../types';
-import { Priority } from '../../../types';
 import { parseHotkeyString } from '../../../utils/hotkey';
 import { CONTEXT_KEY_TRUE } from '../../context-key-expression';
 
@@ -21,7 +20,7 @@ function key(
 function entry(
     command: string,
     seq: KeyPress[],
-    priority: Priority = Priority.User,
+    priority = 0,
 ): HotkeyEntry {
     return { command, key: seq, priority, whenExpr: CONTEXT_KEY_TRUE };
 }
@@ -29,7 +28,7 @@ function entry(
 function configEntry(
     command: string,
     keyString: string,
-    priority: Priority,
+    priority: number,
     removal = false,
 ): ConfigHotkeyEntry {
     const keyPresses = keyString ? parseHotkeyString(keyString) : [];
@@ -55,36 +54,28 @@ describe('HotkeyManager', () => {
 
     describe('insert', () => {
         it('inserts a new entry and triggers matcher rebuild with updated table', () => {
-            const e = entry('cmd.save', [key('x'), key('s')], Priority.Plugin);
+            const e = entry('cmd.save', [key('x'), key('s')], 2);
 
-            manager.insert(e, Priority.User);
+            manager.insert(e, 0);
 
             // Should call rebuild with the inserted entry, and priority overridden to specified one
             expect(mockOnChange.mock.calls.length).toBe(1);
             const [entries] = mockOnChange.mock.calls[0]!;
             expect(entries).toHaveLength(1);
-            expect(entries[0]).toEqual({ ...e, priority: Priority.User });
+            expect(entries[0]).toEqual({ ...e, priority: 0 });
         });
 
         it('overwrites existing entry with same canonical sequence and command (composite key)', () => {
-            const first = entry(
-                'cmd.open',
-                [key('x'), key('o')],
-                Priority.Plugin,
-            );
-            const second = entry(
-                'cmd.open',
-                [key('x'), key('o')],
-                Priority.Preset,
-            );
+            const first = entry('cmd.open', [key('x'), key('o')], 2);
+            const second = entry('cmd.open', [key('x'), key('o')], 1);
 
-            manager.insert(first, Priority.Plugin);
-            manager.insert(second, Priority.User); // same composite key; should overwrite
+            manager.insert(first, 2);
+            manager.insert(second, 500); // same composite key; should overwrite
 
             expect(mockOnChange.mock.calls.length).toBe(2);
             const [entries] = mockOnChange.mock.calls.at(-1)!;
             expect(entries).toHaveLength(1);
-            expect(entries[0]).toEqual({ ...second, priority: Priority.User });
+            expect(entries[0]).toEqual({ ...second, priority: 500 });
         });
 
         it('composite key uses canonicalized sequence (modifier ordering insensitive)', () => {
@@ -92,26 +83,20 @@ describe('HotkeyManager', () => {
             const seq2 = [key('x', 'KeyX', ['shift', 'ctrl'])];
 
             // Different insertion orders for modifiers should canonicalize to same key
-            manager.insert(
-                entry('cmd.toggle', seq1, Priority.Plugin),
-                Priority.Plugin,
-            );
-            manager.insert(
-                entry('cmd.toggle', seq2, Priority.Plugin),
-                Priority.User,
-            );
+            manager.insert(entry('cmd.toggle', seq1, 2), 2);
+            manager.insert(entry('cmd.toggle', seq2, 2), 0);
 
             const [entries] = mockOnChange.mock.calls.at(-1)!;
             expect(entries).toHaveLength(1);
             // Last insert should win and reflect provided priority
-            expect(entries[0].priority).toBe(Priority.User);
+            expect(entries[0].priority).toBe(0);
         });
     });
 
     describe('remove', () => {
         it('removes an existing entry and triggers matcher rebuild', () => {
-            const e = entry('cmd.save', [key('x'), key('s')], Priority.Plugin);
-            manager.insert(e, Priority.Plugin);
+            const e = entry('cmd.save', [key('x'), key('s')], 2);
+            manager.insert(e, 2);
             expect(mockOnChange.mock.calls.length).toBe(1);
 
             manager.remove(e);
@@ -122,7 +107,7 @@ describe('HotkeyManager', () => {
         });
 
         it('no-op remove still triggers rebuild (idempotent behavior)', () => {
-            const e = entry('cmd.missing', [key('z')], Priority.Plugin);
+            const e = entry('cmd.missing', [key('z')], 2);
 
             manager.remove(e);
 
@@ -133,69 +118,24 @@ describe('HotkeyManager', () => {
     });
 
     describe('clear', () => {
-        it('clears all entries when called without priority', () => {
-            manager.insert(
-                entry('cmd.a', [key('a')], Priority.User),
-                Priority.User,
-            );
-            manager.insert(
-                entry('cmd.b', [key('b')], Priority.Preset),
-                Priority.Preset,
-            );
-            manager.insert(
-                entry('cmd.c', [key('c')], Priority.Plugin),
-                Priority.Plugin,
-            );
+        it('clears all entries', () => {
+            manager.insert(entry('cmd.a', [key('a')], 0), 0);
+            manager.insert(entry('cmd.b', [key('b')], 0), 1);
+            manager.insert(entry('cmd.c', [key('c')], 0), 2);
 
             manager.clear();
 
             const [entries] = mockOnChange.mock.calls.at(-1)!;
             expect(entries).toHaveLength(0);
         });
-
-        it('clears only entries of the specified priority', () => {
-            manager.insert(
-                entry('cmd.a', [key('a')], Priority.User),
-                Priority.User,
-            );
-            manager.insert(
-                entry('cmd.b', [key('b')], Priority.Preset),
-                Priority.Preset,
-            );
-            manager.insert(
-                entry('cmd.c', [key('c')], Priority.Plugin),
-                Priority.Plugin,
-            );
-
-            manager.clear(Priority.Preset);
-
-            const [entries] = mockOnChange.mock.calls.at(-1)!;
-            // Should keep User and Plugin entries
-            expect(entries).toEqual(
-                expect.arrayContaining([
-                    expect.objectContaining({
-                        command: 'cmd.a',
-                        priority: Priority.User,
-                    }),
-                    expect.objectContaining({
-                        command: 'cmd.c',
-                        priority: Priority.Plugin,
-                    }),
-                ]),
-            );
-            // And remove Preset
-            expect(
-                entries.find((e: HotkeyEntry) => e.command === 'cmd.b'),
-            ).toBeUndefined();
-        });
     });
 
     describe('getAll and reindexMatcher', () => {
         it('getAll returns a shallow copy of current hotkeys', () => {
-            const a = entry('cmd.a', [key('a')], Priority.User);
-            const b = entry('cmd.b', [key('b')], Priority.Plugin);
-            manager.insert(a, Priority.User);
-            manager.insert(b, Priority.Plugin);
+            const a = entry('cmd.a', [key('a')], 0);
+            const b = entry('cmd.b', [key('b')], 2);
+            manager.insert(a, 0);
+            manager.insert(b, 2);
 
             const all = manager.getAll();
             expect(all).toHaveLength(2);
@@ -209,12 +149,12 @@ describe('HotkeyManager', () => {
     describe('recalculate', () => {
         it('clears existing table and inserts preset + plugin entries', () => {
             // Pre-populate with something
-            manager.insert(entry('old-cmd', [key('z')]), Priority.User);
+            manager.insert(entry('old-cmd', [key('z')]), 0);
             mockOnChange.mockClear();
 
             manager.recalculate(
-                [configEntry('preset-cmd', 'ctrl+k', Priority.Preset)],
-                [configEntry('plugin-cmd', 'ctrl+p', Priority.Plugin)],
+                [configEntry('preset-cmd', 'ctrl+k', 0)],
+                [configEntry('plugin-cmd', 'ctrl+p', 0)],
                 [],
             );
 
@@ -232,45 +172,64 @@ describe('HotkeyManager', () => {
             ).toBeDefined();
         });
 
-        it('inserts preset entries with Preset priority and plugin entries with Plugin priority', () => {
+        it('assigns finalPriority = basePriority + index across aggregated list', () => {
             manager.recalculate(
-                [configEntry('preset-cmd', 'ctrl+k', Priority.Preset)],
-                [configEntry('plugin-cmd', 'ctrl+p', Priority.Plugin)],
-                [],
+                [configEntry('preset-cmd', 'ctrl+k', 0)],  // basePriority=0, index=0 → final=0
+                [configEntry('plugin-cmd', 'ctrl+p', 0)],  // basePriority=0, index=1 → final=1
+                [configEntry('user-cmd', 'ctrl+u', 0)],    // basePriority=0, index=2 → final=2
             );
 
             const [entries] = mockOnChange.mock.calls[0]!;
             expect(
-                entries.find((e: HotkeyEntry) => e.command === 'preset-cmd')!
-                    .priority,
-            ).toBe(Priority.Preset);
+                entries.find((e: HotkeyEntry) => e.command === 'preset-cmd')!.priority,
+            ).toBe(0);
             expect(
-                entries.find((e: HotkeyEntry) => e.command === 'plugin-cmd')!
-                    .priority,
-            ).toBe(Priority.Plugin);
+                entries.find((e: HotkeyEntry) => e.command === 'plugin-cmd')!.priority,
+            ).toBe(1);
+            expect(
+                entries.find((e: HotkeyEntry) => e.command === 'user-cmd')!.priority,
+            ).toBe(2);
         });
 
-        it('inserts user entries with User priority', () => {
+        it('widget basePriority beats editor basePriority regardless of source index', () => {
+            // Widget in preset (index=0): 1000 + 0 = 1000
+            // Editor in user (index=1): 0 + 1 = 1
+            manager.recalculate(
+                [configEntry('widget-cmd', 'ctrl+n', 1000)],
+                [],
+                [configEntry('editor-cmd', 'ctrl+n', 0)],
+            );
+
+            const [entries] = mockOnChange.mock.calls[0]!;
+            expect(
+                entries.find((e: HotkeyEntry) => e.command === 'widget-cmd')!.priority,
+            ).toBe(1000); // 1000 + 0
+            expect(
+                entries.find((e: HotkeyEntry) => e.command === 'editor-cmd')!.priority,
+            ).toBe(1); // 0 + 1
+        });
+
+        it('inserts user entries with correct index offset', () => {
             manager.recalculate(
                 [],
                 [],
-                [configEntry('user-cmd', 'ctrl+u', Priority.User)],
+                [configEntry('user-cmd', 'ctrl+u', 0)],
             );
 
             const [entries] = mockOnChange.mock.calls[0]!;
             expect(entries).toHaveLength(1);
             expect(entries[0].command).toBe('user-cmd');
-            expect(entries[0].priority).toBe(Priority.User);
+            expect(entries[0].priority).toBe(0); // basePriority=0, index=0 → final=0
         });
 
         it('removal by hotkeyString removes specific binding, keeps others for same command', () => {
             manager.recalculate(
                 [
-                    configEntry('kill-line', 'ctrl+k', Priority.Preset),
-                    configEntry('kill-line', 'ctrl+shift+k', Priority.Preset),
+                    configEntry('kill-line', 'ctrl+k', 0),
+                    configEntry('kill-line', 'ctrl+shift+k', 0),
                 ],
                 [],
-                [configEntry('kill-line', 'ctrl+k', Priority.User, true)],
+                [configEntry('kill-line', 'ctrl+k', 0, true)],
             );
 
             const [entries] = mockOnChange.mock.calls[0]!;
@@ -282,11 +241,11 @@ describe('HotkeyManager', () => {
         it('removal without hotkeyString is silently ignored', () => {
             manager.recalculate(
                 [
-                    configEntry('kill-word', 'meta+d', Priority.Preset),
-                    configEntry('kill-word', 'ctrl+d', Priority.Preset),
+                    configEntry('kill-word', 'meta+d', 0),
+                    configEntry('kill-word', 'ctrl+d', 0),
                 ],
                 [],
-                [configEntry('kill-word', '', Priority.User, true)],
+                [configEntry('kill-word', '', 0, true)],
             );
 
             const [entries] = mockOnChange.mock.calls[0]!;
@@ -297,33 +256,35 @@ describe('HotkeyManager', () => {
         it('fires onChange exactly once', () => {
             manager.recalculate(
                 [
-                    configEntry('a', 'ctrl+a', Priority.Preset),
-                    configEntry('b', 'ctrl+b', Priority.Preset),
+                    configEntry('a', 'ctrl+a', 0),
+                    configEntry('b', 'ctrl+b', 0),
                 ],
-                [configEntry('c', 'ctrl+c', Priority.Plugin)],
-                [configEntry('d', 'ctrl+d', Priority.User)],
+                [configEntry('c', 'ctrl+c', 0)],
+                [configEntry('d', 'ctrl+d', 0)],
             );
 
             expect(mockOnChange).toHaveBeenCalledTimes(1);
         });
 
-        it('user entry overrides preset with same key+command (higher priority)', () => {
+        it('user entry replaces preset with same key+command (takes preset map position)', () => {
+            // Same composite key (ctrl+k::cmd): user entry overwrites preset in-place.
+            // After reindex the single surviving entry is at index 0.
             manager.recalculate(
-                [configEntry('cmd', 'ctrl+k', Priority.Preset)],
+                [configEntry('cmd', 'ctrl+k', 0)],
                 [],
-                [configEntry('cmd', 'ctrl+k', Priority.User)],
+                [configEntry('cmd', 'ctrl+k', 0)],
             );
 
             const [entries] = mockOnChange.mock.calls[0]!;
             expect(entries).toHaveLength(1);
-            expect(entries[0].priority).toBe(Priority.User);
+            expect(entries[0].priority).toBe(0); // basePriority(0) + index(0) — only one entry
         });
 
         it('removal of non-existent binding is silently ignored', () => {
             manager.recalculate(
-                [configEntry('other', 'ctrl+o', Priority.Preset)],
+                [configEntry('other', 'ctrl+o', 0)],
                 [],
-                [configEntry('nonexistent', 'ctrl+z', Priority.User, true)],
+                [configEntry('nonexistent', 'ctrl+z', 0, true)],
             );
 
             const [entries] = mockOnChange.mock.calls[0]!;
@@ -333,7 +294,7 @@ describe('HotkeyManager', () => {
 
         it('strips config metadata from stored entries', () => {
             manager.recalculate(
-                [configEntry('test', 'ctrl+t', Priority.Preset)],
+                [configEntry('test', 'ctrl+t', 0)],
                 [],
                 [],
             );
@@ -348,8 +309,8 @@ describe('HotkeyManager', () => {
                 [],
                 [],
                 [
-                    configEntry('cmd', 'ctrl+a', Priority.User),
-                    configEntry('cmd', 'ctrl+a', Priority.User, true),
+                    configEntry('cmd', 'ctrl+a', 0),
+                    configEntry('cmd', 'ctrl+a', 0, true),
                 ],
             );
 
@@ -364,7 +325,7 @@ describe('HotkeyManager', () => {
             manager.setOnChange((entries) => matcher.rebuild(entries));
 
             manager.recalculate(
-                [configEntry('kill-line', 'ctrl+k', Priority.Preset)],
+                [configEntry('kill-line', 'ctrl+k', 0)],
                 [],
                 [],
             );
@@ -381,9 +342,9 @@ describe('HotkeyManager', () => {
             manager.setOnChange((entries) => matcher.rebuild(entries));
 
             manager.recalculate(
-                [configEntry('kill-line', 'ctrl+k', Priority.Preset)],
+                [configEntry('kill-line', 'ctrl+k', 0)],
                 [],
-                [configEntry('kill-line', 'ctrl+k', Priority.User, true)],
+                [configEntry('kill-line', 'ctrl+k', 0, true)],
             );
 
             const result = matcher.match(parseHotkeyString('ctrl+k'));
@@ -402,7 +363,7 @@ describe('HotkeyManager', () => {
             freshManager.setOnChange(mockCb);
 
             freshManager.recalculate(
-                [configEntry('kill-line', 'ctrl+k', Priority.Preset)],
+                [configEntry('kill-line', 'ctrl+k', 0)],
                 [],
                 [],
             );
@@ -424,7 +385,7 @@ describe('HotkeyManager', () => {
             freshManager.setOnChange(mockCb);
 
             freshManager.recalculate(
-                [configEntry('keyboard-quit', 'Escape', Priority.Preset)],
+                [configEntry('keyboard-quit', 'Escape', 0)],
                 [],
                 [],
             );
@@ -445,7 +406,7 @@ describe('HotkeyManager', () => {
             freshManager.setOnChange(mockCb);
 
             freshManager.recalculate(
-                [configEntry('set-mark', 'ctrl+Space', Priority.Preset)],
+                [configEntry('set-mark', 'ctrl+Space', 0)],
                 [],
                 [],
             );
@@ -466,7 +427,7 @@ describe('HotkeyManager', () => {
             freshManager.setOnChange(mockCb);
 
             freshManager.recalculate(
-                [configEntry('save', 'ctrl+x ctrl+s', Priority.Preset)],
+                [configEntry('save', 'ctrl+x ctrl+s', 0)],
                 [],
                 [],
             );

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InputHandler } from '../InputHandler';
 import { KILL_YANK_COMMANDS } from '../../constants';
 import type { KeyPress, MatchResult } from '../../types';
-import { Priority } from '../../types';
 import type { Plugin, App } from 'obsidian';
 import { Scope } from 'obsidian';
 import { CONTEXT_KEY_TRUE } from '../context-key-expression';
@@ -232,7 +231,7 @@ describe('InputHandler', () => {
                 entry: {
                     command: 'test:cmd',
                     key: [key('a', 'KeyA')],
-                    priority: Priority.User,
+                    priority: 0,
                     whenExpr: CONTEXT_KEY_TRUE,
                 },
             });
@@ -354,7 +353,7 @@ describe('InputHandler', () => {
                     entry: {
                         command: 'test:command',
                         key: [key('s', 'KeyS', ['ctrl'])],
-                        priority: Priority.User,
+                        priority: 0,
                         whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
@@ -404,7 +403,7 @@ describe('InputHandler', () => {
                     entry: {
                         command: 'test:command',
                         key: [key('s', 'KeyS', ['ctrl'])],
-                        priority: Priority.User,
+                        priority: 0,
                         whenExpr: CONTEXT_KEY_TRUE,
                         args: { count: 5 },
                     },
@@ -653,7 +652,7 @@ describe('InputHandler', () => {
                     entry: {
                         command: 'test:command',
                         key: [key('s', 'KeyS', ['ctrl'])],
-                        priority: Priority.User,
+                        priority: 0,
                         whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
@@ -697,7 +696,7 @@ describe('InputHandler', () => {
                     entry: {
                         command: 'cmd:test',
                         key: [key('t', 'KeyT', ['ctrl'])],
-                        priority: Priority.User,
+                        priority: 0,
                         whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
@@ -727,7 +726,7 @@ describe('InputHandler', () => {
                     entry: {
                         command: 'cmd:test',
                         key: [key('t', 'KeyT', ['ctrl'])],
-                        priority: Priority.User,
+                        priority: 0,
                         whenExpr: CONTEXT_KEY_TRUE,
                         args: { arg1: 'value' },
                     },
@@ -758,7 +757,7 @@ describe('InputHandler', () => {
                     entry: {
                         command: 'cmd:test',
                         key: [key('t', 'KeyT', ['ctrl'])],
-                        priority: Priority.User,
+                        priority: 0,
                         whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
@@ -792,7 +791,7 @@ describe('InputHandler', () => {
                     entry: {
                         command: KILL_YANK_COMMANDS.YANK,
                         key: [key('y', 'KeyY', ['ctrl'])],
-                        priority: Priority.User,
+                        priority: 0,
                         whenExpr: CONTEXT_KEY_TRUE,
                     },
                 };
@@ -933,7 +932,7 @@ describe('InputHandler', () => {
                         entry: {
                             command: 'test:chord',
                             key: sequence2,
-                            priority: Priority.User,
+                            priority: 0,
                             whenExpr: CONTEXT_KEY_TRUE,
                         },
                     });

@@ -12,7 +12,7 @@
 import type { DataAdapter } from 'obsidian';
 import { normalizePath } from 'obsidian';
 import type { ConfigHotkeyEntry, Disposable, KeyPress } from '../types';
-import { Priority } from '../types';
+import { BASE_PRIORITY } from '../constants';
 import { parseHotkeyString } from '../utils/hotkey';
 import { deserialize } from './context-key-expression';
 
@@ -24,6 +24,7 @@ interface RawHotkeyBinding {
     key?: string;
     when?: string;
     args?: Record<string, unknown>;
+    priority?: number; // basePriority for conflict resolution; defaults to BASE_PRIORITY.EDITOR (0) if omitted
 }
 
 /**
@@ -77,10 +78,7 @@ export class ConfigManager {
         );
         const presetData = await this.readJsonFile<PresetFileData>(presetPath);
         if (presetData !== null && Array.isArray(presetData.hotkeys)) {
-            this.presetEntries = this.parseBindings(
-                presetData.hotkeys,
-                Priority.Preset,
-            );
+            this.presetEntries = this.parseBindings(presetData.hotkeys);
         } else {
             this.presetEntries = [];
         }
@@ -91,7 +89,7 @@ export class ConfigManager {
         );
         const userData = await this.readJsonFile<RawHotkeyBinding[]>(userPath);
         if (userData !== null && Array.isArray(userData)) {
-            this.userEntries = this.parseBindings(userData, Priority.User);
+            this.userEntries = this.parseBindings(userData);
         } else {
             this.userEntries = [];
         }
@@ -102,12 +100,14 @@ export class ConfigManager {
     /**
      * Register hotkeys from a plugin. Same pluginName replaces all previous entries.
      * Returns Disposable that removes all entries for this plugin.
+     * @param defaultBasePriority - Base priority for bindings without an explicit priority field
      */
     registerPluginHotkeys(
         pluginName: string,
         bindings: RawHotkeyBinding[],
+        defaultBasePriority: number = BASE_PRIORITY.EXTENSION,
     ): Disposable {
-        const entries = this.parseBindings(bindings, Priority.Plugin);
+        const entries = this.parseBindings(bindings, defaultBasePriority);
         this.pluginEntries.set(pluginName, entries);
         this.fireOnChange();
 
@@ -127,13 +127,14 @@ export class ConfigManager {
         command: string,
         key?: string,
         when?: string,
+        basePriority: number = BASE_PRIORITY.EDITOR,
     ): Promise<void> {
         const entry = this.parseConfigEntry(
             command,
             key,
             when,
             undefined,
-            Priority.User,
+            basePriority,
         );
         if (entry === null) {
             return;
@@ -203,10 +204,11 @@ export class ConfigManager {
 
     /**
      * Parse an array of raw bindings into ConfigHotkeyEntry[], skipping invalid entries.
+     * @param defaultBasePriority - Used when a binding does not specify its own priority
      */
     private parseBindings(
         bindings: RawHotkeyBinding[],
-        priority: Priority,
+        defaultBasePriority: number = BASE_PRIORITY.EDITOR,
     ): ConfigHotkeyEntry[] {
         const result: ConfigHotkeyEntry[] = [];
         for (const binding of bindings) {
@@ -215,7 +217,7 @@ export class ConfigManager {
                 binding.key,
                 binding.when,
                 binding.args,
-                priority,
+                binding.priority ?? defaultBasePriority,
             );
             if (entry !== null) {
                 result.push(entry);
@@ -232,7 +234,7 @@ export class ConfigManager {
         keyString: string | undefined,
         when: string | undefined,
         args: Record<string, unknown> | undefined,
-        priority: Priority,
+        priority: number,
     ): ConfigHotkeyEntry | null {
         // Detect removal: command starts with "-"
         let command = rawCommand;
@@ -285,6 +287,9 @@ export class ConfigManager {
             }
             if (entry.when) {
                 binding.when = entry.when;
+            }
+            if (entry.priority !== BASE_PRIORITY.EDITOR) {
+                binding.priority = entry.priority;
             }
             return binding;
         });

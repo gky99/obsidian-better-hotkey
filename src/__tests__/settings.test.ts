@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { BetterHotkeySettingTab, DEFAULT_SETTINGS } from '../settings';
 import type { MyPluginSettings } from '../settings';
 import type { ConfigHotkeyEntry, Command } from '../types';
-import { Priority } from '../types';
 import { CONTEXT_KEY_TRUE } from '../components/context-key-expression';
 
 // Polyfill Obsidian's createEl/createDiv on HTMLElement for jsdom
@@ -66,7 +65,7 @@ function makeConfigEntry(
                 code: 'KeyK',
             },
         ],
-        priority: Priority.Preset,
+        priority: 0,
         removal: false,
         hotkeyString: 'ctrl+k',
         when: undefined,
@@ -350,7 +349,7 @@ describe('BetterHotkeySettingTab', () => {
                         makeConfigEntry({
                             command: 'kill-line',
                             hotkeyString: 'ctrl+k',
-                            priority: Priority.User,
+                            priority: 0,
                         }),
                     ],
                 });
@@ -377,7 +376,7 @@ describe('BetterHotkeySettingTab', () => {
                                 makeConfigEntry({
                                     command: 'ext-cmd',
                                     hotkeyString: 'ctrl+shift+e',
-                                    priority: Priority.Plugin,
+                                    priority: 3000,
                                 }),
                             ],
                         },
@@ -409,7 +408,7 @@ describe('BetterHotkeySettingTab', () => {
                             command: 'kill-line',
                             hotkeyString: 'ctrl+k',
                             removal: true,
-                            priority: Priority.User,
+                            priority: 0,
                         }),
                     ],
                 });
@@ -453,7 +452,7 @@ describe('BetterHotkeySettingTab', () => {
                             command: 'kill-line',
                             hotkeyString: 'ctrl+k',
                             removal: true,
-                            priority: Priority.User,
+                            priority: 0,
                         }),
                     ],
                 });
@@ -628,7 +627,7 @@ describe('BetterHotkeySettingTab', () => {
                         makeConfigEntry({
                             command: 'kill-line',
                             hotkeyString: 'ctrl+shift+k',
-                            priority: Priority.User,
+                            priority: 0,
                         }),
                     ],
                 });
@@ -658,7 +657,7 @@ describe('BetterHotkeySettingTab', () => {
                             command: 'kill-line',
                             hotkeyString: 'ctrl+k',
                             removal: true,
-                            priority: Priority.User,
+                            priority: 0,
                         }),
                     ],
                 });
@@ -718,7 +717,7 @@ describe('BetterHotkeySettingTab', () => {
                             makeConfigEntry({
                                 command: 'ext-cmd',
                                 hotkeyString: 'ctrl+e',
-                                priority: Priority.Plugin,
+                                priority: 3000,
                             }),
                         ],
                     },
