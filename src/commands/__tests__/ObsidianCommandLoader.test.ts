@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { loadObsidianCommands } from '../../commands/ObsidianCommandLoader';
+import { loadObsidianCommands } from '../ObsidianCommandLoader';
 import type { App, Command as ObsidianCommand } from 'obsidian';
 import type { Command } from '../../types';
-import type { ExecutionContext } from '../execution-context/ExecutionContext';
+import type { ExecutionContext } from '../../components/execution-context/ExecutionContext';
 
 const keydown = new KeyboardEvent('keydown');
 
