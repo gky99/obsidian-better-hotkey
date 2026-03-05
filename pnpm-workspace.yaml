@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - classic-level
+  - edgedriver
+  - geckodriver
+  - lefthook

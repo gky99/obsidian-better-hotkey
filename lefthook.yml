@@ -1,0 +1,13 @@
+pre-commit:
+    jobs:
+        - name: prettier
+          glob: '*.{ts,js,json,css,md,mjs}'
+          run: pnpm exec prettier --write {staged_files} && git add {staged_files}
+
+        - name: unit-tests
+          run: pnpm test
+          fail_text: 'Unit tests failed. Fix failing tests before committing.'
+
+        - name: lint
+          run: pnpm lint:fix
+          fail_text: 'Lint failed. Fix lint errors before committing.'
