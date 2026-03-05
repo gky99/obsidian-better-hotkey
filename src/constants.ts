@@ -108,20 +108,29 @@ export const CURSOR_MOVEMENT_COMMANDS = {
  */
 export const SUGGEST_COMMANDS = {
     // Selection navigation
-    NEXT_OPTION: 'suggest:next-option',
-    PREV_OPTION: 'suggest:prev-option',
+    NEXT_OPTION: 'suggest-modal:next-option',
+    PREV_OPTION: 'suggest-modal:prev-option',
     // Cursor movement
-    FORWARD_CHAR: 'suggest:forward-char',
-    BACKWARD_CHAR: 'suggest:backward-char',
-    FORWARD_WORD: 'suggest:forward-word',
-    BACKWARD_WORD: 'suggest:backward-word',
-    MOVE_BEGINNING_OF_LINE: 'suggest:move-beginning-of-line',
-    MOVE_END_OF_LINE: 'suggest:move-end-of-line',
+    FORWARD_CHAR: 'suggest-modal:forward-char',
+    BACKWARD_CHAR: 'suggest-modal:backward-char',
+    FORWARD_WORD: 'suggest-modal:forward-word',
+    BACKWARD_WORD: 'suggest-modal:backward-word',
+    MOVE_BEGINNING_OF_LINE: 'suggest-modal:move-beginning-of-line',
+    MOVE_END_OF_LINE: 'suggest-modal:move-end-of-line',
     // Text modification
-    DELETE_CHAR: 'suggest:delete-char',
-    DELETE_BACKWARD_CHAR: 'suggest:delete-backward-char',
-    KILL_LINE: 'suggest:kill-line',
-    KILL_WORD: 'suggest:kill-word',
-    BACKWARD_KILL_WORD: 'suggest:backward-kill-word',
-    YANK: 'suggest:yank',
+    DELETE_CHAR: 'suggest-modal:delete-char',
+    DELETE_BACKWARD_CHAR: 'suggest-modal:delete-backward-char',
+    KILL_LINE: 'suggest-modal:kill-line',
+    KILL_WORD: 'suggest-modal:kill-word',
+    BACKWARD_KILL_WORD: 'suggest-modal:backward-kill-word',
+    YANK: 'suggest-modal:yank',
+} as const;
+
+/**
+ * Popover suggest command IDs
+ * Selection navigation for PopoverSuggest context (inline popovers, e.g. wikilinks)
+ */
+export const POPOVER_SUGGEST_COMMANDS = {
+    NEXT_OPTION: 'popover-suggest:next-option',
+    PREV_OPTION: 'popover-suggest:prev-option',
 } as const;

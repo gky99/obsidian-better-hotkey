@@ -226,4 +226,59 @@ describe('PopoverSuggestProxy', () => {
             expect(PopoverSuggest.prototype.close).toBe(origClose);
         });
     });
+
+    describe('SuggestionSelector', () => {
+        beforeEach(() => {
+            proxy.patch();
+            vi.clearAllMocks();
+        });
+
+        it('moveDown calls suggestions.moveDown on the active instance', () => {
+            const moveFn = vi.fn();
+            const fakePopover = Object.create(PopoverSuggest.prototype);
+            fakePopover.suggestions = { moveUp: vi.fn(), moveDown: moveFn };
+            fakePopover.open();
+
+            const event = new KeyboardEvent('keydown');
+            proxy.moveDown(event);
+
+            expect(moveFn).toHaveBeenCalledWith(event);
+        });
+
+        it('moveUp calls suggestions.moveUp on the active instance', () => {
+            const moveFn = vi.fn();
+            const fakePopover = Object.create(PopoverSuggest.prototype);
+            fakePopover.suggestions = { moveUp: moveFn, moveDown: vi.fn() };
+            fakePopover.open();
+
+            const event = new KeyboardEvent('keydown');
+            proxy.moveUp(event);
+
+            expect(moveFn).toHaveBeenCalledWith(event);
+        });
+
+        it('moveDown is a no-op when no active instance', () => {
+            expect(() => proxy.moveDown()).not.toThrow();
+        });
+
+        it('moveUp is a no-op when no active instance', () => {
+            expect(() => proxy.moveUp()).not.toThrow();
+        });
+
+        it('moveDown handles null suggestions gracefully', () => {
+            const fakePopover = Object.create(PopoverSuggest.prototype);
+            fakePopover.suggestions = null;
+            fakePopover.open();
+
+            expect(() => proxy.moveDown()).not.toThrow();
+        });
+
+        it('moveUp handles null suggestions gracefully', () => {
+            const fakePopover = Object.create(PopoverSuggest.prototype);
+            fakePopover.suggestions = null;
+            fakePopover.open();
+
+            expect(() => proxy.moveUp()).not.toThrow();
+        });
+    });
 });

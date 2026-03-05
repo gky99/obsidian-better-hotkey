@@ -7,8 +7,12 @@
 import { PopoverSuggest } from 'obsidian';
 import { contextEngine } from '../ContextEngine';
 import { CONTEXT_KEYS } from '../../constants';
+import type {
+    PopoverSuggestWithSuggestions,
+    SuggestionSelector,
+} from '../../types';
 
-export class PopoverSuggestProxy {
+export class PopoverSuggestProxy implements SuggestionSelector {
     private origOpen: () => void;
     private origClose: () => void;
     private activeInstance: PopoverSuggest<unknown> | null = null;
@@ -69,5 +73,21 @@ export class PopoverSuggestProxy {
 
     getActiveInstance(): PopoverSuggest<unknown> | null {
         return this.activeInstance;
+    }
+
+    moveUp(event?: KeyboardEvent): void {
+        if (!this.activeInstance) return;
+        const s = (
+            this.activeInstance as unknown as PopoverSuggestWithSuggestions
+        ).suggestions;
+        s?.moveUp(event);
+    }
+
+    moveDown(event?: KeyboardEvent): void {
+        if (!this.activeInstance) return;
+        const s = (
+            this.activeInstance as unknown as PopoverSuggestWithSuggestions
+        ).suggestions;
+        s?.moveDown(event);
     }
 }

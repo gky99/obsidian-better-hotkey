@@ -116,6 +116,16 @@ export interface SuggestModalWithChooser extends SuggestModal<unknown> {
     inputEl: HTMLInputElement;
 }
 
+// ─── Popover Suggest Private API Types ───
+
+/**
+ * Extended PopoverSuggest shape exposing the private suggestions property.
+ * Use: `(instance as unknown as PopoverSuggestWithSuggestions).suggestions`
+ */
+export interface PopoverSuggestWithSuggestions {
+    suggestions: SuggestChooser;
+}
+
 // ─── Suggest Modal Operation Interfaces ───
 
 /**

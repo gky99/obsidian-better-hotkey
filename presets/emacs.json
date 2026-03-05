@@ -38,79 +38,79 @@
         { "command": "editor:undo", "key": "ctrl+x u", "priority": 0 },
 
         {
-            "command": "suggest:next-option",
+            "command": "suggest-modal:next-option",
             "key": "ctrl+n",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:prev-option",
+            "command": "suggest-modal:prev-option",
             "key": "ctrl+p",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:forward-char",
+            "command": "suggest-modal:forward-char",
             "key": "ctrl+f",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:backward-char",
+            "command": "suggest-modal:backward-char",
             "key": "ctrl+b",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:forward-word",
+            "command": "suggest-modal:forward-word",
             "key": "alt+f",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:backward-word",
+            "command": "suggest-modal:backward-word",
             "key": "alt+b",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:move-beginning-of-line",
+            "command": "suggest-modal:move-beginning-of-line",
             "key": "ctrl+a",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:move-end-of-line",
+            "command": "suggest-modal:move-end-of-line",
             "key": "ctrl+e",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:delete-char",
+            "command": "suggest-modal:delete-char",
             "key": "ctrl+d",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:kill-line",
+            "command": "suggest-modal:kill-line",
             "key": "ctrl+k",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:kill-word",
+            "command": "suggest-modal:kill-word",
             "key": "alt+d",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:backward-kill-word",
+            "command": "suggest-modal:backward-kill-word",
             "key": "alt+Backspace",
             "when": "suggestModalOpen",
             "priority": 1000
         },
         {
-            "command": "suggest:yank",
+            "command": "suggest-modal:yank",
             "key": "ctrl+y",
             "when": "suggestModalOpen",
             "priority": 1000

@@ -10,6 +10,7 @@ import {
     createEditingCommands,
     createControlCommands,
     createSuggestCommands,
+    createPopoverSuggestCommands,
 } from './commands';
 import {
     InputHandler,
@@ -62,6 +63,12 @@ export default class MyPlugin extends Plugin {
         // Register suggest modal commands
         const suggestCommands = createSuggestCommands();
         for (const cmd of suggestCommands) {
+            this.commandRegistry.registerCommand(cmd);
+        }
+
+        // Register popover suggest commands
+        const popoverSuggestCommands = createPopoverSuggestCommands();
+        for (const cmd of popoverSuggestCommands) {
             this.commandRegistry.registerCommand(cmd);
         }
 
